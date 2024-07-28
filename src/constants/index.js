@@ -2,6 +2,7 @@ import project1 from "../assets/projects/project-1.jpg";
 import project2 from "../assets/projects/project-2.jpg";
 import project3 from "../assets/projects/project-3.jpg";
 import project4 from "../assets/projects/project-4.jpg";
+import project5 from "../assets/projects/project-5.jpg";
 
 export const HERO_CONTENT = `I am a passionate full stack developer with a knack for crafting robust and scalable web applications. With 5 years of hands-on experience, I have honed my skills in front-end technologies like React and Next.js, as well as back-end technologies like Node.js, MySQL, PostgreSQL, and MongoDB. My goal is to leverage my expertise to create innovative solutions that drive business growth and deliver exceptional user experiences.`;
 
@@ -9,68 +10,68 @@ export const ABOUT_TEXT = `I am a dedicated and versatile full stack developer w
 
 export const EXPERIENCES = [
   {
-    year: "2023 - Present",
-    role: "Senior Full Stack Developer",
-    company: "Google Inc.",
+    year: "Oct 2022 - May 2024",
+    role: "Founder & XR Dev",
+    company: "Inexia",
     description: `Led a team in developing and maintaining web applications using JavaScript, React.js, and Node.js. Implemented RESTful APIs and integrated with MongoDB databases. Collaborated with stakeholders to define project requirements and timelines.`,
-    technologies: ["Javascript", "React.js", "Next.js", "mongoDB"],
+    technologies: ["Unreal Engine 5", "Blender", "Python", "C++"],
   },
   {
-    year: "2022 - 2023",
-    role: "Frontend Developer",
-    company: "Adobe",
-    description: `Designed and developed user interfaces for web applications using Next.js and React. Worked closely with backend developers to integrate frontend components with Node.js APIs. Implemented responsive designs and optimized frontend performance.`,
-    technologies: ["HTML", "CSS", "Vue.js", "mySQL"],
+    year: "June 2023 - Oct 2023",
+    role: "Research Intern",
+    company: "Orbitx India Aerospace (P) LTD",
+    description: `Worked on Aviation Systems for Reusable Launch Vehicles, contributing to system improvements & reliability. Collaborated with a team of 10 engineers to enhance the efficiency by 15%.`,
+    technologies: ["Python", "Machine Learning", "PyTorch"],
   },
   {
-    year: "2021 - 2022",
-    role: "Full Stack Developer",
-    company: "Facebook",
-    description: `Developed and maintained web applications using JavaScript, React.js, and Node.js. Designed and implemented RESTful APIs for data communication. Collaborated with cross-functional teams to deliver high-quality software products on schedule.`,
-    technologies: ["Python", "Svelte", "Three.js", "Postgres"],
-  },
-  {
-    year: "2020 - 2021",
-    role: "Software Engineer",
-    company: "Paypal",
-    description: `Contributed to the development of web applications using JavaScript, React.js, and Node.js. Managed databases and implemented data storage solutions using MongoDB. Worked closely with product managers to prioritize features and enhancements.`,
-    technologies: ["Ruby", "Rails", "PHP", "Sqlite"],
+    year: "Sep 2022 - Mar 2024",
+    role: "Vice Precident & Tech Head",
+    company: "Droid Robotics Club (GLAU)",
+    description: `Mentored over 50 students in IoT and robotics projects, leading to a 30% increase in project completion rates. Organized and led 10+ workshops and seminars on advanced robotics, impacting over 200 students.`,
+    technologies: ["Python", "C/C++", "Arduino", "RaspberryPi","ROS"],
   },
 ];
 
 export const PROJECTS = [
   {
-    title: "Robot Bionic Hand",
+    title: "AI Placement Mnagement System",
     image: project1,
     description:
-      "Developed a fully functional robotic hand capable of mimicking human hand movements. Programmed using Python and integrated with ROS forseamless control. Designed and 3D printed componentsfor precise functionality and robustness",
-    technologies: ["HTML", "CSS", "React", "Node.js", "MongoDB"],
+      "Designed and implemented an AI-driven placement managementsystem to streamline the recruitment process. Developed backend algorithms using Python and PyTorch for efficient data processing and predictive analytics.",
+    technologies: ["React.js", "MongoDB", "Tailwind", "Python", "Pytorch", "Flask"],
   },
   {
-    title: "Task Management App",
+    title: "Robot Bionic Hand",
     image: project2,
     description:
-      "An application for managing tasks and projects, with features such as task creation, assignment, and progress tracking.",
-    technologies: ["HTML", "CSS", "Angular", "Firebase"],
+      "Developed a fully functional robotic hand capable of mimicking human hand movements. Programmed using Python and integrated with ROS forseamless control. Designed and 3D printed componentsfor precise functionality and robustness",
+    technologies: ["Arduino", "C/C++", "Python", "ROS"],
   },
   {
-    title: "Portfolio Website",
+    title: " Placement Query, Cyber-Security, Mental Health Chatbot",
     image: project3,
     description:
-      "A personal portfolio website showcasing projects, skills, and contact information.",
+      "Created multiple chatbotsto addressspecific needs: placement queries, cybersecurity, and mental health. Leveraged NLP techniques and librariessuch as TensorFlow, NLTK, and SpaCy to enable accurate and contextual responses. Integrated chatbotsinto various platforms, ensuring accessibility and ease of use",
     technologies: ["HTML", "CSS", "React", "Bootstrap"],
   },
   {
-    title: "Blogging Platform",
+    title: "VR Firefighting & Flood Training Simulator",
     image: project4,
     description:
-      "A platform for creating and publishing blog posts, with features like rich text editing, commenting, and user profiles.",
-    technologies: ["HTML", "CSS", "Vue.js", "Express", "mySQL"],
+      "Built a VR simulator for training firefightersfor rescuing people in multiple fire & flood scenarios. Used Unreal Engine 5 to create realistic and interactive training environments. Integrated VR technology for an immersive training experience, and C++ forsimulation logic.",
+    technologies: ["Unreal Engine 5", "Blender", "Blueprint/C++"],
+  },
+  {
+    title: "Portfolio Web",
+    image: project5,
+    description:
+      "A platform for showcase my professional journey, with features to share my expreinces, projects and way to contact me.",
+    technologies: ["React.js", "Tailwind", "Framer Motion"],
   },
 ];
 
 export const CONTACT = {
   address: "©steeltroops🗼tokyo ²⁰²⁵",
-  phoneNo: "+91 8273-483-469 ",
+  phoneNo: "+91 82734-83469 ",
   email: "steeltroops.ai@gmail.com",
 };
