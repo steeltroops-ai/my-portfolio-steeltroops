@@ -8,9 +8,9 @@ import { FiInstagram } from "react-icons/fi";
 
 const Navbar = () => {
   return (
-    <nav className="flex items-center justify-between py-6 mb-20">
+    <nav className="flex items-center justify-between py-6 mb-16">
       <div className="flex items-center flex-shrink-0">
-        <img className="w-16 mx-4" src={logo} alt="logo"/>
+        <img className="w-16 mx-0 -ml-2 " src={logo} alt="logo"/>
       </div>
       <div className="flex justify-center gap-4 m-6 text-2xl ems-center">
         <a href='https://x.com/steeltroops_ai' target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-cyan-300">

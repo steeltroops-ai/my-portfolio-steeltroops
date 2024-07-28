@@ -40,10 +40,10 @@ export const EXPERIENCES = [
 
 export const PROJECTS = [
   {
-    title: "E-Commerce Website",
+    title: "Robot Bionic Hand",
     image: project1,
     description:
-      "A fully functional e-commerce website with features like product listing, shopping cart, and user authentication.",
+      "Developed a fully functional robotic hand capable of mimicking human hand movements. Programmed using Python and integrated with ROS forseamless control. Designed and 3D printed componentsfor precise functionality and robustness",
     technologies: ["HTML", "CSS", "React", "Node.js", "MongoDB"],
   },
   {
@@ -70,7 +70,7 @@ export const PROJECTS = [
 ];
 
 export const CONTACT = {
-  address: "Tokyo²⁰²⁵🗼©steeltroops",
+  address: "©steeltroops🗼tokyo ²⁰²⁵",
   phoneNo: "+91 8273-483-469 ",
   email: "steeltroops.ai@gmail.com",
 };

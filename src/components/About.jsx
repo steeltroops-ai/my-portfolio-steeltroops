@@ -9,13 +9,13 @@ const About = () => {
         About
         <span className="text-neutral-500">Me</span>
       </h2>
-      <div className="flex flex-wrap">
+      <div className="flex flex-wrap ">
         <motion.div 
           whileInView={{opacity:1, x:0}}
           initial={{opacity:0, x: -100}}
-          transition={{duration: 0.9 }}
-          className="w-full lg:w-1/2 lg:p-8">
-          <div className="flex flex-col items-center justify-center mr-24 lg:items-start">
+          transition={{duration: 1 }}
+          className="w-full lg:w-1/2 lg:p-16">
+          <div className="flex flex-col items-center justify-center lg:items-start">
             <img 
               className="h-auto max-w-full rounded-3xl" 
               src={aboutImg} 
@@ -27,10 +27,10 @@ const About = () => {
         <motion.div 
           whileInView={{opacity:1,x:0}}
           initial={{opacity:0,x:100}}
-          transition={{duration:0.9}}  
+          transition={{duration:1}}  
           className="w-full lg:w-1/2">
-          <div className="flex justify-center ml-24 lg:justify-start">
-            <p className="max-w-xl py-6 my-2 text-justify">{ABOUT_TEXT}</p>
+          <div className="flex justify-center lg:justify-start">
+            <p className="max-w-xl py-12 my-4 text-justify">{ABOUT_TEXT}</p>
           </div>
         </motion.div>
       </div>

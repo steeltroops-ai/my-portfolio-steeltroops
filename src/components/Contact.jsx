@@ -1,29 +1,29 @@
-import { CONTACT } from "../constants"
+import { CONTACT } from "../constants";
 import { motion } from "framer-motion";
-
 
 const Contact = () => {
   return (
-    <div className='pb-20 border-b border-neutral-900'>
+    <div className='pt-0 pb-6 border-5 border-neutral-900'>
       <motion.h1 
         className='my-10 text-4xl text-center'>Get In Touch</motion.h1>
-      <div className='tracking-tighter text-center'>
+      <div className='tracking-tighter text-center border-b-transparent'>        
         <motion.p 
           whileInView={{opacity:1,x:0}}
           initial={{opacity:0, x:-100}}
           transition={{duration:0.9}}
-          className='my-4'>{CONTACT.address}</motion.p>
-        <motion.p 
+          className='my-4'>{CONTACT.phoneNo}</motion.p>
+        <motion.p
           whileInView={{opacity:1,x:0}}
           initial={{opacity:0, x:100}}
           transition={{duration:0.9}}
-          className='my-4'>{CONTACT.phoneNo}</motion.p>
-        <a href={`mailto:${CONTACT.email}`} className='border-b'>
-          {CONTACT.email}
-        </a>
+          className='my-4'>
+          <a href={`mailto:${CONTACT.email}`} className='text-cyan-400 hover:bold'>
+            {CONTACT.email}
+          </a>
+        </motion.p>        
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Contact;
