@@ -1,8 +1,5 @@
-const CONTACT = {
-  address: "Tokyo",
-  phoneNo: "+91 8273-483-469 ",
-  email: "steeltroops.ai@gmail.com",
-};
+import { CONTACT } from "../constants"
+
 
 
 const Contact = () => {

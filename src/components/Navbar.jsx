@@ -13,12 +13,22 @@ const Navbar = () => {
         <img className="w-10 mx-2" src={logo} alt="logo"/>
       </div>
       <div className="flex justify-center gap-4 m-8 text-2xl ems-center">
-        <FaXTwitter className="cursor-pointer hover:text-cyan-300" />        
-        <FiGithub className="cursor-pointer hover:text-cyan-300" />
-        <FiInstagram className="cursor-pointer hover:text-cyan-300" />
-        <FaLinkedinIn className="cursor-pointer hover:text-cyan-300" />
-        <AiOutlineLink RxLinkNone2  className="cursor-pointer hover:text-cyan-300" />
-      </div>
+        <a href='https://x.com/steeltroops_ai' target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-cyan-300">
+          <FaXTwitter />
+        </a>
+        <a href='https://github.com/steeltroops-ai' target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-cyan-300">
+          <FiGithub />
+        </a>
+        <a href='https://instagram.com/steeltroops_ai' target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-cyan-300">
+          <FiInstagram />
+        </a>
+        <a href='https://linkedin.com/in/steeltroops-ai' target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-cyan-300">
+          <FaLinkedinIn />
+        </a>
+        <a href='https://bento.me/steeltroops' target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-cyan-300">
+          <AiOutlineLink />
+        </a>
+        </div>
     </nav>
   );
 };
