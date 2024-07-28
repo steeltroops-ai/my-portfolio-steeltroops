@@ -4,6 +4,10 @@ import { SiMongodb } from "react-icons/si";
 import { FaNodeJs } from "react-icons/fa6";
 import { SiPytorch } from "react-icons/si";
 import { DiPython } from "react-icons/di";
+import { SiTensorflow } from "react-icons/si";
+import { FaGitAlt } from "react-icons/fa";
+import { FaRust } from "react-icons/fa";
+import { SiUnrealengine } from "react-icons/si";
 import { motion } from "framer-motion";
 
 const iconVariants = (duration) => ({
@@ -61,25 +65,39 @@ const Technologies = () => {
           <FaNodeJs className="text-green-500 text-7xl" />          
         </motion.div>
         <motion.div 
+          variants={iconVariants(4)}
+          initial="initial"
+          animate="animate"
+          className="p-4 border-4 border-neutral-800 rounded-2xl">
+          <DiPython className="text-7xl text-fuchsia-600" />          
+        </motion.div>
+        <motion.div 
+          variants={iconVariants(4)}
+          initial="initial"
+          animate="animate"
+          className="p-4 border-4 border-neutral-800 rounded-2xl">
+          <SiTensorflow className="text-7xl text-yellow-600" />          
+        </motion.div>
+        <motion.div 
           variants={iconVariants(6)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
           <SiPytorch className="text-orange-400 text-7xl" />          
+        </motion.div>    
+        <motion.div 
+          variants={iconVariants(4)}
+          initial="initial"
+          animate="animate"
+          className="p-4 border-4 border-neutral-800 rounded-2xl">
+          <FaRust className="text-7xl text-black-700" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(4)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <DiPython className="text-7xl text-fuchsia-600" />          
-        </motion.div>
-        <motion.div 
-          variants={iconVariants(4)}
-          initial="initial"
-          animate="animate"
-          className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <DiPython className="text-7xl text-fuchsia-600" />          
+          <SiUnrealengine className="text-7xl text-black-600" />          
         </motion.div>
       </motion.div>       
     </div>
