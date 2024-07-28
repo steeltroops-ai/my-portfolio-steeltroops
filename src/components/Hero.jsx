@@ -1,5 +1,5 @@
 import { HERO_CONTENT } from "../assets/constants";
-import profilePic from "../assets/kevinRushProfile.png";
+import profilePic from "../assets/hodakaprofile.jpg";
 import { motion } from "framer-motion";
 
 
@@ -50,6 +50,7 @@ const Hero = () => {
                         animate={{x:0,opacity:1}}
                         transition={{duration:1, delay:0.9}}
                         src={profilePic} 
+                        className="rounded-3xl"
                         alt="Mayank Pratap Singh" />
                 </div>                
             </div>          

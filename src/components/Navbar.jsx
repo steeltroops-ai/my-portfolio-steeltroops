@@ -1,4 +1,4 @@
-import logo from '../assets/kevinRushLogo.png';
+import logo from '../assets/mps.png';
 import { AiOutlineLink } from "react-icons/ai";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaLinkedinIn } from "react-icons/fa6";
@@ -10,7 +10,7 @@ const Navbar = () => {
   return (
     <nav className="flex items-center justify-between py-6 mb-20">
       <div className="flex items-center flex-shrink-0">
-        <img className="w-10 mx-2" src={logo} alt="logo"/>
+        <img className="w-16 mx-4" src={logo} alt="logo"/>
       </div>
       <div className="flex justify-center gap-4 m-6 text-2xl ems-center">
         <a href='https://x.com/steeltroops_ai' target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-cyan-300">

@@ -70,7 +70,7 @@ export const PROJECTS = [
 ];
 
 export const CONTACT = {
-  address: "Tokyo",
+  address: "Tokyo²⁰²⁵🗼©steeltroops",
   phoneNo: "+91 8273-483-469 ",
   email: "steeltroops.ai@gmail.com",
 };
