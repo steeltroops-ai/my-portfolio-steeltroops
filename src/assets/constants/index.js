@@ -40,6 +40,13 @@ export const EXPERIENCES = [
 
 export const PROJECTS = [
   {
+    title: "FullStack Banking Web App",
+    image: project1,
+    description:
+      "A fully functional Banking web application with features like user authentication, account management, and transaction history.",
+    technologies: ["Next.js", "React.js", "Node.js", "MongoDB"],
+  },
+  {
     title: "E-Commerce Website",
     image: project1,
     description:
