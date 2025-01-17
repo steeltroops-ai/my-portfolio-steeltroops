@@ -5,8 +5,6 @@
         "use": "@vercel/node"
       }
     ],
-    "scripts": {
-      "build": "pnpm install --no-frozen-lockfile && pnpm build"
-    }
+    "buildCommand": "pnpm install --no-frozen-lockfile && pnpm build"
 }
   
