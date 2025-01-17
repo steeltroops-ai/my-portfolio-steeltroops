@@ -3,9 +3,10 @@ import { TbBrandNextjs, TbBrandTypescript } from "react-icons/tb";
 import { PiFileCppDuotone } from "react-icons/pi";
 import { GrJava } from "react-icons/gr";
 import { SiMongodb, SiPytorch, SiTensorflow, SiUnrealengine, SiNestjs } from "react-icons/si";
-import { FaNodeJs, FaRust } from "react-icons/fa";
+import { FaNodeJs, FaRust, FaGitAlt } from "react-icons/fa";
 import { FaGolang } from "react-icons/fa6";
-import { DiPython } from "react-icons/di";
+import { DiPython, DiDocker, DiPostgresql } from "react-icons/di";
+import { LiaAws } from "react-icons/lia";
 import { motion } from "framer-motion";
 
 const iconVariants = (duration) => ({
@@ -41,42 +42,42 @@ const Technologies = () => {
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <DiPython className="text-7xl text-fuchsia-600" />          
+          <DiPython className="text-blue-500 text-7xl" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(4)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <FaGolang className="text-7xl text-black-700" />          
+          <FaGolang className="text-7xl text-cyan-500" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(4)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <PiFileCppDuotone className="text-7xl text-black-600" />          
+          <PiFileCppDuotone className="text-blue-700 text-7xl" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(4)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <TbBrandTypescript className="text-7xl text-black-600" />          
+          <TbBrandTypescript className="text-blue-600 text-7xl" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(4)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <GrJava className="text-7xl text-black-600" />          
+          <GrJava className="text-red-600 text-7xl" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(4)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <FaRust className="text-7xl text-black-600" />          
+          <FaRust className="text-orange-600 text-7xl" />          
         </motion.div>
 
         {/* Unreal Engine */}
@@ -85,7 +86,7 @@ const Technologies = () => {
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <SiUnrealengine className="text-7xl text-black-600" />          
+          <SiUnrealengine className="text-white text-7xl" />          
         </motion.div>
         
         {/* Machine Learning */}
@@ -101,7 +102,7 @@ const Technologies = () => {
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <SiPytorch className="text-orange-400 text-7xl" />          
+          <SiPytorch className="text-red-600 text-7xl" />          
         </motion.div> 
 
         {/* Web Development */}
@@ -117,14 +118,14 @@ const Technologies = () => {
           initial="initial"
           animate="animate" 
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <TbBrandNextjs className="text-7xl" />          
+          <TbBrandNextjs className="text-white text-7xl" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(3)}
           initial="initial"
           animate="animate" 
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <SiNestjs className="text-7xl" />          
+          <SiNestjs className="text-red-600 text-7xl" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(5)}
@@ -134,11 +135,40 @@ const Technologies = () => {
           <SiMongodb className="text-green-500 text-7xl" />          
         </motion.div>
         <motion.div 
+          variants={iconVariants(5)}
+          initial="initial"
+          animate="animate" 
+          className="p-4 border-4 border-neutral-800 rounded-2xl">
+          <DiPostgresql className="text-blue-500 text-7xl" />          
+        </motion.div>
+        <motion.div 
           variants={iconVariants(2)}
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
           <FaNodeJs className="text-green-500 text-7xl" />          
+        </motion.div>
+
+        <motion.div 
+          variants={iconVariants(2)}
+          initial="initial"
+          animate="animate"
+          className="p-4 border-4 border-neutral-800 rounded-2xl">
+          <LiaAws className="text-orange-500 text-7xl" />          
+        </motion.div>
+        <motion.div 
+          variants={iconVariants(2)}
+          initial="initial"
+          animate="animate"
+          className="p-4 border-4 border-neutral-800 rounded-2xl">
+          <FaGitAlt className="text-red-600 text-7xl" />          
+        </motion.div>
+        <motion.div 
+          variants={iconVariants(2)}
+          initial="initial"
+          animate="animate"
+          className="p-4 border-4 border-neutral-800 rounded-2xl">
+          <DiDocker className="text-blue-600 text-7xl" />          
         </motion.div>
         
       </motion.div>       
