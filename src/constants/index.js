@@ -11,7 +11,7 @@ export const ABOUT_TEXT = `I am a dedicated and versatile full stack developer w
 export const EXPERIENCES = [
   {
     year: "Oct 2022 - May 2024",
-    role: "Founder & XR Dev",
+    role: "Founder & Fullstack Dev",
     company: "Inexia",
     description: `Led a team in developing and maintaining web applications using JavaScript, React.js, and Node.js. Implemented RESTful APIs and integrated with MongoDB databases. Collaborated with stakeholders to define project requirements and timelines.`,
     technologies: ["Unreal Engine 5", "Blender", "Python", "C++"],
@@ -19,7 +19,7 @@ export const EXPERIENCES = [
   {
     year: "June 2023 - Oct 2023",
     role: "Research Intern",
-    company: "Orbitx India Aerospace (P) LTD",
+    company: "Orbitx India Aerospace",
     description: `Worked on Aviation Systems for Reusable Launch Vehicles, contributing to system improvements & reliability. Collaborated with a team of 10 engineers to enhance the efficiency by 15%.`,
     technologies: ["Python", "Machine Learning", "PyTorch"],
   },
