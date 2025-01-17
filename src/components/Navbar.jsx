@@ -1,9 +1,7 @@
 import logo from '../assets/mps.png';
 import { AiOutlineLink } from "react-icons/ai";
-import { FaXTwitter } from "react-icons/fa6";
-import { FaLinkedinIn } from "react-icons/fa6";
-import { FiGithub } from "react-icons/fi";
-import { FiInstagram } from "react-icons/fi";
+import { FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
+import { FiGithub, FiInstagram } from "react-icons/fi";
 
 
 const Navbar = () => {

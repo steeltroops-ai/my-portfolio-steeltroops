@@ -1,13 +1,8 @@
 import { RiReactjsLine } from "react-icons/ri";
 import { TbBrandNextjs } from "react-icons/tb";
-import { SiMongodb } from "react-icons/si";
-import { FaNodeJs } from "react-icons/fa6";
-import { SiPytorch } from "react-icons/si";
+import { SiMongodb, SiPytorch, SiTensorflow, SiUnrealengine } from "react-icons/si";
+import { FaNodeJs, FaRust } from "react-icons/fa";
 import { DiPython } from "react-icons/di";
-import { SiTensorflow } from "react-icons/si";
-import { FaGitAlt } from "react-icons/fa";
-import { FaRust } from "react-icons/fa";
-import { SiUnrealengine } from "react-icons/si";
 import { motion } from "framer-motion";
 
 const iconVariants = (duration) => ({
@@ -76,7 +71,7 @@ const Technologies = () => {
           initial="initial"
           animate="animate"
           className="p-4 border-4 border-neutral-800 rounded-2xl">
-          <SiTensorflow className="text-7xl text-yellow-600" />          
+          <SiTensorflow className="text-yellow-600 text-7xl" />          
         </motion.div>
         <motion.div 
           variants={iconVariants(6)}

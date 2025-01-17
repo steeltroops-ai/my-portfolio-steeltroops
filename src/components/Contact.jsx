@@ -17,7 +17,7 @@ const Contact = () => {
           initial={{opacity:0, x:100}}
           transition={{duration:0.9}}
           className='my-4'>
-          <a href={`mailto:${CONTACT.email}`} className='px-2 py-1  mr-2 text-sm -font-medium rounded bg-neutral-900 text-purple-700 '>
+          <a href={`mailto:${CONTACT.email}`} className='px-2 py-1 mr-2 text-sm font-medium text-purple-700 rounded bg-neutral-900'>
             {CONTACT.email}
           </a>
         </motion.p>        
