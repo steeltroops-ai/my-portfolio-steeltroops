@@ -10,5 +10,17 @@
 
 /* Add this to ensure text is visible */
 body {
-  @apply text-gray-900 bg-white;
+  color: #1a202c; /* text-gray-900 */
+  background-color: #ffffff; /* bg-white */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
