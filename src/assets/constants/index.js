@@ -3,9 +3,20 @@ import project2 from "../projects/project-2.jpg";
 import project3 from "../projects/project-3.jpg";
 import project4 from "../projects/project-4.jpg";
 
-export const HERO_CONTENT = `I am a passionate full stack developer and machine learning engineer with a knack for crafting robust and scalable applications. With extensive hands-on experience, I have honed my skills in a wide range of technologies including Python, React.js, Next.js, TensorFlow, and Unreal Engine 5. My goal is to leverage my expertise to create innovative solutions that drive technological advancement and deliver exceptional user experiences across web, AI, and game development domains.`;
+export const HERO_CONTENT = `
+I build tech that matters.
 
-export const ABOUT_TEXT = `I am a dedicated and versatile developer with a passion for creating efficient and cutting-edge applications. Currently pursuing my BTech in Computer Science Engineering with a specialization in Artificial Intelligence and Machine Learning, I have worked on a variety of projects spanning web development, machine learning, robotics, and game development. My journey in technology began with a deep curiosity for how things work, and it has evolved into a path where I continuously strive to learn and adapt to new challenges. I thrive in collaborative environments and enjoy solving complex problems to deliver high-quality solutions. Outside of coding, I enjoy staying active, exploring new technologies, and contributing to open-source projects.`;
+I’m a full-stack developer, AI aficionado, and robotics engineer obsessed with creating smart systems that seamlessly connect software and hardware. From building web apps with React, Next.js, and Bun to diving deep into ML frameworks like TensorFlow and PyTorch, I’m all about pushing tech to its limits.
+
+Whether I'm developing AI systems or working on robotics projects with Python, C++, and ROS2, I focus on making things that are fast, scalable, and truly impactful. I'm not just coding for the sake of coding. I’m solving real-world problems and creating tech that actually makes life better.`;
+
+export const ABOUT_TEXT = `Hey, I'm Mayank – a robotics and AI enthusiast, soon-to-be graduate in Computer Science with a focus on AI & ML at GLA University, India. I’ve been in love with tech since I wrote my first Python script at 16, and I’ve been hooked on turning ideas into reality ever since. 
+
+I’ve built everything from a humanoid robot arm with sensors to diving deep into robotics and AI. I’m all about pushing boundaries, whether that’s optimizing robotics software, tinkering with Linux setups, or building full-stack web apps. I like to experiment, solve problems, and stay hands-on with whatever tech catches my eye. 
+
+When I’m not coding or working with hardware, you’ll probably find me bingeing some anime, exploring the latest in futuristic tech, or sharing my journey on Twitter with fellow tech enthusiasts.
+
+I’m constantly learning and building right now, I'm diving into full-stack web development, AI, and robotics, always looking for new ways to solve real-world challenges. So yeah, I don't settle for ordinary - I'm here to create something that actually makes a difference.`;
 
 export const EXPERIENCES = [
   {
