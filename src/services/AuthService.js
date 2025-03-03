@@ -1,25 +1,31 @@
 // Get admin credentials from environment variables
 const ADMIN_CREDENTIALS = {
-  username: 'steeltroops',
-  password: 'steel#123'
+  username: import.meta.env.VITE_ADMIN_USERNAME || 'steeltroops',
+  password: import.meta.env.VITE_ADMIN_PASSWORD || 'steel#123'
 };
 
+// Log the credentials for debugging (remove in production)
+console.log('Admin credentials loaded:', {
+  username: ADMIN_CREDENTIALS.username,
+  envUsername: import.meta.env.VITE_ADMIN_USERNAME,
+  hasPassword: !!ADMIN_CREDENTIALS.password,
+  envHasPassword: !!import.meta.env.VITE_ADMIN_PASSWORD
+});
+
 export const login = (username, password) => {
-  if (!username || !password) {
-    console.error('Login failed: Missing credentials');
-    return false;
-  }
+  console.log('Login attempt:', { username, hasPassword: !!password });
+  console.log('Comparing with:', { 
+    storedUsername: ADMIN_CREDENTIALS.username,
+    passwordMatch: password === ADMIN_CREDENTIALS.password
+  });
 
-  const trimmedUsername = username.trim();
-  const trimmedPassword = password.trim();
-
-  if (trimmedUsername === ADMIN_CREDENTIALS.username && trimmedPassword === ADMIN_CREDENTIALS.password) {
+  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
     const token = 'mock-jwt-token'; // In production, generate proper JWT tokens
     localStorage.setItem('adminToken', token);
+    console.log('Login successful');
     return true;
   }
-  
-  console.error('Login failed: Invalid credentials');
+  console.log('Login failed');
   return false;
 };
 
