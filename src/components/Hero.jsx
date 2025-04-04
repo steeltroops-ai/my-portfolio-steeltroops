@@ -28,7 +28,7 @@ const Hero = () => {
                             variants={container(0.3)}
                             initial="hidden"
                             animate="visible"
-                            className="py-2 text-4xl tracking-tight text-transparent bg-gradient-to-r from-pink-300 via-slate-500 to-purple-500 bg-clip-text">
+                            className="py-2 text-4xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-500 via-slate-500">
                             Full Stack Web Dev & <br />
                             Machine Learning Engineer
                         </motion.span>
@@ -36,7 +36,7 @@ const Hero = () => {
                             variants={container(0.6)}
                             initial="hidden"
                             animate="visible"
-                            className="max-w-xl py-6 my-2 font-light tracking-tight text-justify">
+                            className="py-6 my-2 max-w-xl font-light tracking-tight text-justify">
                             {HERO_CONTENT}
                         </motion.p>
                     </div>
