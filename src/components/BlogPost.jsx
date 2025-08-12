@@ -13,7 +13,7 @@ import FloatingChatButton from "./FloatingChatButton";
 import SEOHead from "./SEOHead";
 import { InlineSocialShare } from "./SocialShare";
 import OptimizedImage, { BlogImage } from "./OptimizedImage";
-import 'highlight.js/styles/github-dark.css';
+// Syntax highlighting styles are handled by rehype-highlight
 
 const BlogPost = () => {
   const { slug } = useParams();

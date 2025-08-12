@@ -24,3 +24,41 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Basic syntax highlighting styles for code blocks */
+.hljs {
+  background: #0d1117 !important;
+  color: #c9d1d9 !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem !important;
+  overflow-x: auto !important;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in {
+  color: #ff7b72 !important;
+}
+
+.hljs-string,
+.hljs-attr {
+  color: #a5d6ff !important;
+}
+
+.hljs-function,
+.hljs-title {
+  color: #d2a8ff !important;
+}
+
+.hljs-comment {
+  color: #8b949e !important;
+  font-style: italic !important;
+}
+
+.hljs-number {
+  color: #79c0ff !important;
+}
+
+.hljs-variable {
+  color: #ffa657 !important;
+}
