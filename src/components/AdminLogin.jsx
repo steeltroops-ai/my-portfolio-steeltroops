@@ -1,29 +1,43 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../services/AuthService';
+import { login, adminLogin } from '../services/SupabaseAuthService';
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
-      setError('Please enter both username and password');
+    if (!email || !password) {
+      setError('Please enter both email and password');
       return;
     }
+
+    setLoading(true);
+    setError('');
+
     try {
-      const success = login(username, password);
-      if (success) {
+      // Try new authentication first
+      const result = await adminLogin(email, password);
+      if (result.success) {
         navigate('/admin/dashboard');
       } else {
-        setError('Invalid username or password');
+        // Fallback to legacy authentication for backward compatibility
+        const legacySuccess = await login(email, password);
+        if (legacySuccess) {
+          navigate('/admin/dashboard');
+        } else {
+          setError(result.error || 'Invalid email or password');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);
       setError('An error occurred during login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,11 +55,12 @@ const AdminLogin = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
-              className="w-full p-2 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Admin Email"
+              disabled={loading}
+              className="w-full p-2 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50"
             />
           </div>
           <div>
@@ -54,14 +69,23 @@ const AdminLogin = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full p-2 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500"
+              disabled={loading}
+              className="w-full p-2 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50"
             />
           </div>
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white rounded transition-colors flex items-center justify-center"
           >
-            Login
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Signing in...
+              </>
+            ) : (
+              'Login'
+            )}
           </button>
         </form>
       </div>

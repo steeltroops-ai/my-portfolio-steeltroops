@@ -7,23 +7,36 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.54.0",
+    "@tanstack/react-query": "^5.85.0",
     "@vercel/speed-insights": "^1.1.0",
-    "bcryptjs": "^3.0.2",
-    "contentful": "^11.5.3",
+    "dompurify": "^3.2.6",
     "framer-motion": "^10.18.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.11.0",
-    "postcss-cli": "^11.0.0",
+    "prismjs": "^1.30.0",
     "prop-types": "^15.8.1",
+    "quill": "^2.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
     "react-icons": "^5.5.0",
-    "react-router-dom": "^7.2.0"
+    "react-markdown": "^10.1.0",
+    "react-quill": "^2.0.0",
+    "react-router-dom": "^7.2.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
@@ -32,8 +45,11 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.18",
+    "jsdom": "^26.1.0",
     "postcss": "^8.5.1",
+    "postcss-cli": "^11.0.1",
     "tailwindcss": "^3.4.17",
-    "vite": "^4.5.5"
+    "vite": "^4.5.5",
+    "vitest": "^3.2.4"
   }
 }
