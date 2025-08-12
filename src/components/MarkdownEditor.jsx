@@ -5,14 +5,14 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import 'react-quill/dist/quill.snow.css'
-import 'highlight.js/styles/github-dark.css'
+// Syntax highlighting styles are handled globally in index.css
 
-const MarkdownEditor = React.memo(({
-  value = '',
-  onChange,
+const MarkdownEditor = ({ 
+  value = '', 
+  onChange, 
   placeholder = 'Write your blog post content...',
   height = '400px',
-  showPreview = true
+  showPreview = true 
 }) => {
   const [activeTab, setActiveTab] = useState('write')
   const [content, setContent] = useState(value)
@@ -54,10 +54,8 @@ const MarkdownEditor = React.memo(({
     }
   }, [onChange])
 
-  // Memoized HTML to Markdown converter
-  const htmlToMarkdown = useCallback((html) => {
-    if (!html || typeof html !== 'string') return ''
-
+  // Convert HTML to Markdown (basic conversion)
+  const htmlToMarkdown = (html) => {
     return html
       .replace(/<h([1-6])>/g, (match, level) => '#'.repeat(parseInt(level)) + ' ')
       .replace(/<\/h[1-6]>/g, '\n\n')
@@ -86,14 +84,14 @@ const MarkdownEditor = React.memo(({
       .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
       .replace(/\n{3,}/g, '\n\n') // Replace multiple newlines with double newlines
       .trim()
-  }, [])
+  }
 
-  const getMarkdownContent = useCallback(() => {
+  const getMarkdownContent = () => {
     if (activeTab === 'markdown') {
       return content
     }
     return htmlToMarkdown(content)
-  }, [activeTab, content, htmlToMarkdown])
+  }
 
   return (
     <div className="markdown-editor border border-neutral-700 rounded-lg overflow-hidden bg-neutral-900">
@@ -273,8 +271,6 @@ const MarkdownEditor = React.memo(({
       `}</style>
     </div>
   )
-})
-
-MarkdownEditor.displayName = 'MarkdownEditor'
+}
 
 export default MarkdownEditor
