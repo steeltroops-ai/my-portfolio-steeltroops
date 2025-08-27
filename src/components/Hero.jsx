@@ -2,6 +2,7 @@ import { HERO_CONTENT } from "../constants";
 import profilePic from "../assets/hodakaprofile.jpg";
 import { motion } from "framer-motion";
 
+
 const container = (delay) => ({
   hidden: { x: -100, opacity: 0 },
   visible: {
@@ -38,7 +39,7 @@ const Hero = () => {
               variants={container(0.6)}
               initial="hidden"
               animate="visible"
-              className="py-6 my-2 max-w-xl font-light tracking-tight text-justify"
+              className="max-w-xl py-6 my-2 font-light tracking-tight text-justify"
             >
               {HERO_CONTENT}
             </motion.p>

@@ -1,10 +1,104 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./profiletop.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mayank</title>
+
+    <!-- Performance Optimizations -->
+    <!-- Preload critical fonts -->
+    <link
+      rel="preload"
+      href="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Preload critical images -->
+    <link
+      rel="preload"
+      href="/src/assets/hodakaprofile.jpg"
+      as="image"
+      type="image/jpeg"
+    />
+    <link
+      rel="preload"
+      href="/src/assets/about.jpg"
+      as="image"
+      type="image/jpeg"
+    />
+
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//supabase.co" />
+
+    <!-- Preconnect to critical third-party origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Prefetch likely next pages -->
+    <link rel="prefetch" href="/blog" />
+    <link rel="prefetch" href="/admin/login" />
+
+    <!-- Resource hints for better performance -->
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Critical CSS inline (will be populated by build process) -->
+    <style id="critical-css">
+      /* Critical above-the-fold styles will be inlined here during build */
+      body {
+        background-color: #0a0a0a;
+        color: #e5e7eb;
+        font-family: "Inter", sans-serif;
+      }
+      .loading-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+    </style>
+
+    <title>Mayank - Full Stack Developer & AI Engineer</title>
+
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Full Stack Developer specializing in React, Node.js, and AI/ML solutions. Building modern web applications with cutting-edge technology."
+    />
+    <meta
+      name="keywords"
+      content="Full Stack Developer, React, Node.js, AI, Machine Learning, Web Development, JavaScript, TypeScript"
+    />
+    <meta name="author" content="Mayank" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta
+      property="og:title"
+      content="Mayank - Full Stack Developer & AI Engineer"
+    />
+    <meta
+      property="og:description"
+      content="Full Stack Developer specializing in React, Node.js, and AI/ML solutions. Building modern web applications with cutting-edge technology."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://your-domain.com" />
+    <meta property="og:image" content="/src/assets/hodakaprofile.jpg" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Mayank - Full Stack Developer & AI Engineer"
+    />
+    <meta
+      name="twitter:description"
+      content="Full Stack Developer specializing in React, Node.js, and AI/ML solutions."
+    />
+    <meta name="twitter:image" content="/src/assets/hodakaprofile.jpg" />
   </head>
   <body>
     <div id="root"></div>

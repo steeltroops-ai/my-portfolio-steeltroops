@@ -14,10 +14,12 @@ import SEOHead from "./SEOHead";
 import { InlineSocialShare } from "./SocialShare";
 import OptimizedImage, { BlogImage } from "./OptimizedImage";
 import Comments from "./Comments/Comments";
+import ReadingProgress, { BlogReadingProgress } from "./ReadingProgress";
 // Syntax highlighting styles are handled by rehype-highlight
 
 const BlogPost = () => {
   const { slug } = useParams();
+  const articleRef = useRef(null);
 
   // Use React Query to fetch the post
   const {
@@ -109,6 +111,15 @@ const BlogPost = () => {
           <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-[radial-gradient(circle_400px_at_50%_300px,#fbfbfb36,#000)]"></div>
         </div>
       </div>
+
+      {/* Reading Progress Indicator */}
+      <BlogReadingProgress
+        articleRef={articleRef}
+        showStats={true}
+        position="top"
+        color="cyan"
+        height={3}
+      />
 
       <div className="container px-8 mx-auto">
         <Navbar />
@@ -214,6 +225,7 @@ const BlogPost = () => {
 
           {/* Article Content */}
           <motion.div
+            ref={articleRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
