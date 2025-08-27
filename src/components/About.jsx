@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 import aboutImg from "../assets/about.jpg";
-import { ABOUT_TEXT } from "../assets/constants";
+import { ABOUT_TEXT } from "../constants";
 import { motion } from "framer-motion";
 
 const About = () => {
@@ -10,22 +10,22 @@ const About = () => {
         About <span className="text-neutral-500">Me</span>
       </h2>
       <div className="flex flex-wrap">
-        <motion.div 
+        <motion.div
           whileInView={{ opacity: 1, x: 0 }}
           initial={{ opacity: 0, x: -100 }}
           transition={{ duration: 1 }}
           className="w-full lg:w-1/2 lg:p-16"
         >
           <div className="flex flex-col justify-center items-center lg:items-start">
-            <img 
-              className="max-w-full h-auto rounded-3xl" 
-              src={aboutImg} 
-              alt="about" 
+            <img
+              className="max-w-full h-auto rounded-3xl"
+              src={aboutImg}
+              alt="about"
               loading="lazy"
             />
           </div>
         </motion.div>
-        <motion.div 
+        <motion.div
           whileInView={{ opacity: 1, x: 0 }}
           initial={{ opacity: 0, x: 100 }}
           transition={{ duration: 1 }}
