@@ -1,13 +1,28 @@
-import React, { Suspense, lazy } from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { HelmetProvider } from 'react-helmet-async'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import App from './App.jsx'
-import FloatingChatButton from './components/FloatingChatButton'
-import ErrorBoundary from './components/ErrorBoundary'
-import errorTracker from './utils/errorTracking'
-import './index.css'
+import React, { Suspense, lazy } from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import App from "./App.jsx";
+import FloatingChatButton from "./components/FloatingChatButton";
+import ErrorBoundary from "./components/ErrorBoundary";
+import errorTracker from "./utils/errorTracking";
+import "./utils/seedBlogPosts.js"; // Import seeding utility for console access
+import "./index.css";
+
+// Register Service Worker for caching
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        console.log("SW registered: ", registration);
+      })
+      .catch((registrationError) => {
+        console.log("SW registration failed: ", registrationError);
+      });
+  });
+}
 
 // Create a client
 const queryClient = new QueryClient({
@@ -22,14 +37,14 @@ const queryClient = new QueryClient({
       retry: 1,
     },
   },
-})
+});
 
 // Lazy load components for code splitting
-const Blog = lazy(() => import('./components/Blog'))
-const BlogPost = lazy(() => import('./components/BlogPost'))
-const AdminLogin = lazy(() => import('./components/AdminLogin'))
-const AdminDashboard = lazy(() => import('./components/AdminDashboard'))
-const BlogEditor = lazy(() => import('./components/BlogEditor'))
+const Blog = lazy(() => import("./components/Blog"));
+const BlogPost = lazy(() => import("./components/BlogPost"));
+const AdminLogin = lazy(() => import("./components/AdminLogin"));
+const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
+const BlogEditor = lazy(() => import("./components/BlogEditor"));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -39,9 +54,9 @@ const LoadingSpinner = () => (
       <p className="text-neutral-400 text-sm">Loading...</p>
     </div>
   </div>
-)
+);
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -49,7 +64,15 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Router>
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
-                <Route path="/" element={<><App /><FloatingChatButton /></>} />
+                <Route
+                  path="/"
+                  element={
+                    <>
+                      <App />
+                      <FloatingChatButton />
+                    </>
+                  }
+                />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
@@ -62,5 +85,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </HelmetProvider>
       </QueryClientProvider>
     </ErrorBoundary>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
