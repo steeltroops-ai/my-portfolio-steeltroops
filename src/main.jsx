@@ -8,10 +8,10 @@ import FloatingChatButton from "./components/FloatingChatButton";
 import ErrorBoundary from "./components/ErrorBoundary";
 // Error tracking utility - available for future use
 // import errorTracker from "./utils/errorTracking";
-// import "./utils/seedBlogPosts.js"; // Temporarily disabled for debugging
+// import "./utils/seedBlogPosts.js"; // Temporarily disabled for deployment debugging
 import "./index.css";
 
-// Add global error handlers for debugging
+// Add error logging for production debugging
 window.addEventListener("error", (event) => {
   console.error("Global error:", event.error);
   console.error("Error details:", {
@@ -19,7 +19,6 @@ window.addEventListener("error", (event) => {
     filename: event.filename,
     lineno: event.lineno,
     colno: event.colno,
-    stack: event.error?.stack,
   });
 });
 
@@ -27,8 +26,8 @@ window.addEventListener("unhandledrejection", (event) => {
   console.error("Unhandled promise rejection:", event.reason);
 });
 
-// Register Service Worker for caching (disabled for debugging)
-// if ("serviceWorker" in navigator && import.meta.env.PROD) {
+// Register Service Worker for caching - temporarily disabled for debugging
+// if ("serviceWorker" in navigator) {
 //   window.addEventListener("load", () => {
 //     navigator.serviceWorker
 //       .register("/sw.js")

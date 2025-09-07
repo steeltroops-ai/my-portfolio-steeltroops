@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       // Use automatic JSX runtime (no need to import React)
@@ -13,6 +13,9 @@ export default defineConfig({
   define: {
     global: "globalThis",
   },
+  // Ensure environment variables are properly loaded
+  envDir: ".",
+  envPrefix: "VITE_",
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
@@ -104,4 +107,4 @@ export default defineConfig({
       "@tanstack/react-query",
     ],
   },
-});
+}));

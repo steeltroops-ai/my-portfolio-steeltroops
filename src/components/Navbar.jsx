@@ -14,7 +14,7 @@ const Navbar = () => {
           href="https://x.com/steeltroops_ai"
           target="_blank"
           rel="noopener noreferrer"
-          className="cursor-pointer hover:text-cyan-400"
+          className="cursor-pointer hover:text-cyan-300"
         >
           <FaXTwitter />
         </a>
@@ -22,7 +22,7 @@ const Navbar = () => {
           href="https://github.com/steeltroops-ai"
           target="_blank"
           rel="noopener noreferrer"
-          className="cursor-pointer hover:text-cyan-400"
+          className="cursor-pointer hover:text-cyan-300"
         >
           <FiGithub />
         </a>
@@ -30,7 +30,7 @@ const Navbar = () => {
           href="https://instagram.com/steeltroops_ai"
           target="_blank"
           rel="noopener noreferrer"
-          className="cursor-pointer hover:text-cyan-400"
+          className="cursor-pointer hover:text-cyan-300"
         >
           <FiInstagram />
         </a>
@@ -38,7 +38,7 @@ const Navbar = () => {
           href="https://linkedin.com/in/steeltroops-ai"
           target="_blank"
           rel="noopener noreferrer"
-          className="cursor-pointer hover:text-cyan-400"
+          className="cursor-pointer hover:text-cyan-300"
         >
           <FaLinkedinIn />
         </a>
@@ -46,7 +46,7 @@ const Navbar = () => {
           href="https://bento.me/steeltroops"
           target="_blank"
           rel="noopener noreferrer"
-          className="cursor-pointer hover:text-cyan-400"
+          className="cursor-pointer hover:text-cyan-300"
         >
           <AiOutlineLink />
         </a>

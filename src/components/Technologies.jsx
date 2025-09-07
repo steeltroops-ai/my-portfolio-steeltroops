@@ -30,11 +30,11 @@ const iconVariants = (duration) => ({
 
 const Technologies = () => {
   return (
-    <div className="pb-4 border-b border-neutral-900 lg:mb-3">
+    <div className="pb-24 border-b border-neutral-800">
       <motion.h2
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 1.2 }}
         className="my-20 text-4xl text-center"
       >
         Technologies

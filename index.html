@@ -15,19 +15,38 @@
       crossorigin
     />
 
-    <!-- Minimal configuration for debugging -->
+    <!-- Image preloading removed to prevent console warnings -->
+
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//supabase.co" />
+
+    <!-- Preconnect to critical third-party origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Prefetch likely next pages -->
+    <link rel="prefetch" href="/blog" />
+    <link rel="prefetch" href="/admin/login" />
 
     <!-- Resource hints for better performance -->
     <meta name="theme-color" content="#0a0a0a" />
     <meta name="color-scheme" content="dark" />
 
-    <!-- Minimal critical CSS for debugging -->
-    <style>
+    <!-- Critical CSS inline (will be populated by build process) -->
+    <style id="critical-css">
+      /* Critical above-the-fold styles will be inlined here during build */
       body {
-        margin: 0;
-        background-color: #000000;
-        color: #ffffff;
-        font-family: Arial, sans-serif;
+        background-color: #0a0a0a;
+        color: #e5e7eb;
+        font-family: "Inter", sans-serif;
+      }
+      .loading-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
       }
     </style>
 
@@ -55,7 +74,7 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://your-domain.com" />
-    <meta property="og:image" content="/assets/hodakaprofile.jpg" />
+    <meta property="og:image" content="/src/assets/hodakaprofile.jpg" />
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -67,7 +86,7 @@
       name="twitter:description"
       content="Full Stack Developer specializing in React, Node.js, and AI/ML solutions."
     />
-    <meta name="twitter:image" content="/assets/hodakaprofile.jpg" />
+    <meta name="twitter:image" content="/src/assets/hodakaprofile.jpg" />
   </head>
   <body>
     <div id="root"></div>

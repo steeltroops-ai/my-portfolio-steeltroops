@@ -36,37 +36,67 @@ export const PROJECTS = [
   {
     title: "FullStack Banking Web App",
     image: project1,
-    description: "A fully functional Banking web application with features like user authentication, account management, and transaction history.",
-    technologies: ["Next.js", "TypeScript", "AppWrite", "Plaid", "Dwolla", "Zod", "Chart.js", "Shad.cn"],
+    description:
+      "A fully functional Banking web application with features like user authentication, account management, and transaction history.",
+    technologies: [
+      "Next.js",
+      "TypeScript",
+      "AppWrite",
+      "Plaid",
+      "Dwolla",
+      "Zod",
+      "Chart.js",
+      "Shad.cn",
+    ],
   },
   {
     title: "AI Placement Management System",
     image: project1,
-    description: "Designed and implemented an AI-driven placement management system to streamline the recruitment process. Developed backend algorithms using PyTorch for efficient data processing and predictive analytics. Also chat support for students to connect with mentors and mental health support.",
-    technologies: ["React.js", "MongoDB", "Nest.js", "Tailwind", "PDFKit", "PyTorch", "OAuth2/JWT"],
+    description:
+      "Designed and implemented an AI-driven placement management system to streamline the recruitment process. Developed backend algorithms using PyTorch for efficient data processing and predictive analytics. Also chat support for students to connect with mentors and mental health support.",
+    technologies: [
+      "React.js",
+      "MongoDB",
+      "Nest.js",
+      "Tailwind",
+      "PDFKit",
+      "PyTorch",
+      "OAuth2/JWT",
+    ],
   },
   {
     title: "Robot Bionic Hand",
     image: project2,
-    description: "Developed a fully functional robotic hand capable of mimicking human hand movements. Programmed using Python and integrated with ROS for seamless control. Designed and 3D printed components for precise functionality and robustness.",
-    technologies: ["Raspberry Pi", "C/C++", "Python", "ROS2", "OpenCV", "3D Printing"],
+    description:
+      "Developed a fully functional robotic hand capable of mimicking human hand movements. Programmed using Python and integrated with ROS for seamless control. Designed and 3D printed components for precise functionality and robustness.",
+    technologies: [
+      "Raspberry Pi",
+      "C/C++",
+      "Python",
+      "ROS2",
+      "OpenCV",
+      "3D Printing",
+    ],
   },
   {
     title: "Placement Query, Cyber-Security, Mental Health Chatbot",
     image: project3,
-    description: "Created multiple chatbots to address specific needs: placement queries, cybersecurity, and mental health. Leveraged NLP techniques and libraries such as TensorFlow, NLTK, and SpaCy to enable accurate and contextual responses. Integrated chatbots into various platforms, ensuring accessibility and ease of use.",
+    description:
+      "Created multiple chatbots to address specific needs: placement queries, cybersecurity, and mental health. Leveraged NLP techniques and libraries such as TensorFlow, NLTK, and SpaCy to enable accurate and contextual responses. Integrated chatbots into various platforms, ensuring accessibility and ease of use.",
     technologies: ["HTML", "CSS", "React", "Vite", "Tailwind", "Bootstrap"],
   },
   {
     title: "VR Firefighting & Flood Training Simulator",
     image: project4,
-    description: "Built a VR simulator for training firefighters for rescuing people in multiple fire & flood scenarios. Used Unreal Engine 5 to create realistic and interactive training environments. Integrated VR technology for an immersive training experience, and C++ for simulation logic.",
+    description:
+      "Built a VR simulator for training firefighters for rescuing people in multiple fire & flood scenarios. Used Unreal Engine 5 to create realistic and interactive training environments. Integrated VR technology for an immersive training experience, and C++ for simulation logic.",
     technologies: ["Unreal Engine 5", "Blender", "Blueprint/C++"],
   },
   {
     title: "Portfolio Web",
     image: project5,
-    description: "A platform to showcase my professional journey, with features to share my experiences, projects, and ways to contact me.",
+    description:
+      "A platform to showcase my professional journey, with features to share my experiences, projects, and ways to contact me.",
     technologies: ["React.js", "Tailwind", "Framer Motion"],
   },
 ];
