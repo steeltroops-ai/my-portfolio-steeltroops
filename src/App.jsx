@@ -1,21 +1,49 @@
+// Phase 2: Add Hero component (most likely culprit)
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+
 const App = () => {
+  console.log("App rendering - Phase 2: Adding Hero");
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#000000",
-        color: "#ffffff",
-        padding: "20px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <h1 style={{ color: "#00ffff" }}>Portfolio Test - React Working!</h1>
-      <h2>Environment: {import.meta.env.MODE}</h2>
-      <h2>Production: {String(import.meta.env.PROD)}</h2>
-      <h2>Timestamp: {new Date().toISOString()}</h2>
-      <p style={{ color: "#00ff00", fontWeight: "bold", marginTop: "20px" }}>
-        If you see this, React and Vite are working correctly!
-      </p>
+    <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
+      {/* Basic background without complex gradients */}
+      <div className="fixed top-0 w-full h-full -z-10 bg-black"></div>
+
+      <div className="container px-8 mx-auto">
+        <Navbar />
+
+        {/* Test status indicator */}
+        <div
+          style={{
+            padding: "20px",
+            backgroundColor: "#111",
+            margin: "20px 0",
+            borderRadius: "8px",
+          }}
+        >
+          <h2 style={{ color: "#00ffff" }}>Phase 2: Hero Component Test</h2>
+          <p style={{ color: "#00ff00" }}>✅ Navbar loaded</p>
+          <p style={{ color: "#ffff00" }}>🔄 Testing Hero component...</p>
+          <p>Environment: {import.meta.env.MODE}</p>
+        </div>
+
+        <Hero />
+
+        {/* Post-Hero status */}
+        <div
+          style={{
+            padding: "20px",
+            backgroundColor: "#111",
+            margin: "20px 0",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={{ color: "#00ff00" }}>
+            ✅ Hero component loaded successfully!
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
