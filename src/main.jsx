@@ -8,22 +8,38 @@ import FloatingChatButton from "./components/FloatingChatButton";
 import ErrorBoundary from "./components/ErrorBoundary";
 // Error tracking utility - available for future use
 // import errorTracker from "./utils/errorTracking";
-import "./utils/seedBlogPosts.js"; // Import seeding utility for console access
+// import "./utils/seedBlogPosts.js"; // Temporarily disabled for debugging
 import "./index.css";
 
-// Register Service Worker for caching
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        console.log("SW registered: ", registration);
-      })
-      .catch((registrationError) => {
-        console.log("SW registration failed: ", registrationError);
-      });
+// Add global error handlers for debugging
+window.addEventListener("error", (event) => {
+  console.error("Global error:", event.error);
+  console.error("Error details:", {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    stack: event.error?.stack,
   });
-}
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled promise rejection:", event.reason);
+});
+
+// Register Service Worker for caching (disabled for debugging)
+// if ("serviceWorker" in navigator && import.meta.env.PROD) {
+//   window.addEventListener("load", () => {
+//     navigator.serviceWorker
+//       .register("/sw.js")
+//       .then((registration) => {
+//         console.log("SW registered: ", registration);
+//       })
+//       .catch((registrationError) => {
+//         console.log("SW registration failed: ", registrationError);
+//       });
+//   });
+// }
 
 // Create a client
 const queryClient = new QueryClient({
