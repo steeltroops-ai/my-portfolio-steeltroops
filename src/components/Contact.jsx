@@ -113,7 +113,7 @@ const Contact = () => {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Two-Column Layout */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="grid grid-cols-2 gap-8 lg:grid-cols-2">
             {/* Left Column - Name, Email, Subject */}
             <motion.div
               whileInView={{ opacity: 1, x: 0 }}
