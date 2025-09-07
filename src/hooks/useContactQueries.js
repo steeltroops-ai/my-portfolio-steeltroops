@@ -1,12 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ContactService } from '../services/ContactService';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ContactService } from "../services/ContactService";
 
 // Query keys for consistent caching
 export const contactQueryKeys = {
-  all: ['contact'],
-  messages: () => [...contactQueryKeys.all, 'messages'],
-  messagesList: (options) => [...contactQueryKeys.messages(), 'list', options],
-  stats: () => [...contactQueryKeys.all, 'stats'],
+  all: ["contact"],
+  messages: () => [...contactQueryKeys.all, "messages"],
+  messagesList: (options) => [...contactQueryKeys.messages(), "list", options],
+  stats: () => [...contactQueryKeys.all, "stats"],
 };
 
 /**
@@ -17,14 +17,14 @@ export const useSubmitContactMessage = () => {
 
   return useMutation({
     mutationFn: ContactService.submitMessage,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       // Invalidate contact messages list for admin
       queryClient.invalidateQueries({ queryKey: contactQueryKeys.messages() });
       queryClient.invalidateQueries({ queryKey: contactQueryKeys.stats() });
     },
     onError: (error) => {
-      console.error('Failed to submit contact message:', error);
-    }
+      console.error("Failed to submit contact message:", error);
+    },
   });
 };
 
@@ -38,7 +38,8 @@ export const useContactMessages = (options = {}) => {
     staleTime: 2 * 60 * 1000, // 2 minutes
     cacheTime: 5 * 60 * 1000, // 5 minutes
     enabled: true, // Only enable if user is admin (you might want to add auth check here)
-    select: (data) => data.success ? data : { data: [], count: 0, error: data.error }
+    select: (data) =>
+      data.success ? data : { data: [], count: 0, error: data.error },
   });
 };
 
@@ -49,34 +50,34 @@ export const useUpdateMessageStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ messageId, status, adminNotes }) => 
+    mutationFn: ({ messageId, status, adminNotes }) =>
       ContactService.updateMessageStatus(messageId, status, adminNotes),
     onSuccess: (data, variables) => {
       // Invalidate and refetch messages list
       queryClient.invalidateQueries({ queryKey: contactQueryKeys.messages() });
       queryClient.invalidateQueries({ queryKey: contactQueryKeys.stats() });
-      
+
       // Update specific message in cache if possible
       const { messageId, status } = variables;
       queryClient.setQueriesData(
         { queryKey: contactQueryKeys.messages() },
         (oldData) => {
           if (!oldData?.data) return oldData;
-          
+
           return {
             ...oldData,
-            data: oldData.data.map(message => 
-              message.id === messageId 
+            data: oldData.data.map((message) =>
+              message.id === messageId
                 ? { ...message, status, updated_at: new Date().toISOString() }
                 : message
-            )
+            ),
           };
         }
       );
     },
     onError: (error) => {
-      console.error('Failed to update message status:', error);
-    }
+      console.error("Failed to update message status:", error);
+    },
   });
 };
 
@@ -92,24 +93,24 @@ export const useDeleteContactMessage = () => {
       // Invalidate and refetch messages list
       queryClient.invalidateQueries({ queryKey: contactQueryKeys.messages() });
       queryClient.invalidateQueries({ queryKey: contactQueryKeys.stats() });
-      
+
       // Remove message from cache
       queryClient.setQueriesData(
         { queryKey: contactQueryKeys.messages() },
         (oldData) => {
           if (!oldData?.data) return oldData;
-          
+
           return {
             ...oldData,
-            data: oldData.data.filter(message => message.id !== messageId),
-            count: oldData.count - 1
+            data: oldData.data.filter((message) => message.id !== messageId),
+            count: oldData.count - 1,
           };
         }
       );
     },
     onError: (error) => {
-      console.error('Failed to delete contact message:', error);
-    }
+      console.error("Failed to delete contact message:", error);
+    },
   });
 };
 
@@ -123,7 +124,7 @@ export const useContactMessageStats = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
     enabled: true, // Only enable if user is admin
-    select: (data) => data.success ? data.data : {}
+    select: (data) => (data.success ? data.data : {}),
   });
 };
 
@@ -132,6 +133,6 @@ export const useContactMessageStats = () => {
  */
 export const useContactFormValidation = () => {
   return {
-    validateForm: ContactService.validateContactForm
+    validateForm: ContactService.validateContactForm,
   };
 };

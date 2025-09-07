@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import PropTypes from "prop-types";
 import { sanitizeImageUrl } from "../utils/sanitize";
 
 const OptimizedImage = ({
@@ -26,7 +27,9 @@ const OptimizedImage = ({
   const sanitizedSrc = sanitizeImageUrl(src);
 
   useEffect(() => {
-    if (!lazy || !imgRef.current) return;
+    if (!lazy || !imgRef.current) {
+      return;
+    }
 
     // Intersection Observer for lazy loading
     observerRef.current = new IntersectionObserver(
@@ -52,6 +55,32 @@ const OptimizedImage = ({
       }
     };
   }, [lazy]);
+
+  // Generate optimized sources early to use in preload effect
+  const avifSrc = generateAVIFSrc(sanitizedSrc);
+  const webpSrc = generateWebPSrc(sanitizedSrc);
+  const srcSet = generateSrcSet(sanitizedSrc);
+
+  // Add preload link for priority images - MUST be before any conditional returns
+  useEffect(() => {
+    if (!priority || !sanitizedSrc || typeof document === "undefined") {
+      return;
+    }
+
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = avifSrc || webpSrc || sanitizedSrc;
+    if (avifSrc) link.type = "image/avif";
+    else if (webpSrc) link.type = "image/webp";
+    document.head.appendChild(link);
+
+    return () => {
+      if (document.head.contains(link)) {
+        document.head.removeChild(link);
+      }
+    };
+  }, [priority, sanitizedSrc, avifSrc, webpSrc]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -137,29 +166,6 @@ const OptimizedImage = ({
     );
   }
 
-  const avifSrc = generateAVIFSrc(sanitizedSrc);
-  const webpSrc = generateWebPSrc(sanitizedSrc);
-  const srcSet = generateSrcSet(sanitizedSrc);
-
-  // Add preload link for priority images
-  useEffect(() => {
-    if (priority && sanitizedSrc && typeof document !== "undefined") {
-      const link = document.createElement("link");
-      link.rel = "preload";
-      link.as = "image";
-      link.href = avifSrc || webpSrc || sanitizedSrc;
-      if (avifSrc) link.type = "image/avif";
-      else if (webpSrc) link.type = "image/webp";
-      document.head.appendChild(link);
-
-      return () => {
-        if (document.head.contains(link)) {
-          document.head.removeChild(link);
-        }
-      };
-    }
-  }, [priority, sanitizedSrc, avifSrc, webpSrc]);
-
   return (
     <div
       ref={imgRef}
@@ -215,6 +221,21 @@ const OptimizedImage = ({
   );
 };
 
+OptimizedImage.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string,
+  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  className: PropTypes.string,
+  lazy: PropTypes.bool,
+  webp: PropTypes.bool,
+  avif: PropTypes.bool,
+  placeholder: PropTypes.bool,
+  sizes: PropTypes.string,
+  quality: PropTypes.number,
+  priority: PropTypes.bool,
+};
+
 export default OptimizedImage;
 
 // Utility component for blog post images
@@ -257,3 +278,16 @@ export const ProjectImage = ({ src, alt, priority = false, ...props }) => (
     {...props}
   />
 );
+
+BlogImage.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+  caption: PropTypes.string,
+  priority: PropTypes.bool,
+};
+
+ProjectImage.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+  priority: PropTypes.bool,
+};

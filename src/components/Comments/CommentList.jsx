@@ -1,25 +1,25 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { FiMessageSquare, FiUser, FiClock } from 'react-icons/fi';
-import { useComments } from '../../hooks/useCommentQueries';
+import { motion } from "framer-motion";
+import PropTypes from "prop-types";
+import { FiMessageSquare, FiUser, FiClock } from "react-icons/fi";
+import { useComments } from "../../hooks/useCommentQueries";
 
 const CommentItem = ({ comment, index }) => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getInitials = (name) => {
     return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -78,6 +78,21 @@ const CommentItem = ({ comment, index }) => {
   );
 };
 
+CommentItem.propTypes = {
+  comment: PropTypes.shape({
+    id: PropTypes.string,
+    content: PropTypes.string,
+    author_name: PropTypes.string,
+    author_email: PropTypes.string,
+    created_at: PropTypes.string,
+    user_profiles: PropTypes.shape({
+      avatar_url: PropTypes.string,
+      display_name: PropTypes.string,
+    }),
+  }).isRequired,
+  index: PropTypes.number.isRequired,
+};
+
 const CommentList = ({ postId }) => {
   const { data: commentsData, isLoading, error } = useComments(postId);
 
@@ -106,7 +121,9 @@ const CommentList = ({ postId }) => {
   if (error) {
     return (
       <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-4 text-center">
-        <p className="text-red-300 text-sm">Failed to load comments. Please try again later.</p>
+        <p className="text-red-300 text-sm">
+          Failed to load comments. Please try again later.
+        </p>
       </div>
     );
   }
@@ -136,11 +153,7 @@ const CommentList = ({ postId }) => {
 
       <div className="space-y-4">
         {comments.map((comment, index) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            index={index}
-          />
+          <CommentItem key={comment.id} comment={comment} index={index} />
         ))}
       </div>
 
@@ -154,6 +167,10 @@ const CommentList = ({ postId }) => {
       )}
     </div>
   );
+};
+
+CommentList.propTypes = {
+  postId: PropTypes.string.isRequired,
 };
 
 export default CommentList;

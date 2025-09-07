@@ -1,8 +1,8 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Helmet } from "react-helmet-async";
+import PropTypes from "prop-types";
 
-const SEOHead = ({ 
-  title = "Mayank's Portfolio", 
+const SEOHead = ({
+  title = "Mayank's Portfolio",
   description = "Full-stack developer specializing in modern web technologies",
   image = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop",
   url = window.location.href,
@@ -11,7 +11,7 @@ const SEOHead = ({
   publishedTime,
   modifiedTime,
   tags = [],
-  canonical
+  canonical,
 }) => {
   const siteTitle = "Mayank's Portfolio";
   const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
@@ -32,7 +32,7 @@ const SEOHead = ({
       <meta property="og:url" content={url} />
       <meta property="og:type" content={type} />
       <meta property="og:site_name" content={siteTitle} />
-      
+
       {/* Twitter Card Meta Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
@@ -42,7 +42,7 @@ const SEOHead = ({
       <meta name="twitter:site" content="@steeltroops_ai" />
 
       {/* Article specific meta tags */}
-      {type === 'article' && (
+      {type === "article" && (
         <>
           <meta property="article:author" content={author} />
           {publishedTime && (
@@ -51,7 +51,7 @@ const SEOHead = ({
           {modifiedTime && (
             <meta property="article:modified_time" content={modifiedTime} />
           )}
-          {tags.map(tag => (
+          {tags.map((tag) => (
             <meta key={tag} property="article:tag" content={tag} />
           ))}
         </>
@@ -62,56 +62,69 @@ const SEOHead = ({
       <meta name="googlebot" content="index, follow" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta httpEquiv="Content-Language" content="en" />
-      
+
       {/* Structured Data for Blog Posts */}
-      {type === 'article' && (
+      {type === "article" && (
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "BlogPosting",
-            "headline": title,
-            "description": description,
-            "image": image,
-            "author": {
+            headline: title,
+            description: description,
+            image: image,
+            author: {
               "@type": "Person",
-              "name": author,
-              "url": "https://github.com/steeltroops-ai"
+              name: author,
+              url: "https://github.com/steeltroops-ai",
             },
-            "publisher": {
+            publisher: {
               "@type": "Person",
-              "name": author,
-              "url": "https://github.com/steeltroops-ai"
+              name: author,
+              url: "https://github.com/steeltroops-ai",
             },
-            "datePublished": publishedTime,
-            "dateModified": modifiedTime || publishedTime,
-            "mainEntityOfPage": {
+            datePublished: publishedTime,
+            dateModified: modifiedTime || publishedTime,
+            mainEntityOfPage: {
               "@type": "WebPage",
-              "@id": url
+              "@id": url,
             },
-            "keywords": tags.join(", ")
+            keywords: tags.join(", "),
           })}
         </script>
       )}
 
       {/* Structured Data for Website */}
-      {type === 'website' && (
+      {type === "website" && (
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "name": siteTitle,
-            "description": description,
-            "url": url,
-            "author": {
+            name: siteTitle,
+            description: description,
+            url: url,
+            author: {
               "@type": "Person",
-              "name": author,
-              "url": "https://github.com/steeltroops-ai"
-            }
+              name: author,
+              url: "https://github.com/steeltroops-ai",
+            },
           })}
         </script>
       )}
     </Helmet>
   );
+};
+
+SEOHead.propTypes = {
+  title: PropTypes.string,
+  description: PropTypes.string,
+  image: PropTypes.string,
+  url: PropTypes.string,
+  type: PropTypes.string,
+  author: PropTypes.string,
+  publishedTime: PropTypes.string,
+  modifiedTime: PropTypes.string,
+  tags: PropTypes.arrayOf(PropTypes.string),
+  canonical: PropTypes.string,
 };
 
 export default SEOHead;

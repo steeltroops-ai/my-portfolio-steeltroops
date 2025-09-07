@@ -1,5 +1,6 @@
-import React from 'react';
-import errorTracker from '../utils/errorTracking';
+import React from "react";
+import PropTypes from "prop-types";
+import errorTracker from "../utils/errorTracking";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -7,25 +8,25 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(_error) {
     // Update state so the next render will show the fallback UI
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
     // Log the error to console or error reporting service
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
 
     // Track the error
     errorTracker.captureException(error, {
       errorBoundary: true,
       componentStack: errorInfo.componentStack,
-      errorInfo: errorInfo
+      errorInfo: errorInfo,
     });
 
     this.setState({
       error: error,
-      errorInfo: errorInfo
+      errorInfo: errorInfo,
     });
   }
 
@@ -37,16 +38,29 @@ class ErrorBoundary extends React.Component {
           <div className="text-center max-w-md mx-auto p-8">
             <div className="mb-6">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-900/20 flex items-center justify-center">
-                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="w-8 h-8 text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Oops! Something went wrong</h1>
+              <h1 className="text-2xl font-bold text-white mb-2">
+                Oops! Something went wrong
+              </h1>
               <p className="text-neutral-400 mb-6">
-                We encountered an unexpected error. Please try refreshing the page or go back to the homepage.
+                We encountered an unexpected error. Please try refreshing the
+                page or go back to the homepage.
               </p>
             </div>
-            
+
             <div className="space-y-4">
               <button
                 onClick={() => window.location.reload()}
@@ -54,9 +68,9 @@ class ErrorBoundary extends React.Component {
               >
                 Refresh Page
               </button>
-              
+
               <button
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = "/")}
                 className="w-full px-6 py-3 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
               >
                 Go to Homepage
@@ -64,7 +78,7 @@ class ErrorBoundary extends React.Component {
             </div>
 
             {/* Show error details in development */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env.NODE_ENV === "development" && this.state.error && (
               <details className="mt-8 text-left">
                 <summary className="cursor-pointer text-sm text-neutral-500 hover:text-neutral-400">
                   Show Error Details
@@ -87,5 +101,9 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default ErrorBoundary;

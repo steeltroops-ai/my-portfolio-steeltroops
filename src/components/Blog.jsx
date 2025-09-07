@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { AiOutlineLink } from "react-icons/ai";
@@ -12,29 +12,24 @@ const Blog = () => {
   const [posts, setPosts] = useState([]);
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPosts, setTotalPosts] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const postsPerPage = 6;
 
-  useEffect(() => {
-    loadPosts();
-    loadTags();
-  }, [currentPage, searchTerm, selectedTags]);
-
-  const loadPosts = async () => {
+  const loadPosts = useCallback(async () => {
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const { data, count, error } = await getPublishedPosts({
         limit: postsPerPage,
         offset: (currentPage - 1) * postsPerPage,
         search: searchTerm,
-        tags: selectedTags
+        tags: selectedTags,
       });
 
       if (error) throw error;
@@ -42,12 +37,17 @@ const Blog = () => {
       setPosts(data || []);
       setTotalPosts(count || 0);
     } catch (err) {
-      console.error('Error loading posts:', err);
-      setError('Failed to load blog posts');
+      console.error("Error loading posts:", err);
+      setError("Failed to load blog posts");
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, selectedTags, postsPerPage]);
+
+  useEffect(() => {
+    loadPosts();
+    loadTags();
+  }, [loadPosts]);
 
   const loadTags = async () => {
     try {
@@ -55,15 +55,13 @@ const Blog = () => {
       if (error) throw error;
       setTags(data || []);
     } catch (err) {
-      console.error('Error loading tags:', err);
+      console.error("Error loading tags:", err);
     }
   };
 
   const handleTagToggle = (tag) => {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
     setCurrentPage(1);
   };
@@ -95,7 +93,10 @@ const Blog = () => {
         {/* Navigation */}
         <nav className="flex justify-between items-center py-6 mb-8">
           <div className="flex flex-shrink-0 items-center">
-            <Link to="/" className="text-2xl font-bold text-white hover:text-cyan-300 transition-colors">
+            <Link
+              to="/"
+              className="text-2xl font-bold text-white hover:text-cyan-300 transition-colors"
+            >
               ← Back to Portfolio
             </Link>
           </div>
@@ -158,7 +159,8 @@ const Blog = () => {
             transition={{ delay: 0.1 }}
             className="text-xl text-neutral-400 max-w-2xl mx-auto"
           >
-            Thoughts, tutorials, and insights about web development, technology, and more.
+            Thoughts, tutorials, and insights about web development, technology,
+            and more.
           </motion.p>
         </div>
 
@@ -203,19 +205,21 @@ const Blog = () => {
           {showFilters && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               className="mt-4 p-4 bg-neutral-900/50 rounded-lg border border-neutral-800"
             >
-              <h3 className="text-sm font-medium text-neutral-300 mb-3">Filter by tags:</h3>
+              <h3 className="text-sm font-medium text-neutral-300 mb-3">
+                Filter by tags:
+              </h3>
               <div className="flex flex-wrap gap-2">
-                {tags.map(tag => (
+                {tags.map((tag) => (
                   <button
                     key={tag}
                     onClick={() => handleTagToggle(tag)}
                     className={`px-3 py-1 text-sm rounded-full transition-colors ${
                       selectedTags.includes(tag)
-                        ? 'bg-cyan-600 text-white'
-                        : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                        ? "bg-cyan-600 text-white"
+                        : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
                     }`}
                   >
                     {tag}
@@ -270,7 +274,7 @@ const Blog = () => {
                 {(searchTerm || selectedTags.length > 0) && (
                   <button
                     onClick={() => {
-                      setSearchTerm('');
+                      setSearchTerm("");
                       setSelectedTags([]);
                       setCurrentPage(1);
                     }}
@@ -291,7 +295,10 @@ const Blog = () => {
                       transition={{ delay: 0.1 * index }}
                       className="relative p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 border-neutral-800 bg-neutral-900/30 hover:shadow-lg hover:shadow-cyan-500/20 hover:-translate-y-1 group"
                     >
-                      <Link to={`/blog/${post.slug}`} className="block space-y-4">
+                      <Link
+                        to={`/blog/${post.slug}`}
+                        className="block space-y-4"
+                      >
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent rounded-xl transition-colors to-cyan-950/10 group-hover:to-cyan-950/20"></div>
 
                         {/* Featured Image */}
@@ -318,7 +325,7 @@ const Blog = () => {
                           {/* Tags */}
                           {post.tags && post.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2">
-                              {post.tags.slice(0, 3).map(tag => (
+                              {post.tags.slice(0, 3).map((tag) => (
                                 <span
                                   key={tag}
                                   className="text-xs px-2 py-1 bg-neutral-800 text-neutral-400 rounded-full"
@@ -338,11 +345,14 @@ const Blog = () => {
                           <div className="flex items-center justify-between text-sm text-neutral-500 group-hover:text-neutral-400 transition-colors">
                             <div className="flex items-center">
                               <span className="inline-block mr-2 w-2 h-2 bg-cyan-500 rounded-full"></span>
-                              {new Date(post.created_at).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              })}
+                              {new Date(post.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                }
+                              )}
                             </div>
                             {post.read_time && (
                               <span>{post.read_time} min read</span>
@@ -358,7 +368,9 @@ const Blog = () => {
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center space-x-2">
                     <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
                       className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
                     >
@@ -366,23 +378,27 @@ const Blog = () => {
                     </button>
 
                     <div className="flex space-x-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-2 rounded transition-colors ${
-                            currentPage === page
-                              ? 'bg-cyan-600 text-white'
-                              : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-2 rounded transition-colors ${
+                              currentPage === page
+                                ? "bg-cyan-600 text-white"
+                                : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      )}
                     </div>
 
                     <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
                       disabled={currentPage === totalPages}
                       className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
                     >

@@ -1,12 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CommentService } from '../services/CommentService';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { CommentService } from "../services/CommentService";
 
 // Query keys for consistent caching
 export const commentQueryKeys = {
-  all: ['comments'],
-  byPost: (postId) => [...commentQueryKeys.all, 'post', postId],
-  pending: () => [...commentQueryKeys.all, 'pending'],
-  stats: () => [...commentQueryKeys.all, 'stats'],
+  all: ["comments"],
+  byPost: (postId) => [...commentQueryKeys.all, "post", postId],
+  pending: () => [...commentQueryKeys.all, "pending"],
+  stats: () => [...commentQueryKeys.all, "stats"],
 };
 
 /**
@@ -19,7 +19,8 @@ export const useComments = (postId, options = {}) => {
     staleTime: 2 * 60 * 1000, // 2 minutes
     cacheTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!postId,
-    select: (data) => data.success ? data : { data: [], count: 0, error: data.error }
+    select: (data) =>
+      data.success ? data : { data: [], count: 0, error: data.error },
   });
 };
 
@@ -33,23 +34,23 @@ export const useAddComment = () => {
     mutationFn: CommentService.addComment,
     onSuccess: (data, variables) => {
       // Invalidate comments for the specific post
-      queryClient.invalidateQueries({ 
-        queryKey: commentQueryKeys.byPost(variables.post_id) 
+      queryClient.invalidateQueries({
+        queryKey: commentQueryKeys.byPost(variables.post_id),
       });
-      
+
       // Invalidate pending comments for admin
-      queryClient.invalidateQueries({ 
-        queryKey: commentQueryKeys.pending() 
+      queryClient.invalidateQueries({
+        queryKey: commentQueryKeys.pending(),
       });
-      
+
       // Invalidate comment stats
-      queryClient.invalidateQueries({ 
-        queryKey: commentQueryKeys.stats() 
+      queryClient.invalidateQueries({
+        queryKey: commentQueryKeys.stats(),
       });
     },
     onError: (error) => {
-      console.error('Failed to add comment:', error);
-    }
+      console.error("Failed to add comment:", error);
+    },
   });
 };
 
@@ -60,15 +61,15 @@ export const useUpdateCommentStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ commentId, status }) => 
+    mutationFn: ({ commentId, status }) =>
       CommentService.updateCommentStatus(commentId, status),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       // Invalidate all comment-related queries
       queryClient.invalidateQueries({ queryKey: commentQueryKeys.all });
     },
     onError: (error) => {
-      console.error('Failed to update comment status:', error);
-    }
+      console.error("Failed to update comment status:", error);
+    },
   });
 };
 
@@ -85,8 +86,8 @@ export const useDeleteComment = () => {
       queryClient.invalidateQueries({ queryKey: commentQueryKeys.all });
     },
     onError: (error) => {
-      console.error('Failed to delete comment:', error);
-    }
+      console.error("Failed to delete comment:", error);
+    },
   });
 };
 
@@ -100,7 +101,8 @@ export const usePendingComments = (options = {}) => {
     staleTime: 1 * 60 * 1000, // 1 minute
     cacheTime: 3 * 60 * 1000, // 3 minutes
     enabled: true, // Only enable if user is admin
-    select: (data) => data.success ? data : { data: [], count: 0, error: data.error }
+    select: (data) =>
+      data.success ? data : { data: [], count: 0, error: data.error },
   });
 };
 
@@ -114,7 +116,7 @@ export const useCommentStats = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
     enabled: true, // Only enable if user is admin
-    select: (data) => data.success ? data.data : {}
+    select: (data) => (data.success ? data.data : {}),
   });
 };
 
@@ -123,6 +125,6 @@ export const useCommentStats = () => {
  */
 export const useCommentValidation = () => {
   return {
-    validateComment: CommentService.validateComment
+    validateComment: CommentService.validateComment,
   };
 };

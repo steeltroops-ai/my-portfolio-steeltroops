@@ -1,0 +1,41 @@
+# Bun Configuration File
+# Optimized settings for React portfolio project with Vite
+
+[install]
+# Performance optimizations
+cache = true
+registry = "https://registry.npmjs.org/"
+# Faster installs
+frozen-lockfile = false
+production = false
+# Optimize for development
+dev = true
+
+[install.scopes]
+# Use faster registries for common packages
+"@types" = "https://registry.npmjs.org/"
+"@vitejs" = "https://registry.npmjs.org/"
+
+[run]
+# Bun runtime optimizations
+bun = true
+# Enable hot reload optimizations
+hot = true
+
+[test]
+# Test runner optimizations
+preload = ["./src/test/setup.js"]
+coverage = true
+
+[build]
+# Build optimizations for Vite integration
+target = "browser"
+format = "esm"
+minify = true
+sourcemap = false
+
+# Development server optimizations
+[dev]
+port = 5173
+host = "localhost"
+hot = true

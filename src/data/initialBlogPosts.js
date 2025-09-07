@@ -969,6 +969,7 @@ function OptimizedImage({
   const imgRef = useRef();
 
   // Generate WebP source if supported
+  // eslint-disable-next-line no-useless-escape
   const webpSrc = webp && src ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : null;
 
   useEffect(() => {

@@ -1,5 +1,10 @@
-import { supabase, generateSlug, estimateReadingTime, extractExcerpt } from '../lib/supabase'
-import { sanitizeBlogContent, sanitizeUserInput, sanitizeMarkdown } from '../utils/sanitize'
+import {
+  supabase,
+  generateSlug,
+  estimateReadingTime,
+  extractExcerpt,
+} from "../lib/supabase";
+import { sanitizeBlogContent, sanitizeUserInput } from "../utils/sanitize";
 
 // Blog Post CRUD Operations
 
@@ -26,41 +31,46 @@ export const getPublishedPosts = async (options = {}) => {
       tags,
       featured_image_url,
       author
-    `
+    `;
 
     let query = supabase
-      .from('blog_posts')
-      .select(selectFields, { count: 'exact' })
-      .eq('published', true)
-      .order('created_at', { ascending: false })
+      .from("blog_posts")
+      .select(selectFields, { count: "exact" })
+      .eq("published", true)
+      .order("created_at", { ascending: false });
 
     // Apply filters
     if (options.tags && options.tags.length > 0) {
-      query = query.overlaps('tags', options.tags)
+      query = query.overlaps("tags", options.tags);
     }
 
     if (options.search) {
-      query = query.or(`title.ilike.%${options.search}%,excerpt.ilike.%${options.search}%,content.ilike.%${options.search}%`)
+      query = query.or(
+        `title.ilike.%${options.search}%,excerpt.ilike.%${options.search}%,content.ilike.%${options.search}%`
+      );
     }
 
     // Apply pagination
     if (options.limit) {
-      query = query.limit(options.limit)
+      query = query.limit(options.limit);
     }
     if (options.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+      query = query.range(
+        options.offset,
+        options.offset + (options.limit || 10) - 1
+      );
     }
 
-    const { data, error, count } = await query
+    const { data, error, count } = await query;
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { data, count, error: null }
+    return { data, count, error: null };
   } catch (error) {
-    console.error('Error fetching published posts:', error)
-    return { data: [], count: 0, error }
+    console.error("Error fetching published posts:", error);
+    return { data: [], count: 0, error };
   }
-}
+};
 
 /**
  * Get all blog posts (for admin)
@@ -82,31 +92,34 @@ export const getAllPosts = async (options = {}) => {
       tags,
       featured_image_url,
       author
-    `
+    `;
 
     let query = supabase
-      .from('blog_posts')
-      .select(selectFields, { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .from("blog_posts")
+      .select(selectFields, { count: "exact" })
+      .order("created_at", { ascending: false });
 
     // Apply pagination
     if (options.limit) {
-      query = query.limit(options.limit)
+      query = query.limit(options.limit);
     }
     if (options.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+      query = query.range(
+        options.offset,
+        options.offset + (options.limit || 10) - 1
+      );
     }
 
-    const { data, error, count } = await query
+    const { data, error, count } = await query;
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { data, count, error: null }
+    return { data, count, error: null };
   } catch (error) {
-    console.error('Error fetching all posts:', error)
-    return { data: [], count: 0, error }
+    console.error("Error fetching all posts:", error);
+    return { data: [], count: 0, error };
   }
-}
+};
 
 /**
  * Get a single blog post by slug
@@ -117,25 +130,25 @@ export const getAllPosts = async (options = {}) => {
 export const getPostBySlug = async (slug, includeUnpublished = false) => {
   try {
     let query = supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .single()
+      .from("blog_posts")
+      .select("*")
+      .eq("slug", slug)
+      .single();
 
     if (!includeUnpublished) {
-      query = query.eq('published', true)
+      query = query.eq("published", true);
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Error fetching post by slug:', error)
-    return { data: null, error }
+    console.error("Error fetching post by slug:", error);
+    return { data: null, error };
   }
-}
+};
 
 /**
  * Get a single blog post by ID
@@ -145,19 +158,19 @@ export const getPostBySlug = async (slug, includeUnpublished = false) => {
 export const getPostById = async (id) => {
   try {
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('id', id)
-      .single()
+      .from("blog_posts")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Error fetching post by ID:', error)
-    return { data: null, error }
+    console.error("Error fetching post by ID:", error);
+    return { data: null, error };
   }
-}
+};
 
 /**
  * Create a new blog post
@@ -172,39 +185,44 @@ export const createPost = async (postData) => {
       title: sanitizeUserInput(postData.title),
       content: sanitizeBlogContent(postData.content),
       excerpt: postData.excerpt ? sanitizeUserInput(postData.excerpt) : null,
-      meta_description: postData.meta_description ? sanitizeUserInput(postData.meta_description) : null
-    }
+      meta_description: postData.meta_description
+        ? sanitizeUserInput(postData.meta_description)
+        : null,
+    };
 
     // Generate slug if not provided
-    const slug = sanitizedData.slug || generateSlug(sanitizedData.title)
+    const slug = sanitizedData.slug || generateSlug(sanitizedData.title);
 
     // Generate excerpt if not provided
-    const excerpt = sanitizedData.excerpt || extractExcerpt(sanitizedData.content)
+    const excerpt =
+      sanitizedData.excerpt || extractExcerpt(sanitizedData.content);
 
     // Estimate reading time
-    const readTime = estimateReadingTime(sanitizedData.content)
+    const readTime = estimateReadingTime(sanitizedData.content);
 
     const { data, error } = await supabase
-      .from('blog_posts')
-      .insert([{
-        ...sanitizedData,
-        slug,
-        excerpt,
-        read_time: readTime,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
+      .from("blog_posts")
+      .insert([
+        {
+          ...sanitizedData,
+          slug,
+          excerpt,
+          read_time: readTime,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ])
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Error creating post:', error)
-    return { data: null, error }
+    console.error("Error creating post:", error);
+    return { data: null, error };
   }
-}
+};
 
 /**
  * Update a blog post
@@ -218,44 +236,50 @@ export const updatePost = async (id, postData) => {
     const sanitizedData = {
       ...postData,
       title: postData.title ? sanitizeUserInput(postData.title) : undefined,
-      content: postData.content ? sanitizeBlogContent(postData.content) : undefined,
-      excerpt: postData.excerpt ? sanitizeUserInput(postData.excerpt) : undefined,
-      meta_description: postData.meta_description ? sanitizeUserInput(postData.meta_description) : undefined
-    }
+      content: postData.content
+        ? sanitizeBlogContent(postData.content)
+        : undefined,
+      excerpt: postData.excerpt
+        ? sanitizeUserInput(postData.excerpt)
+        : undefined,
+      meta_description: postData.meta_description
+        ? sanitizeUserInput(postData.meta_description)
+        : undefined,
+    };
 
     // Update slug if title changed
     if (sanitizedData.title && !sanitizedData.slug) {
-      sanitizedData.slug = generateSlug(sanitizedData.title)
+      sanitizedData.slug = generateSlug(sanitizedData.title);
     }
 
     // Update excerpt if content changed
     if (sanitizedData.content && !sanitizedData.excerpt) {
-      sanitizedData.excerpt = extractExcerpt(sanitizedData.content)
+      sanitizedData.excerpt = extractExcerpt(sanitizedData.content);
     }
 
     // Update reading time if content changed
     if (sanitizedData.content) {
-      sanitizedData.read_time = estimateReadingTime(sanitizedData.content)
+      sanitizedData.read_time = estimateReadingTime(sanitizedData.content);
     }
 
     const { data, error } = await supabase
-      .from('blog_posts')
+      .from("blog_posts")
       .update({
         ...sanitizedData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Error updating post:', error)
-    return { data: null, error }
+    console.error("Error updating post:", error);
+    return { data: null, error };
   }
-}
+};
 
 /**
  * Delete a blog post
@@ -264,19 +288,16 @@ export const updatePost = async (id, postData) => {
  */
 export const deletePost = async (id) => {
   try {
-    const { error } = await supabase
-      .from('blog_posts')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from("blog_posts").delete().eq("id", id);
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { success: true, error: null }
+    return { success: true, error: null };
   } catch (error) {
-    console.error('Error deleting post:', error)
-    return { success: false, error }
+    console.error("Error deleting post:", error);
+    return { success: false, error };
   }
-}
+};
 
 /**
  * Toggle post published status
@@ -287,23 +308,23 @@ export const deletePost = async (id) => {
 export const togglePostPublished = async (id, published) => {
   try {
     const { data, error } = await supabase
-      .from('blog_posts')
-      .update({ 
+      .from("blog_posts")
+      .update({
         published,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
+    if (error) throw error;
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Error toggling post published status:', error)
-    return { data: null, error }
+    console.error("Error toggling post published status:", error);
+    return { data: null, error };
   }
-}
+};
 
 /**
  * Get all unique tags from published posts
@@ -314,31 +335,31 @@ export const getAllTags = async () => {
     // Use a more efficient query to get unique tags
     // This could be optimized further with a database function
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select('tags')
-      .eq('published', true)
-      .not('tags', 'is', null)
+      .from("blog_posts")
+      .select("tags")
+      .eq("published", true)
+      .not("tags", "is", null);
 
-    if (error) throw error
+    if (error) throw error;
 
     // Extract and flatten all tags with better performance
-    const tagSet = new Set()
-    data.forEach(post => {
+    const tagSet = new Set();
+    data.forEach((post) => {
       if (post.tags && Array.isArray(post.tags)) {
-        post.tags.forEach(tag => {
+        post.tags.forEach((tag) => {
           if (tag && tag.trim()) {
-            tagSet.add(tag.trim())
+            tagSet.add(tag.trim());
           }
-        })
+        });
       }
-    })
+    });
 
     // Convert to sorted array
-    const uniqueTags = Array.from(tagSet).sort()
+    const uniqueTags = Array.from(tagSet).sort();
 
-    return { data: uniqueTags, error: null }
+    return { data: uniqueTags, error: null };
   } catch (error) {
-    console.error('Error fetching tags:', error)
-    return { data: [], error }
+    console.error("Error fetching tags:", error);
+    return { data: [], error };
   }
-}
+};

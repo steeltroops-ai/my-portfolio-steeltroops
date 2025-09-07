@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FiSend, FiUser, FiMail, FiMessageSquare, FiCheck, FiAlertCircle } from 'react-icons/fi';
-import { useAddComment, useCommentValidation } from '../../hooks/useCommentQueries';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import PropTypes from "prop-types";
+import {
+  FiSend,
+  FiUser,
+  FiMail,
+  FiMessageSquare,
+  FiCheck,
+  FiAlertCircle,
+} from "react-icons/fi";
+import {
+  useAddComment,
+  useCommentValidation,
+} from "../../hooks/useCommentQueries";
 
 const CommentForm = ({ postId, onSuccess }) => {
   const [formData, setFormData] = useState({
-    content: '',
-    author_name: '',
-    author_email: ''
+    content: "",
+    author_name: "",
+    author_email: "",
   });
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
@@ -17,23 +28,23 @@ const CommentForm = ({ postId, onSuccess }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     // Clear error for this field when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form
     const validation = validateComment(formData);
     if (!validation.isValid) {
@@ -51,8 +62,8 @@ const CommentForm = ({ postId, onSuccess }) => {
         onSuccess: (result) => {
           if (result.success) {
             setShowSuccess(true);
-            setFormData({ content: '', author_name: '', author_email: '' });
-            
+            setFormData({ content: "", author_name: "", author_email: "" });
+
             // Hide success message after 5 seconds
             setTimeout(() => {
               setShowSuccess(false);
@@ -64,8 +75,11 @@ const CommentForm = ({ postId, onSuccess }) => {
           }
         },
         onError: (error) => {
-          setErrors({ submit: error.message || 'Failed to submit comment. Please try again.' });
-        }
+          setErrors({
+            submit:
+              error.message || "Failed to submit comment. Please try again.",
+          });
+        },
       }
     );
   };
@@ -111,7 +125,10 @@ const CommentForm = ({ postId, onSuccess }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Comment Content */}
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-neutral-300 mb-2">
+          <label
+            htmlFor="content"
+            className="block text-sm font-medium text-neutral-300 mb-2"
+          >
             Comment *
           </label>
           <textarea
@@ -121,7 +138,7 @@ const CommentForm = ({ postId, onSuccess }) => {
             onChange={handleInputChange}
             rows={4}
             className={`w-full px-4 py-3 bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all resize-vertical ${
-              errors.content ? 'border-red-500' : 'border-neutral-700'
+              errors.content ? "border-red-500" : "border-neutral-700"
             }`}
             placeholder="Share your thoughts..."
             disabled={isLoading}
@@ -138,7 +155,10 @@ const CommentForm = ({ postId, onSuccess }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Name Field */}
           <div>
-            <label htmlFor="author_name" className="block text-sm font-medium text-neutral-300 mb-2">
+            <label
+              htmlFor="author_name"
+              className="block text-sm font-medium text-neutral-300 mb-2"
+            >
               <FiUser className="inline mr-2" />
               Name *
             </label>
@@ -149,7 +169,7 @@ const CommentForm = ({ postId, onSuccess }) => {
               value={formData.author_name}
               onChange={handleInputChange}
               className={`w-full px-4 py-3 bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all ${
-                errors.author_name ? 'border-red-500' : 'border-neutral-700'
+                errors.author_name ? "border-red-500" : "border-neutral-700"
               }`}
               placeholder="Your name"
               disabled={isLoading}
@@ -161,7 +181,10 @@ const CommentForm = ({ postId, onSuccess }) => {
 
           {/* Email Field */}
           <div>
-            <label htmlFor="author_email" className="block text-sm font-medium text-neutral-300 mb-2">
+            <label
+              htmlFor="author_email"
+              className="block text-sm font-medium text-neutral-300 mb-2"
+            >
               <FiMail className="inline mr-2" />
               Email *
             </label>
@@ -172,7 +195,7 @@ const CommentForm = ({ postId, onSuccess }) => {
               value={formData.author_email}
               onChange={handleInputChange}
               className={`w-full px-4 py-3 bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all ${
-                errors.author_email ? 'border-red-500' : 'border-neutral-700'
+                errors.author_email ? "border-red-500" : "border-neutral-700"
               }`}
               placeholder="your.email@example.com"
               disabled={isLoading}
@@ -192,8 +215,8 @@ const CommentForm = ({ postId, onSuccess }) => {
             whileTap={{ scale: isLoading ? 1 : 0.98 }}
             className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
               isLoading
-                ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed'
-                : 'bg-cyan-600 hover:bg-cyan-700 text-white'
+                ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                : "bg-cyan-600 hover:bg-cyan-700 text-white"
             }`}
           >
             {isLoading ? (
@@ -212,10 +235,16 @@ const CommentForm = ({ postId, onSuccess }) => {
       </form>
 
       <p className="mt-4 text-xs text-neutral-500">
-        Your email will not be published. All comments are moderated before appearing.
+        Your email will not be published. All comments are moderated before
+        appearing.
       </p>
     </motion.div>
   );
+};
+
+CommentForm.propTypes = {
+  postId: PropTypes.string.isRequired,
+  onSuccess: PropTypes.func,
 };
 
 export default CommentForm;

@@ -1,4 +1,4 @@
-import React from "react";
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
 import { usePostBySlug } from "../hooks/useBlogQueries";
@@ -6,15 +6,14 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
-import { FiArrowLeft, FiCalendar, FiClock, FiShare2 } from "react-icons/fi";
-import { FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
+import { FiArrowLeft, FiCalendar, FiClock } from "react-icons/fi";
 import Navbar from "./Navbar";
 import FloatingChatButton from "./FloatingChatButton";
 import SEOHead from "./SEOHead";
 import { InlineSocialShare } from "./SocialShare";
 import OptimizedImage, { BlogImage } from "./OptimizedImage";
 import Comments from "./Comments/Comments";
-import ReadingProgress, { BlogReadingProgress } from "./ReadingProgress";
+import { BlogReadingProgress } from "./ReadingProgress";
 // Syntax highlighting styles are handled by rehype-highlight
 
 const BlogPost = () => {
@@ -34,28 +33,29 @@ const BlogPost = () => {
     ? "Post not found"
     : "";
 
-  const sharePost = (platform) => {
-    const url = window.location.href;
-    const title = post?.title || "";
+  // Sharing functionality - currently unused but kept for future use
+  // const sharePost = (platform) => {
+  //   const url = window.location.href;
+  //   const title = post?.title || "";
 
-    const shareUrls = {
-      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-        title
-      )}&url=${encodeURIComponent(url)}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-        url
-      )}`,
-    };
+  //   const shareUrls = {
+  //     twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+  //       title
+  //     )}&url=${encodeURIComponent(url)}`,
+  //     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+  //       url
+  //     )}`,
+  //   };
 
-    if (shareUrls[platform]) {
-      window.open(shareUrls[platform], "_blank", "width=600,height=400");
-    }
-  };
+  //   if (shareUrls[platform]) {
+  //     window.open(shareUrls[platform], "_blank", "width=600,height=400");
+  //   }
+  // };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
-    // You could add a toast notification here
-  };
+  // const copyToClipboard = () => {
+  //   navigator.clipboard.writeText(window.location.href);
+  //   // You could add a toast notification here
+  // };
 
   if (loading) {
     return (

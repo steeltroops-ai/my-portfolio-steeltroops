@@ -61,9 +61,9 @@ function analyzeBundleSize() {
 
   if (!fs.existsSync(distPath)) {
     console.error(
-      `${colors.red}❌ Build directory not found. Run 'npm run build' first.${colors.reset}`
+      `${colors.red}❌ Build directory not found. Run 'bun run build' first.${colors.reset}`
     );
-    process.exit(1);
+    return false;
   }
 
   console.log(`${colors.cyan}📊 Bundle Size Analysis${colors.reset}\n`);
@@ -204,12 +204,12 @@ function analyzeBundleSize() {
     `  ${colors.green}• Enable gzip compression on your server for better performance${colors.reset}`
   );
 
-  // Exit with error code if there are errors
+  // Return status based on results
   if (errors.length > 0) {
     console.log(
       `\n${colors.red}Bundle size check failed with ${errors.length} error(s).${colors.reset}`
     );
-    process.exit(1);
+    return false;
   } else if (warnings.length > 0) {
     console.log(
       `\n${colors.yellow}Bundle size check completed with ${warnings.length} warning(s).${colors.reset}`

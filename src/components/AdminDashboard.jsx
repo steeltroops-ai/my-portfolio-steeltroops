@@ -1,36 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAllPosts, useDeletePost, useTogglePostPublished } from '../hooks/useBlogQueries';
-import { isAuthenticatedLegacy, logout } from '../services/SupabaseAuthService';
-import { FiPlus, FiEdit, FiTrash2, FiEye, FiEyeOff, FiSearch, FiCalendar } from 'react-icons/fi';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  useAllPosts,
+  useDeletePost,
+  useTogglePostPublished,
+} from "../hooks/useBlogQueries";
+import { isAuthenticatedLegacy, logout } from "../services/SupabaseAuthService";
+import {
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiEye,
+  FiEyeOff,
+  FiSearch,
+  FiCalendar,
+} from "react-icons/fi";
 
 const AdminDashboard = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, published, draft
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all"); // all, published, draft
   const navigate = useNavigate();
 
   // Use React Query hooks
-  const { data: postsData, isLoading: loading, error: queryError } = useAllPosts();
+  const {
+    data: postsData,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useAllPosts();
   const deletePostMutation = useDeletePost();
   const togglePublishedMutation = useTogglePostPublished();
 
   const posts = postsData?.posts || [];
-  const error = queryError ? 'Failed to load posts' : '';
+  const error = queryError ? "Failed to load posts" : "";
 
   useEffect(() => {
     if (!isAuthenticatedLegacy()) {
-      navigate('/admin/login');
+      navigate("/admin/login");
       return;
     }
   }, [navigate]);
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate("/admin/login");
   };
 
   const handleNewPost = () => {
-    navigate('/admin/post/new');
+    navigate("/admin/post/new");
   };
 
   const handleEditPost = (id) => {
@@ -38,33 +55,35 @@ const AdminDashboard = () => {
   };
 
   const handleDeletePost = async (id) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
+    if (window.confirm("Are you sure you want to delete this post?")) {
       try {
         await deletePostMutation.mutateAsync(id);
       } catch (err) {
-        console.error('Error deleting post:', err);
-        alert('Failed to delete post');
+        console.error("Error deleting post:", err);
+        alert("Failed to delete post");
       }
     }
   };
 
-  const handleTogglePublished = async (id, currentStatus) => {
+  const handleTogglePublished = async (id, _currentStatus) => {
     try {
       await togglePublishedMutation.mutateAsync(id);
     } catch (err) {
-      console.error('Error toggling post status:', err);
-      alert('Failed to update post status');
+      console.error("Error toggling post status:", err);
+      alert("Failed to update post status");
     }
   };
 
   // Filter posts based on search term and status
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredPosts = posts.filter((post) => {
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = filterStatus === 'all' ||
-                         (filterStatus === 'published' && post.published) ||
-                         (filterStatus === 'draft' && !post.published);
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "published" && post.published) ||
+      (filterStatus === "draft" && !post.published);
 
     return matchesSearch && matchesStatus;
   });
@@ -120,19 +139,21 @@ const AdminDashboard = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-neutral-900/50 p-4 rounded-lg border border-neutral-800">
-            <h3 className="text-sm font-medium text-neutral-400">Total Posts</h3>
+            <h3 className="text-sm font-medium text-neutral-400">
+              Total Posts
+            </h3>
             <p className="text-2xl font-bold text-white">{posts.length}</p>
           </div>
           <div className="bg-neutral-900/50 p-4 rounded-lg border border-neutral-800">
             <h3 className="text-sm font-medium text-neutral-400">Published</h3>
             <p className="text-2xl font-bold text-green-400">
-              {posts.filter(post => post.published).length}
+              {posts.filter((post) => post.published).length}
             </p>
           </div>
           <div className="bg-neutral-900/50 p-4 rounded-lg border border-neutral-800">
             <h3 className="text-sm font-medium text-neutral-400">Drafts</h3>
             <p className="text-2xl font-bold text-yellow-400">
-              {posts.filter(post => !post.published).length}
+              {posts.filter((post) => !post.published).length}
             </p>
           </div>
         </div>
@@ -149,7 +170,7 @@ const AdminDashboard = () => {
           <div className="text-center py-20">
             <p className="text-red-400 mb-4">{error}</p>
             <button
-              onClick={loadPosts}
+              onClick={() => refetch()}
               className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded transition-colors"
             >
               Try Again
@@ -163,15 +184,15 @@ const AdminDashboard = () => {
             {filteredPosts.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-neutral-400 text-lg mb-4">
-                  {searchTerm || filterStatus !== 'all'
-                    ? 'No posts match your filters.'
-                    : 'No blog posts yet.'}
+                  {searchTerm || filterStatus !== "all"
+                    ? "No posts match your filters."
+                    : "No blog posts yet."}
                 </p>
-                {(searchTerm || filterStatus !== 'all') && (
+                {(searchTerm || filterStatus !== "all") && (
                   <button
                     onClick={() => {
-                      setSearchTerm('');
-                      setFilterStatus('all');
+                      setSearchTerm("");
+                      setFilterStatus("all");
                     }}
                     className="text-cyan-400 hover:text-cyan-300"
                   >
@@ -189,21 +210,25 @@ const AdminDashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h2 className="text-xl font-semibold">{post.title}</h2>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          post.published
-                            ? 'bg-green-900/30 text-green-400 border border-green-700'
-                            : 'bg-yellow-900/30 text-yellow-400 border border-yellow-700'
-                        }`}>
-                          {post.published ? 'Published' : 'Draft'}
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            post.published
+                              ? "bg-green-900/30 text-green-400 border border-green-700"
+                              : "bg-yellow-900/30 text-yellow-400 border border-yellow-700"
+                          }`}
+                        >
+                          {post.published ? "Published" : "Draft"}
                         </span>
                       </div>
 
-                      <p className="text-neutral-400 mb-3 line-clamp-2">{post.excerpt}</p>
+                      <p className="text-neutral-400 mb-3 line-clamp-2">
+                        {post.excerpt}
+                      </p>
 
                       {/* Tags */}
                       {post.tags && post.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-3">
-                          {post.tags.slice(0, 3).map(tag => (
+                          {post.tags.slice(0, 3).map((tag) => (
                             <span
                               key={tag}
                               className="text-xs px-2 py-1 bg-neutral-800 text-neutral-400 rounded"
@@ -229,7 +254,8 @@ const AdminDashboard = () => {
                         )}
                         {post.updated_at !== post.created_at && (
                           <span className="text-neutral-600">
-                            Updated {new Date(post.updated_at).toLocaleDateString()}
+                            Updated{" "}
+                            {new Date(post.updated_at).toLocaleDateString()}
                           </span>
                         )}
                       </div>
@@ -237,16 +263,18 @@ const AdminDashboard = () => {
 
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => handleTogglePublished(post.id, post.published)}
+                        onClick={() =>
+                          handleTogglePublished(post.id, post.published)
+                        }
                         className={`flex items-center gap-1 px-3 py-2 rounded text-sm transition-colors ${
                           post.published
-                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
+                            ? "bg-yellow-600 hover:bg-yellow-700 text-white"
+                            : "bg-green-600 hover:bg-green-700 text-white"
                         }`}
-                        title={post.published ? 'Unpublish' : 'Publish'}
+                        title={post.published ? "Unpublish" : "Publish"}
                       >
                         {post.published ? <FiEyeOff /> : <FiEye />}
-                        {post.published ? 'Unpublish' : 'Publish'}
+                        {post.published ? "Unpublish" : "Publish"}
                       </button>
 
                       <button

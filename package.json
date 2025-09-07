@@ -4,17 +4,27 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
+    "dev:no-lint": "vite --host",
     "build": "vite build",
     "build:analyze": "ANALYZE=true vite build",
-    "analyze": "npm run build:analyze",
-    "bundle-size": "npm run build && node scripts/bundle-size-check.js",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "analyze": "bun run build:analyze",
+    "bundle-size": "bun run build && bun scripts/bundle-size-check.js",
+    "lint": "bunx eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "bunx --bun vitest",
+    "test:ui": "bunx --bun vitest --ui",
+    "test:run": "bunx --bun vitest run",
+    "test:coverage": "bunx --bun vitest run --coverage",
+    "add": "bun add",
+    "remove": "bun remove",
+    "update": "bun update",
+    "npm": "echo 'Redirecting to Bun...' && bun",
+    "yarn": "echo 'Redirecting to Bun...' && bun",
+    "pnpm": "echo 'Redirecting to Bun...' && bun",
+    "npm-install": "echo 'Using Bun instead of npm install'",
+    "yarn-install": "echo 'Using Bun instead of yarn install'",
+    "pnpm-install": "echo 'Using Bun instead of pnpm install'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",
@@ -45,6 +55,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^10.0.0",
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^4.6.2",
@@ -53,7 +64,7 @@
     "postcss": "^8.5.1",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^3.4.17",
-    "vite": "^4.5.5",
+    "vite": "4.4.9",
     "vitest": "^3.2.4"
   }
 }

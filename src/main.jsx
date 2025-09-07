@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy, StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -6,7 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.jsx";
 import FloatingChatButton from "./components/FloatingChatButton";
 import ErrorBoundary from "./components/ErrorBoundary";
-import errorTracker from "./utils/errorTracking";
+// Error tracking utility - available for future use
+// import errorTracker from "./utils/errorTracking";
 import "./utils/seedBlogPosts.js"; // Import seeding utility for console access
 import "./index.css";
 
@@ -57,7 +58,7 @@ const LoadingSpinner = () => (
 );
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+  <StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
@@ -85,5 +86,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </HelmetProvider>
       </QueryClientProvider>
     </ErrorBoundary>
-  </React.StrictMode>
+  </StrictMode>
 );

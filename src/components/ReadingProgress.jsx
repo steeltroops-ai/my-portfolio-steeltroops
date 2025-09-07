@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { motion, useScroll, useSpring } from "framer-motion";
 
 const ReadingProgress = ({
@@ -141,6 +142,16 @@ const ReadingProgress = ({
   );
 };
 
+ReadingProgress.propTypes = {
+  target: PropTypes.object,
+  className: PropTypes.string,
+  showPercentage: PropTypes.bool,
+  position: PropTypes.oneOf(["top", "bottom", "side"]),
+  color: PropTypes.string,
+  height: PropTypes.number,
+  zIndex: PropTypes.number,
+};
+
 export default ReadingProgress;
 
 // Utility hook for reading progress
@@ -176,7 +187,7 @@ export const BlogReadingProgress = ({
   position = "top",
   ...props
 }) => {
-  const [wordCount, setWordCount] = useState(0);
+  const [_wordCount, setWordCount] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState(0);
 
   useEffect(() => {
@@ -199,4 +210,12 @@ export const BlogReadingProgress = ({
       {...props}
     />
   );
+};
+
+BlogReadingProgress.propTypes = {
+  articleRef: PropTypes.shape({
+    current: PropTypes.object,
+  }).isRequired,
+  showStats: PropTypes.bool,
+  position: PropTypes.oneOf(["top", "bottom", "side"]),
 };

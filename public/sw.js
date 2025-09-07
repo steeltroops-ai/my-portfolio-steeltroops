@@ -1,13 +1,12 @@
-// Service Worker for Portfolio Caching
-const CACHE_NAME = 'portfolio-v1.0.0';
-const STATIC_CACHE_NAME = 'portfolio-static-v1.0.0';
-const DYNAMIC_CACHE_NAME = 'portfolio-dynamic-v1.0.0';
+// Service Worker for Portfolio Caching - Optimized for Bun + Vite
+const CACHE_VERSION = "1.1.0";
+const STATIC_CACHE_NAME = `portfolio-static-v${CACHE_VERSION}`;
+const DYNAMIC_CACHE_NAME = `portfolio-dynamic-v${CACHE_VERSION}`;
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/favicon.ico',
+  "/",
+  "/profiletop.png",
   // Add other static assets as needed
 ];
 
@@ -20,11 +19,7 @@ const DYNAMIC_CACHE_PATTERNS = [
 ];
 
 // Assets to never cache
-const NEVER_CACHE_PATTERNS = [
-  /\/api\//,
-  /\/admin\//,
-  /chrome-extension:/,
-];
+const NEVER_CACHE_PATTERNS = [/\/api\//, /\/admin\//, /chrome-extension:/];
 
 // Maximum cache size (in items)
 const MAX_CACHE_SIZE = 100;
@@ -33,73 +28,96 @@ const MAX_CACHE_SIZE = 100;
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Install event - cache static assets
-self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...');
-  
+self.addEventListener("install", (event) => {
+  console.log("Service Worker: Installing...");
+
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('Service Worker: Static assets cached');
+    caches
+      .open(STATIC_CACHE_NAME)
+      .then(async (cache) => {
+        console.log("Service Worker: Caching static assets");
+
+        // Cache assets individually to handle missing files gracefully
+        const cachePromises = STATIC_ASSETS.map(async (asset) => {
+          try {
+            await cache.add(asset);
+            console.log(`Service Worker: Cached ${asset}`);
+          } catch (error) {
+            console.warn(
+              `Service Worker: Failed to cache ${asset}:`,
+              error.message
+            );
+          }
+        });
+
+        await Promise.allSettled(cachePromises);
+        console.log("Service Worker: Static assets caching completed");
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('Service Worker: Failed to cache static assets', error);
+        console.error("Service Worker: Failed to cache static assets", error);
       })
   );
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...');
-  
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker: Activating...");
+
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE_NAME && 
-                cacheName !== DYNAMIC_CACHE_NAME &&
-                cacheName.startsWith('portfolio-')) {
-              console.log('Service Worker: Deleting old cache', cacheName);
+            if (
+              cacheName !== STATIC_CACHE_NAME &&
+              cacheName !== DYNAMIC_CACHE_NAME &&
+              cacheName.startsWith("portfolio-")
+            ) {
+              console.log("Service Worker: Deleting old cache", cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('Service Worker: Activated');
+        console.log("Service Worker: Activated");
         return self.clients.claim();
       })
   );
 });
 
 // Fetch event - serve from cache or network
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const { request } = event;
-  const url = new URL(request.url);
+  const requestUrl = new URL(request.url);
 
   // Skip non-GET requests
-  if (request.method !== 'GET') {
+  if (request.method !== "GET") {
     return;
   }
 
   // Skip requests that should never be cached
-  if (NEVER_CACHE_PATTERNS.some(pattern => pattern.test(request.url))) {
+  if (NEVER_CACHE_PATTERNS.some((pattern) => pattern.test(request.url))) {
     return;
   }
 
   // Handle different types of requests
-  if (request.url.includes('/api/') || request.url.includes('supabase.co')) {
+  if (
+    requestUrl.pathname.includes("/api/") ||
+    requestUrl.hostname.includes("supabase.co")
+  ) {
     // API requests - network first, cache as fallback
     event.respondWith(networkFirstStrategy(request));
-  } else if (STATIC_ASSETS.some(asset => request.url.endsWith(asset))) {
+  } else if (
+    STATIC_ASSETS.some((asset) => requestUrl.pathname.endsWith(asset))
+  ) {
     // Static assets - cache first
     event.respondWith(cacheFirstStrategy(request));
-  } else if (DYNAMIC_CACHE_PATTERNS.some(pattern => pattern.test(request.url))) {
+  } else if (
+    DYNAMIC_CACHE_PATTERNS.some((pattern) => pattern.test(request.url))
+  ) {
     // Dynamic assets - stale while revalidate
     event.respondWith(staleWhileRevalidateStrategy(request));
   } else {
@@ -123,8 +141,8 @@ async function cacheFirstStrategy(request) {
     }
     return networkResponse;
   } catch (error) {
-    console.error('Cache-first strategy failed:', error);
-    return new Response('Offline', { status: 503 });
+    console.error("Cache-first strategy failed:", error);
+    return new Response("Offline", { status: 503 });
   }
 }
 
@@ -132,31 +150,31 @@ async function cacheFirstStrategy(request) {
 async function networkFirstStrategy(request) {
   try {
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse.ok) {
       // Cache successful responses
       const cache = await caches.open(DYNAMIC_CACHE_NAME);
       cache.put(request, networkResponse.clone());
-      
+
       // Clean up cache if it gets too large
       cleanupCache(DYNAMIC_CACHE_NAME);
     }
-    
+
     return networkResponse;
   } catch (error) {
-    console.log('Network failed, trying cache:', error);
-    
+    console.log("Network failed, trying cache:", error);
+
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       return cachedResponse;
     }
-    
+
     // Return offline page for navigation requests
-    if (request.mode === 'navigate') {
-      return caches.match('/') || new Response('Offline', { status: 503 });
+    if (request.mode === "navigate") {
+      return caches.match("/") || new Response("Offline", { status: 503 });
     }
-    
-    return new Response('Offline', { status: 503 });
+
+    return new Response("Offline", { status: 503 });
   }
 }
 
@@ -164,19 +182,21 @@ async function networkFirstStrategy(request) {
 async function staleWhileRevalidateStrategy(request) {
   const cache = await caches.open(DYNAMIC_CACHE_NAME);
   const cachedResponse = await cache.match(request);
-  
+
   // Fetch from network in background
-  const networkResponsePromise = fetch(request).then((networkResponse) => {
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-      cleanupCache(DYNAMIC_CACHE_NAME);
-    }
-    return networkResponse;
-  }).catch(() => {
-    // Network failed, but we might have cached version
-    return cachedResponse;
-  });
-  
+  const networkResponsePromise = fetch(request)
+    .then((networkResponse) => {
+      if (networkResponse.ok) {
+        cache.put(request, networkResponse.clone());
+        cleanupCache(DYNAMIC_CACHE_NAME);
+      }
+      return networkResponse;
+    })
+    .catch(() => {
+      // Network failed, but we might have cached version
+      return cachedResponse;
+    });
+
   // Return cached version immediately if available, otherwise wait for network
   return cachedResponse || networkResponsePromise;
 }
@@ -185,12 +205,14 @@ async function staleWhileRevalidateStrategy(request) {
 async function cleanupCache(cacheName) {
   const cache = await caches.open(cacheName);
   const keys = await cache.keys();
-  
+
   if (keys.length > MAX_CACHE_SIZE) {
     // Remove oldest entries
     const keysToDelete = keys.slice(0, keys.length - MAX_CACHE_SIZE);
-    await Promise.all(keysToDelete.map(key => cache.delete(key)));
-    console.log(`Service Worker: Cleaned up ${keysToDelete.length} cache entries`);
+    await Promise.all(keysToDelete.map((key) => cache.delete(key)));
+    console.log(
+      `Service Worker: Cleaned up ${keysToDelete.length} cache entries`
+    );
   }
 }
 
@@ -198,22 +220,25 @@ async function cleanupCache(cacheName) {
 async function cleanupExpiredCache() {
   const cacheNames = await caches.keys();
   const now = Date.now();
-  
+
   for (const cacheName of cacheNames) {
-    if (!cacheName.startsWith('portfolio-')) continue;
-    
+    if (!cacheName.startsWith("portfolio-")) continue;
+
     const cache = await caches.open(cacheName);
     const keys = await cache.keys();
-    
+
     for (const request of keys) {
       const response = await cache.match(request);
       if (response) {
-        const dateHeader = response.headers.get('date');
+        const dateHeader = response.headers.get("date");
         if (dateHeader) {
           const responseDate = new Date(dateHeader).getTime();
           if (now - responseDate > CACHE_DURATION) {
             await cache.delete(request);
-            console.log('Service Worker: Removed expired cache entry', request.url);
+            console.log(
+              "Service Worker: Removed expired cache entry",
+              request.url
+            );
           }
         }
       }
@@ -225,12 +250,12 @@ async function cleanupExpiredCache() {
 setInterval(cleanupExpiredCache, 60 * 60 * 1000); // Every hour
 
 // Handle messages from main thread
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
-  
-  if (event.data && event.data.type === 'CACHE_URLS') {
+
+  if (event.data && event.data.type === "CACHE_URLS") {
     const urls = event.data.urls;
     caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
       cache.addAll(urls);
@@ -239,9 +264,9 @@ self.addEventListener('message', (event) => {
 });
 
 // Background sync for offline actions (if supported)
-if ('sync' in self.registration) {
-  self.addEventListener('sync', (event) => {
-    if (event.tag === 'background-sync') {
+if ("sync" in self.registration) {
+  self.addEventListener("sync", (event) => {
+    if (event.tag === "background-sync") {
       event.waitUntil(handleBackgroundSync());
     }
   });
@@ -249,5 +274,5 @@ if ('sync' in self.registration) {
 
 async function handleBackgroundSync() {
   // Handle any offline actions that need to be synced
-  console.log('Service Worker: Background sync triggered');
+  console.log("Service Worker: Background sync triggered");
 }

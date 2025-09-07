@@ -1,36 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { usePostById, useCreatePost, useUpdatePost } from '../hooks/useBlogQueries';
-import { isAuthenticatedLegacy } from '../services/SupabaseAuthService';
-import MarkdownEditor from './MarkdownEditor';
-import ImageUpload from './ImageUpload';
-import { generateSlug } from '../lib/supabase';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  usePostById,
+  useCreatePost,
+  useUpdatePost,
+} from "../hooks/useBlogQueries";
+import { isAuthenticatedLegacy } from "../services/SupabaseAuthService";
+import MarkdownEditor from "./MarkdownEditor";
+import ImageUpload from "./ImageUpload";
+import { generateSlug } from "../lib/supabase";
 
 const BlogEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState({
-    title: '',
-    slug: '',
-    content: '',
-    excerpt: '',
+    title: "",
+    slug: "",
+    content: "",
+    excerpt: "",
     tags: [],
-    featured_image_url: '',
-    meta_description: '',
-    published: false
+    featured_image_url: "",
+    meta_description: "",
+    published: false,
   });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [tagInput, setTagInput] = useState('');
+  const [error, setError] = useState("");
+  const [tagInput, setTagInput] = useState("");
 
   // Use React Query hooks
-  const { data: existingPost, isLoading: loading, error: queryError } = usePostById(id);
+  const {
+    data: existingPost,
+    isLoading: loading,
+    error: queryError,
+  } = usePostById(id);
   const createPostMutation = useCreatePost();
   const updatePostMutation = useUpdatePost();
 
   useEffect(() => {
     if (!isAuthenticatedLegacy()) {
-      navigate('/admin/login');
+      navigate("/admin/login");
       return;
     }
   }, [navigate]);
@@ -38,28 +46,31 @@ const BlogEditor = () => {
   useEffect(() => {
     if (existingPost) {
       setPost(existingPost);
-      setTagInput(existingPost.tags ? existingPost.tags.join(', ') : '');
+      setTagInput(existingPost.tags ? existingPost.tags.join(", ") : "");
     }
   }, [existingPost]);
 
   useEffect(() => {
     if (queryError) {
-      setError('Failed to load post');
+      setError("Failed to load post");
     }
   }, [queryError]);
 
   const handleSubmit = async (e, shouldPublish = false) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setError("");
 
     try {
       // Prepare post data
       const postData = {
         ...post,
         published: shouldPublish,
-        tags: tagInput.split(',').map(tag => tag.trim()).filter(tag => tag),
-        slug: post.slug || generateSlug(post.title)
+        tags: tagInput
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag),
+        slug: post.slug || generateSlug(post.title),
       };
 
       if (id) {
@@ -68,26 +79,26 @@ const BlogEditor = () => {
         await createPostMutation.mutateAsync(postData);
       }
 
-      navigate('/admin/dashboard');
+      navigate("/admin/dashboard");
     } catch (err) {
-      console.error('Error saving post:', err);
-      setError(err.message || 'Failed to save post');
+      console.error("Error saving post:", err);
+      setError(err.message || "Failed to save post");
     } finally {
       setSaving(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setPost(prev => ({
+    setPost((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleImageUploaded = (imageData) => {
-    setPost(prev => ({
+    setPost((prev) => ({
       ...prev,
-      featured_image_url: imageData.url
+      featured_image_url: imageData.url,
     }));
   };
 
@@ -101,7 +112,7 @@ const BlogEditor = () => {
   const generateSlugFromTitle = () => {
     if (post.title) {
       const slug = generateSlug(post.title);
-      setPost(prev => ({ ...prev, slug }));
+      setPost((prev) => ({ ...prev, slug }));
     }
   };
 
@@ -125,10 +136,10 @@ const BlogEditor = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">
-              {id ? 'Edit Post' : 'Create New Post'}
+              {id ? "Edit Post" : "Create New Post"}
             </h1>
             <button
-              onClick={() => navigate('/admin/dashboard')}
+              onClick={() => navigate("/admin/dashboard")}
               className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded transition-colors"
             >
               Back to Dashboard
@@ -144,11 +155,13 @@ const BlogEditor = () => {
             {/* Title and Slug */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Title *</label>
+                <label className="block text-sm font-medium mb-2">
+                  Title *
+                </label>
                 <input
                   type="text"
                   value={post.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
                   className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500"
                   placeholder="Enter post title..."
                   required
@@ -169,7 +182,7 @@ const BlogEditor = () => {
                 <input
                   type="text"
                   value={post.slug}
-                  onChange={(e) => handleInputChange('slug', e.target.value)}
+                  onChange={(e) => handleInputChange("slug", e.target.value)}
                   className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500"
                   placeholder="post-url-slug"
                 />
@@ -181,7 +194,7 @@ const BlogEditor = () => {
               <label className="block text-sm font-medium mb-2">Excerpt</label>
               <textarea
                 value={post.excerpt}
-                onChange={(e) => handleInputChange('excerpt', e.target.value)}
+                onChange={(e) => handleInputChange("excerpt", e.target.value)}
                 className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500"
                 rows="3"
                 placeholder="Brief description of the post..."
@@ -193,7 +206,9 @@ const BlogEditor = () => {
 
             {/* Featured Image Upload */}
             <div>
-              <label className="block text-sm font-medium mb-2">Featured Image</label>
+              <label className="block text-sm font-medium mb-2">
+                Featured Image
+              </label>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <ImageUpload
@@ -205,7 +220,9 @@ const BlogEditor = () => {
                   <input
                     type="text"
                     value={post.featured_image_url}
-                    onChange={(e) => handleInputChange('featured_image_url', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("featured_image_url", e.target.value)
+                    }
                     className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500"
                     placeholder="Or paste image URL..."
                   />
@@ -224,10 +241,12 @@ const BlogEditor = () => {
 
             {/* Content Editor */}
             <div>
-              <label className="block text-sm font-medium mb-2">Content *</label>
+              <label className="block text-sm font-medium mb-2">
+                Content *
+              </label>
               <MarkdownEditor
                 value={post.content}
-                onChange={(content) => handleInputChange('content', content)}
+                onChange={(content) => handleInputChange("content", content)}
                 height="500px"
               />
             </div>
@@ -243,7 +262,13 @@ const BlogEditor = () => {
                 placeholder="Enter tags separated by commas (e.g., react, javascript, web-development)"
               />
               <div className="flex flex-wrap gap-2 mt-2">
-                {['react', 'javascript', 'web-development', 'tutorial', 'guide'].map(tag => (
+                {[
+                  "react",
+                  "javascript",
+                  "web-development",
+                  "tutorial",
+                  "guide",
+                ].map((tag) => (
                   <button
                     key={tag}
                     type="button"
@@ -258,10 +283,14 @@ const BlogEditor = () => {
 
             {/* Meta Description */}
             <div>
-              <label className="block text-sm font-medium mb-2">Meta Description (SEO)</label>
+              <label className="block text-sm font-medium mb-2">
+                Meta Description (SEO)
+              </label>
               <textarea
                 value={post.meta_description}
-                onChange={(e) => handleInputChange('meta_description', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("meta_description", e.target.value)
+                }
                 className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-cyan-500"
                 rows="2"
                 maxLength="160"
@@ -280,7 +309,7 @@ const BlogEditor = () => {
                 disabled={saving}
                 className="px-6 py-3 bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
               >
-                {saving ? 'Saving...' : 'Save Draft'}
+                {saving ? "Saving..." : "Save Draft"}
               </button>
 
               <button
@@ -289,12 +318,16 @@ const BlogEditor = () => {
                 disabled={saving}
                 className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
               >
-                {saving ? 'Publishing...' : (id ? 'Update & Publish' : 'Publish Post')}
+                {saving
+                  ? "Publishing..."
+                  : id
+                  ? "Update & Publish"
+                  : "Publish Post"}
               </button>
 
               <button
                 type="button"
-                onClick={() => navigate('/admin/dashboard')}
+                onClick={() => navigate("/admin/dashboard")}
                 className="px-6 py-3 bg-red-700 hover:bg-red-600 rounded transition-colors"
               >
                 Cancel

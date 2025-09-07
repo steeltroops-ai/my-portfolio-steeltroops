@@ -1,12 +1,12 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import CommentForm from './CommentForm';
-import CommentList from './CommentList';
+import { motion } from "framer-motion";
+import PropTypes from "prop-types";
+import CommentForm from "./CommentForm";
+import CommentList from "./CommentList";
 
 const Comments = ({ postId, postTitle }) => {
   const handleCommentSuccess = (result) => {
     // Optional: Show toast notification or other success handling
-    console.log('Comment submitted successfully:', result);
+    console.log("Comment submitted successfully:", result);
   };
 
   return (
@@ -18,24 +18,24 @@ const Comments = ({ postId, postTitle }) => {
     >
       {/* Comments Section Header */}
       <div className="border-t border-neutral-800 pt-8">
-        <h3 className="text-2xl font-bold text-neutral-200 mb-2">
-          Discussion
-        </h3>
+        <h3 className="text-2xl font-bold text-neutral-200 mb-2">Discussion</h3>
         <p className="text-neutral-400 text-sm">
-          Share your thoughts about "{postTitle}"
+          Share your thoughts about &ldquo;{postTitle}&rdquo;
         </p>
       </div>
 
       {/* Comment Form */}
-      <CommentForm 
-        postId={postId} 
-        onSuccess={handleCommentSuccess}
-      />
+      <CommentForm postId={postId} onSuccess={handleCommentSuccess} />
 
       {/* Comments List */}
       <CommentList postId={postId} />
     </motion.section>
   );
+};
+
+Comments.propTypes = {
+  postId: PropTypes.string.isRequired,
+  postTitle: PropTypes.string.isRequired,
 };
 
 export default Comments;

@@ -1,108 +1,107 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { visualizer } from "rollup-plugin-visualizer";
+import { resolve } from "path";
 
 export default defineConfig({
   plugins: [
-    react(),
-    // Critical CSS will be handled by a custom plugin
-    {
-      name: "critical-css",
-      generateBundle(options, bundle) {
-        // Extract critical CSS during build
-        const cssFiles = Object.keys(bundle).filter((fileName) =>
-          fileName.endsWith(".css")
-        );
-
-        cssFiles.forEach((fileName) => {
-          const cssAsset = bundle[fileName];
-          if (
-            cssAsset.type === "asset" &&
-            typeof cssAsset.source === "string"
-          ) {
-            // Identify critical CSS patterns (above-the-fold styles)
-            const criticalPatterns = [
-              // Layout and typography
-              /\.container[^{]*{[^}]*}/g,
-              /\.max-w-[^{]*{[^}]*}/g,
-              /\.mx-auto[^{]*{[^}]*}/g,
-              /\.px-[^{]*{[^}]*}/g,
-              /\.py-[^{]*{[^}]*}/g,
-              // Hero section styles
-              /\.hero[^{]*{[^}]*}/g,
-              /\.text-[^{]*{[^}]*}/g,
-              /\.font-[^{]*{[^}]*}/g,
-              // Navigation styles
-              /\.nav[^{]*{[^}]*}/g,
-              /\.fixed[^{]*{[^}]*}/g,
-              /\.top-[^{]*{[^}]*}/g,
-              /\.z-[^{]*{[^}]*}/g,
-              // Background and colors
-              /\.bg-[^{]*{[^}]*}/g,
-              /\.text-neutral[^{]*{[^}]*}/g,
-              /\.text-cyan[^{]*{[^}]*}/g,
-            ];
-
-            let criticalCSS = "";
-            criticalPatterns.forEach((pattern) => {
-              const matches = cssAsset.source.match(pattern);
-              if (matches) {
-                criticalCSS += matches.join("\n");
-              }
-            });
-
-            // Create a separate critical CSS file
-            if (criticalCSS) {
-              this.emitFile({
-                type: "asset",
-                fileName: "critical.css",
-                source: criticalCSS,
-              });
-            }
-          }
-        });
-      },
-    },
-    // Bundle analyzer for production builds
-    process.env.ANALYZE &&
-      visualizer({
-        filename: "dist/bundle-analysis.html",
-        open: true,
-        gzipSize: true,
-        brotliSize: true,
-        template: "treemap", // 'treemap', 'sunburst', 'network'
-      }),
-  ].filter(Boolean),
+    react({
+      // Use automatic JSX runtime (no need to import React)
+      jsxRuntime: "automatic",
+    }),
+  ],
+  // Bun compatibility fixes
+  define: {
+    global: "globalThis",
+  },
   resolve: {
     alias: {
-      "@": "/src",
+      "@": resolve(__dirname, "./src"),
+      "@/components": resolve(__dirname, "./src/components"),
+      "@/services": resolve(__dirname, "./src/services"),
+      "@/utils": resolve(__dirname, "./src/utils"),
+      "@/hooks": resolve(__dirname, "./src/hooks"),
+      "@/lib": resolve(__dirname, "./src/lib"),
+      "@/data": resolve(__dirname, "./src/data"),
+      "@/constants": resolve(__dirname, "./src/constants"),
     },
   },
+  // Optimized for Bun development server
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: false,
+    open: false, // Don't auto-open browser
+    cors: true,
+    hmr: {
+      overlay: true,
+      // Disable WebSocket for Bun compatibility
+      clientPort: 5173,
+    },
+    // Faster file watching
+    watch: {
+      usePolling: false,
+      interval: 100,
+    },
+  },
+  // Vitest configuration
   test: {
     globals: true,
     environment: "jsdom",
     setupFiles: "./src/test/setup.js",
+    css: true,
+    reporters: ["verbose"],
   },
+  // Optimized build configuration
   build: {
+    target: "es2020",
+    minify: "esbuild",
+    sourcemap: process.env.NODE_ENV === "development" ? "inline" : false,
     rollupOptions: {
       output: {
         manualChunks: {
+          // Core React libraries
           vendor: ["react", "react-dom"],
+          // Routing
           router: ["react-router-dom"],
+          // State management and queries
           query: ["@tanstack/react-query"],
+          // Backend services
           supabase: ["@supabase/supabase-js"],
+          // Markdown processing (largest chunk)
           markdown: [
             "react-markdown",
             "remark-gfm",
             "rehype-highlight",
             "rehype-raw",
+            "highlight.js",
+            "prismjs",
           ],
-          editor: ["react-quill"],
+          // Rich text editor
+          editor: ["react-quill", "quill"],
+          // Animations
           motion: ["framer-motion"],
+          // Icons
           icons: ["react-icons"],
+          // Utilities
+          utils: ["dompurify", "prop-types"],
         },
+        // Optimize chunk file names
+        chunkFileNames: "assets/[name]-[hash].js",
+        entryFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash].[ext]",
       },
     },
     chunkSizeWarningLimit: 1000,
+    // Enable compression
+    reportCompressedSize: true,
+  },
+  // Performance optimizations
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@tanstack/react-query",
+    ],
   },
 });
