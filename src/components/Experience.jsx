@@ -3,43 +3,46 @@ import { motion } from "framer-motion";
 
 const Experience = () => {
   return (
-    <div id="experience" className="border-b border-neutral-800 py-24 scroll-mt-20">
+    <div id="experience" className="pb-4 border-b border-neutral-800 scroll-mt-20">
       <motion.h2
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
-        transition={{ duration: 1.5 }}
-        className="mb-20 text-center text-4xl font-light tracking-tight"
+        transition={{ duration: 1.2 }}
+        className="my-12 lg:my-20 text-3xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center"
       >
-        Experience
+        My <span className="text-neutral-500">Experience</span>
       </motion.h2>
-      <div className="max-w-4xl mx-auto space-y-16">
+      <div>
         {EXPERIENCES.map((experience, index) => (
-          <motion.div
+          <div
             key={index}
-            whileInView={{ opacity: 1, y: 0 }}
-            initial={{ opacity: 0, y: 50 }}
-            transition={{ duration: 0.8, delay: index * 0.1 }}
-            className="flex flex-col lg:flex-row gap-8 lg:gap-24 group justify-center"
+            className="flex flex-wrap mb-8 lg:justify-center"
           >
-            <div className="lg:w-40 flex-shrink-0 lg:text-right">
-              <p className="text-sm font-mono text-neutral-500 group-hover:text-purple-400 transition-colors">
+            <motion.div
+              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: -100 }}
+              transition={{ duration: 1 }}
+              className="w-full lg:w-1/4"
+            >
+              <p className="mb-6 text-sm font-mono text-neutral-500">
                 {experience.year}
               </p>
-            </div>
-            <div className="flex-1 space-y-3 max-w-xl">
-              <div>
-                <h3 className="text-xl font-semibold text-neutral-100 group-hover:text-white transition-colors">
-                  {experience.role}
-                </h3>
-                <p className="text-base text-purple-400 mt-1">{experience.company}</p>
-              </div>
-              <div className="text-neutral-400 leading-relaxed space-y-2">
+            </motion.div>
+            <motion.div
+              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: 100 }}
+              transition={{ duration: 1 }}
+              className="w-full max-w-xl lg:w-3/4"
+            >
+              <h6 className="mb-2 font-semibold text-neutral-100">{experience.role}</h6>
+              <p className="mb-4 text-purple-400">{experience.company}</p>
+              <div className="mb-4 text-justify text-neutral-200 font-light space-y-2">
                 {experience.description.split('\n').map((line, i) => (
                   line.trim() && <p key={i}>{line}</p>
                 ))}
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         ))}
       </div>
     </div>

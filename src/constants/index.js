@@ -47,23 +47,23 @@ export const PROJECTS = [
   {
     title: "Neza Digital Marketplace",
     image: project1,
-    url: "", // Add your project URL here
+    url: "",
     description:
       "Developed a digital service marketplace connecting households and businesses with local service providers. Implemented multi-user architecture, secure authentication, real-time service listing, and provider management. Integrated payment workflows via Razorpay, role-based access control, and responsive design, ensuring seamless transactions and optimal user experience.",
     technologies: ["Next.js", "TypeScript", "Node.js", "Razorpay", "Authentication"],
   },
   {
-    title: "Finance Management App",
+    title: "MDC Dataset Citation Classification",
     image: project2,
-    url: "", // Add your project URL here
+    url: "",
     description:
-      "Built a finance management platform enabling secure multi-bank linking, real-time fund tracking, and seamless transfers. Implemented server-side rendering (SSR) authentication, responsive dashboards, and categorized spending insights for a smooth, dynamic user experience.",
-    technologies: ["Next.js", "TypeScript", "Plaid", "Dwolla", "Appwrite"],
+      "Automated classification of dataset citations in scientific literature using NLP and ensemble ML with SciBERT and classical models. Classifies references as primary, secondary, or missing with detailed performance metrics and comprehensive evaluation framework.",
+    technologies: ["Python", "SciBERT", "Ensemble Methods", "NLP"],
   },
   {
     title: "AI-Powered Drug Research Platform",
     image: project3,
-    url: "", // Add your project URL here
+    url: "",
     description:
       "Developed an AI-driven platform for molecule generation and 2D protein folding, with real-time visualization for researchers. Enabled group collaboration, role-based access control, and secure authentication via NextAuth, backed by MongoDB based data storage and real-time messaging.",
     technologies: ["Next.js", "TypeScript", "MongoDB", "Nvidia NeMo", "RDKit"],
@@ -71,26 +71,74 @@ export const PROJECTS = [
   {
     title: "NeuraLens Neurological Assessment",
     image: project4,
-    url: "", // Add your project URL here
+    url: "",
     description:
       "Built a multimodal neurological assessment platform integrating speech analysis, retinal imaging, motor evaluation, and cognitive testing into a unified dashboard. Implemented real-time data analysis, secure data management, and responsive visualization for clinical use.",
     technologies: ["Next.js", "TypeScript", "Python", "ML Frameworks"],
   },
   {
-    title: "Hiregeist Job Platform",
+    title: "Transformer Model Implementation",
     image: project5,
-    url: "", // Add your project URL here
+    url: "",
     description:
-      "Architected modern job placement platform designed to transform how students discover opportunities and companies find talent. Implemented intelligent matching algorithms and comprehensive user management system with real-time communication features.",
-    technologies: ["Next.js 15", "React 19", "TypeScript"],
+      "Built the 'Attention is All You Need' transformer architecture from scratch, including self-attention, positional encodings, and beam search for sequence-to-sequence modeling. Created reproducible training pipelines with configuration management and attention map visualizations to improve interpretability of transformer layers.",
+    technologies: ["Python", "PyTorch", "Transformers", "NLP"],
+  },
+  {
+    title: "Finance Management App",
+    image: project1,
+    url: "",
+    description:
+      "Built a finance management platform enabling secure multi-bank linking, real-time fund tracking, and seamless transfers. Implemented server-side rendering (SSR) authentication, responsive dashboards, and categorized spending insights for a smooth, dynamic user experience.",
+    technologies: ["Next.js", "TypeScript", "Plaid", "Dwolla", "Appwrite"],
+  },
+  {
+    title: "Robot Bionic Arm",
+    image: project2,
+    url: "",
+    description:
+      "Developed a lightweight robotic arm with custom PID controllers and inverse kinematics for precise motion; integrated real-time ROS2 nodes for sensor fusion, adaptive actuation, and closed-loop feedback. Designed and 3D-printed modular mechanical components optimized for joint torque, response latency, and high precision manipulation tasks.",
+    technologies: ["ROS2", "C++", "Python", "PID Control", "3D Printing"],
+  },
+  {
+    title: "Niryo LLM Robotic Arm Integration",
+    image: project3,
+    url: "",
+    description:
+      "Integrated Niryo Ned2 robotic arm with computer vision and Large Language Model capabilities for intelligent object manipulation and task execution. Developed natural language interface allowing users to command robotic operations through conversational AI with real time task interpretation.",
+    technologies: ["Python", "ROS2", "Computer Vision", "LLM"],
+  },
+  {
+    title: "VR Firefighting & Flood Training Simulator",
+    image: project4,
+    url: "",
+    description:
+      "Built a fully interactive physics-based VR simulator in UE5 for firefighter training in multi-hazard flood/fire scenarios, including dynamic hazard propagation and environment response. Implemented immersive VR interaction systems in C++ for real-time collision detection, hazard-triggered events, and scenario-based rescue simulations.",
+    technologies: ["Unreal Engine 5", "C++", "Physics Simulation", "VR"],
+  },
+  {
+    title: "Maze-Bot ROS2 Navigation Platform",
+    image: project5,
+    url: "",
+    description:
+      "Developed comprehensive ROS2-based autonomous navigation platform featuring advanced algorithms, SLAM integration, and professional-grade testing framework for robotics research. Implemented sophisticated path planning algorithms including A*, RRT, and dynamic window approach for optimal navigation in complex environments.",
+    technologies: ["ROS2", "C++", "SLAM", "Path Planning"],
   },
   {
     title: "House Price Prediction Model with MLOps",
     image: project1,
-    url: "", // Add your project URL here
+    url: "",
     description:
       "Developed an end-to-end ML pipeline for house price prediction, including data ingestion, preprocessing, feature engineering, and model training with log transformations, scaling, and one-hot encoding. Implemented multimodal model evaluation using RMSE, R², cross-validation, and set up workflow monitoring to track pipeline performance and ensure reproducibility.",
     technologies: ["Python", "Scikit-learn", "ZenML", "MLflow"],
+  },
+  {
+    title: "Hiregeist Job Platform",
+    image: project2,
+    url: "",
+    description:
+      "Architected modern job placement platform designed to transform how students discover opportunities and companies find talent. Implemented intelligent matching algorithms and comprehensive user management system with real-time communication features.",
+    technologies: ["Next.js 15", "React 19", "TypeScript"],
   },
 ];
 

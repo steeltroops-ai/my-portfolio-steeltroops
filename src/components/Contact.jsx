@@ -104,38 +104,36 @@ const Contact = () => {
   };
 
   return (
-    <div id="contact" className="pb-4 border-b border-neutral-900 scroll-mt-20">
-      {/* Section Header - matching other components */}
+    <div id="contact" className="pb-8 lg:pb-12 border-b border-neutral-800 scroll-mt-20">
+      {/* Section Header - Responsive & Sleek */}
       <motion.h2
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
         transition={{ duration: 1.2 }}
-        className="my-12 lg:my-20 text-3xl lg:text-4xl text-center"
+        className="my-10 sm:my-12 lg:my-20 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center px-4"
       >
-        Get In <span className="text-neutral-500">Touch</span>
+        Let's <span className="text-neutral-500">Connect</span>
       </motion.h2>
 
-      {/* Two-Column Contact Form */}
+      {/* Responsive Contact Form Container */}
       <motion.div
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: 50 }}
         transition={{ duration: 1 }}
-        className="max-w-5xl mx-auto mb-8"
+        className="max-w-3xl mx-auto mb-8 px-4 sm:px-6 lg:px-8"
       >
-        {/* Success Message */}
+        {/* Success Message - Responsive Liquid Glass */}
         {showSuccess && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center p-4 mb-8 space-x-3 border border-green-700 rounded-lg bg-green-900/20 backdrop-blur-sm"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center justify-center p-3 sm:p-4 mb-6 space-x-2 border border-green-400/50 rounded-full bg-green-500/20 backdrop-blur-md shadow-lg shadow-green-500/10"
           >
-            <FiCheck className="text-xl text-green-400" />
-            <p className="text-green-400">
-              Your message has been sent successfully! I&apos;ll get back to you
-              soon.
-            </p>
+            <FiCheck className="text-base sm:text-lg text-green-400" />
+            <p className="text-xs sm:text-sm text-green-400 font-medium">Message sent successfully!</p>
           </motion.div>
         )}
+
         {/* Honeypot field for spam bots - should remain empty */}
         <div className="hidden" aria-hidden="true">
           <label htmlFor="_hp">Leave this field empty</label>
@@ -149,144 +147,124 @@ const Contact = () => {
             tabIndex="-1"
           />
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
-          {/* Two-Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Left Column - Name, Email, Subject */}
+
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          {/* Responsive Grid Layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {/* Name Field - Responsive Liquid Glass */}
             <motion.div
-              whileInView={{ opacity: 1, x: 0 }}
-              initial={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex flex-col justify-between space-y-4 lg:space-y-6"
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
             >
-              {/* Name Field */}
-              <div className="flex-1">
-                <label
-                  htmlFor="name"
-                  className="block mb-2 text-sm font-medium text-neutral-400"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 text-white transition-all duration-300 border rounded-xl backdrop-blur-sm bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:ring-0 focus:border-neutral-700/50 focus:bg-neutral-900/50 focus:shadow-lg focus:shadow-cyan-500/10 placeholder-neutral-500"
-                  placeholder="Your name"
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Email Field */}
-              <div className="flex-1">
-                <label
-                  htmlFor="email"
-                  className="block mb-2 text-sm font-medium text-neutral-400"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 text-white transition-all duration-300 border rounded-xl backdrop-blur-sm bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:ring-0 focus:border-neutral-700/50 focus:bg-neutral-900/50 focus:shadow-lg focus:shadow-cyan-500/10 placeholder-neutral-500"
-                  placeholder="your.email@example.com"
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Subject Field */}
-              <div className="flex-1">
-                <label
-                  htmlFor="subject"
-                  className="block mb-2 text-sm font-medium text-neutral-400"
-                >
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 text-white transition-all duration-300 border rounded-xl backdrop-blur-sm bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:ring-0 focus:border-neutral-700/50 focus:bg-neutral-900/50 focus:shadow-lg focus:shadow-cyan-500/10 placeholder-neutral-500"
-                  placeholder="What's this about?"
-                  disabled={isLoading}
-                />
-              </div>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-white transition-all duration-300 border rounded-lg backdrop-blur-md bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:border-purple-400/50 focus:bg-purple-500/10 focus:shadow-lg focus:shadow-purple-500/10 placeholder-neutral-500 text-sm sm:text-base"
+                placeholder="Name"
+                disabled={isLoading}
+              />
             </motion.div>
 
-            {/* Right Column - Message Field */}
+            {/* Email Field - Responsive Liquid Glass */}
             <motion.div
-              whileInView={{ opacity: 1, x: 0 }}
-              initial={{ opacity: 0, x: 30 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex flex-col"
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {/* Message Field */}
-              <div className="flex flex-col flex-1">
-                <label
-                  htmlFor="message"
-                  className="block mb-2 text-sm font-medium text-neutral-400"
-                >
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  className="w-full flex-1 min-h-[200px] lg:min-h-[300px] px-4 py-3 transition-all duration-300 border rounded-xl backdrop-blur-sm bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:ring-0 focus:border-neutral-700/50 focus:bg-neutral-900/50 focus:shadow-lg focus:shadow-cyan-500/10 text-white placeholder-neutral-500 resize-none"
-                  placeholder="Tell me about your project or idea... Share your vision, requirements, timeline, or any questions you have. I'd love to hear from you!"
-                  disabled={isLoading}
-                />
-                <p className="mt-2 text-xs text-neutral-500">
-                  {formData.message.length}/2000 characters
-                </p>
-              </div>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-white transition-all duration-300 border rounded-lg backdrop-blur-md bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:border-purple-400/50 focus:bg-purple-500/10 focus:shadow-lg focus:shadow-purple-500/10 placeholder-neutral-500 text-sm sm:text-base"
+                placeholder="Email"
+                disabled={isLoading}
+              />
             </motion.div>
           </div>
 
-          {/* Submit Button - Centered and styled like blog buttons */}
+          {/* Subject Field - Responsive Liquid Glass */}
           <motion.div
             whileInView={{ opacity: 1, y: 0 }}
             initial={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col items-center mt-10 space-y-3"
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              value={formData.subject}
+              onChange={handleInputChange}
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-white transition-all duration-300 border rounded-lg backdrop-blur-md bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:border-purple-400/50 focus:bg-purple-500/10 focus:shadow-lg focus:shadow-purple-500/10 placeholder-neutral-500 text-sm sm:text-base"
+              placeholder="Subject"
+              disabled={isLoading}
+            />
+          </motion.div>
+
+          {/* Message Field - Responsive Liquid Glass */}
+          <motion.div
+            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative"
+          >
+            <textarea
+              id="message"
+              name="message"
+              value={formData.message}
+              onChange={handleInputChange}
+              className="w-full min-h-[160px] sm:min-h-[180px] px-3 sm:px-4 py-2.5 sm:py-3 pb-8 transition-all duration-300 border rounded-lg backdrop-blur-md bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:border-purple-400/50 focus:bg-purple-500/10 focus:shadow-lg focus:shadow-purple-500/10 text-white placeholder-neutral-500 resize-none text-sm sm:text-base"
+              placeholder="Your message..."
+              disabled={isLoading}
+            />
+            <span className="absolute bottom-2.5 sm:bottom-3 right-3 sm:right-4 text-xs text-neutral-500">
+              {formData.message.length}/2000
+            </span>
+          </motion.div>
+
+          {/* Centered Send Button - Responsive Liquid Glass */}
+          <motion.div
+            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="flex flex-col items-center pt-3 sm:pt-4 space-y-2 sm:space-y-3"
           >
             <motion.button
               type="submit"
               disabled={isLoading}
-              whileHover={{ scale: isLoading ? 1 : 1.02 }}
-              whileTap={{ scale: isLoading ? 1 : 0.98 }}
-              className={`inline-flex items-center px-8 py-4 text-sm font-medium rounded-xl transition-all duration-300 backdrop-blur-sm border space-x-3 ${isLoading
-                ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border-neutral-700/50"
-                : "bg-neutral-900/50 hover:bg-neutral-800/70 text-white border-neutral-700/50 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+              whileHover={{ scale: isLoading ? 1 : 1.05 }}
+              whileTap={{ scale: isLoading ? 1 : 0.95 }}
+              className={`inline-flex items-center justify-center px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300 backdrop-blur-md shadow-lg ${isLoading
+                ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
+                : "bg-purple-500/20 text-purple-300 border border-purple-400/50 hover:bg-purple-500/30 hover:border-purple-400/70 hover:shadow-xl hover:shadow-purple-500/20"
                 }`}
             >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-transparent rounded-full border-t-neutral-400 animate-spin" />
-                  <span>Sending Message...</span>
-                </>
-              ) : (
-                <>
-                  <FiSend className="text-base" />
-                  <span>Send Message</span>
-                </>
-              )}
+              <span className="flex items-center space-x-2">
+                {isLoading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-transparent rounded-full border-t-neutral-400 animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Send</span>
+                    <FiSend className="text-sm sm:text-base" />
+                  </>
+                )}
+              </span>
             </motion.button>
 
-            {/* Subtle Error Messages Below Button */}
+            {/* Error Messages - Responsive */}
             {errors.submit && (
               <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-md text-xs text-center text-neutral-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs sm:text-sm text-neutral-400 text-center max-w-sm px-4"
               >
                 {errors.submit}
               </motion.p>

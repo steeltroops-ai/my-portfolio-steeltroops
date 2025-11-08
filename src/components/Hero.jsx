@@ -14,15 +14,16 @@ const container = (delay) => ({
 
 const Hero = () => {
   return (
-    <div id="hero" className="pb-4 border-b border-neutral-900 lg:mb-3 scroll-mt-20">
+    <div id="hero" className="pb-4 border-b border-neutral-800 lg:mb-3 scroll-mt-20">
       <div className="flex flex-wrap">
         <div className="w-full lg:w-1/2 lg:pr-8">
-          <div className="flex flex-col items-center lg:items-start">
+          <div className="flex flex-col">
             <motion.h1
               variants={container(0)}
               initial="hidden"
               animate="visible"
-              className="pb-8 lg:pb-16 text-4xl sm:text-5xl lg:text-6xl xl:text-8xl font-thin tracking-tight lg:mt-16"
+              className="pb-4 text-4xl sm:text-5xl lg:text-6xl xl:text-8xl font-thin tracking-tight lg:mt-16"
+              style={{ textAlign: 'left' }}
             >
               Mayank Pratap Singh
             </motion.h1>
@@ -30,16 +31,18 @@ const Hero = () => {
               variants={container(0.3)}
               initial="hidden"
               animate="visible"
-              className="py-2 text-2xl sm:text-3xl lg:text-4xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-500 via-slate-500"
+              className="pb-4 text-2xl sm:text-3xl lg:text-4xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-500 via-slate-500"
+              style={{ textAlign: 'left' }}
             >
-              Full Stack Web Dev & <br />
+              Full Stack, Robotics & <br />
               Machine Learning Engineer
             </motion.span>
             <motion.p
               variants={container(0.6)}
               initial="hidden"
               animate="visible"
-              className="max-w-xl py-4 lg:py-6 my-2 font-light tracking-tight text-justify text-sm sm:text-base"
+              className="pt-2 font-light tracking-tight text-sm sm:text-base max-w-xl text-neutral-400"
+              style={{ textAlign: 'left' }}
             >
               {HERO_CONTENT}
             </motion.p>

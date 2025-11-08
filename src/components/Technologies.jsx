@@ -184,9 +184,10 @@ const TechnologyIcon = ({ tech, duration, index }) => {
       onKeyDown={handleKeyDown}
       aria-label={`${tech.name} - ${tech.description}`}
     >
-      <div className="p-4 border-4 border-neutral-800 rounded-2xl min-w-[88px] min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-200 ease-in-out hover:scale-110 hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-400/20 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black group-hover:bg-neutral-800/30">
+      <div className="relative p-4 rounded-2xl min-w-[88px] min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black bg-gradient-to-br from-white/5 via-white/3 to-transparent backdrop-blur-md border border-white/10 shadow-2xl hover:from-white/10 hover:via-white/5 hover:border-white/20 hover:shadow-cyan-500/20">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30"></div>
         <IconComponent
-          className={`${tech.color} text-7xl transition-all duration-200 group-hover:drop-shadow-lg`}
+          className={`${tech.color} text-7xl transition-all duration-200 group-hover:drop-shadow-lg relative z-10`}
         />
       </div>
 
@@ -219,9 +220,9 @@ const Technologies = () => {
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
         transition={{ duration: 1.2 }}
-        className="my-12 lg:my-20 text-3xl lg:text-4xl text-center"
+        className="my-12 lg:my-20 text-3xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center"
       >
-        Tech Stack
+        Tech <span className="text-neutral-500">Stack</span>
       </motion.h2>
 
       <motion.div
