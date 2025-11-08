@@ -4,31 +4,32 @@ import { motion } from "framer-motion";
 const FloatingChatButton = () => {
   return (
     <motion.div
-      initial={{ x: 50, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
+      initial={{ x: 60, opacity: 0, rotateY: 90 }}
+      animate={{ x: 0, opacity: 1, rotateY: 0 }}
       transition={{
         type: "spring",
-        stiffness: 200,
-        damping: 20,
-        delay: 0.3
+        stiffness: 100,
+        damping: 15,
+        delay: 0.5
       }}
       className="fixed right-0 bottom-6 sm:bottom-8 z-50"
     >
       <motion.div
-        whileHover={{ x: -3 }}
-        whileTap={{ scale: 0.97 }}
+        whileHover={{ x: -4, rotateY: -5 }}
+        whileTap={{ scale: 0.96 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         <Link
           to={window.location.pathname === "/blog" ? "/" : "/blog"}
-          className="group relative flex justify-center items-center px-1.5 sm:px-2 py-4 sm:py-5 text-xs sm:text-sm font-semibold text-purple-100 rounded-l-xl border-l-2 border-t border-b shadow-xl shadow-purple-500/25 transition-all duration-300 bg-neutral-900/40 hover:bg-neutral-900/60 border-purple-400/60 hover:border-purple-300/80 backdrop-blur-xl hover:shadow-2xl hover:shadow-purple-400/35 focus:outline-none focus:ring-2 focus:ring-purple-300/60 focus:ring-offset-1 focus:ring-offset-black overflow-hidden"
+          className="group relative flex justify-center items-center px-2.5 py-5 text-sm font-semibold text-purple-300 rounded-l-xl border border-r-0 border-purple-400/50 transition-all duration-300 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-400/70 backdrop-blur-[2px] shadow-lg focus:outline-none focus:ring-1 focus:ring-purple-400/50 overflow-hidden"
           aria-label={window.location.pathname === "/blog" ? "Go to Home" : "Go to Blogs"}
         >
-          {/* Enhanced glass shine effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 via-transparent to-purple-600/10 opacity-100 group-hover:opacity-0 transition-opacity duration-300" />
-          <div className="absolute inset-0 bg-gradient-to-tl from-purple-300/15 via-transparent to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Subtle glass shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/8 via-transparent to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-tl from-purple-300/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Text with better contrast */}
-          <span className="relative font-inter tracking-[0.15em] [writing-mode:vertical-lr] rotate-180 drop-shadow-lg">
+          {/* Text */}
+          <span className="relative tracking-[0.18em] [writing-mode:vertical-lr] rotate-180">
             {window.location.pathname === "/blog" ? "Home" : "Blogs"}
           </span>
         </Link>

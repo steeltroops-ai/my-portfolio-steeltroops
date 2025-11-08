@@ -1,26 +1,43 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+
+const sections = [
+    { id: 'hero', label: 'Home' },
+    { id: 'about', label: 'About' },
+    { id: 'technologies', label: 'Tech Stack' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'contact', label: 'Contact' }
+];
 
 const ScrollspyNav = () => {
     const [activeSection, setActiveSection] = useState('hero');
-
-    const sections = [
-        { id: 'hero', label: 'Home' },
-        { id: 'about', label: 'About' },
-        { id: 'technologies', label: 'Tech Stack' },
-        { id: 'experience', label: 'Experience' },
-        { id: 'projects', label: 'Projects' },
-        { id: 'contact', label: 'Contact' }
-    ];
+    const isScrollingRef = useRef(false);
+    const scrollTimeoutRef = useRef(null);
 
     // Handle navigation click to scroll to target section
     const handleNavClick = (sectionId) => {
         const element = document.getElementById(sectionId);
         if (element) {
+            // Disable observer during programmatic scroll
+            isScrollingRef.current = true;
+
+            // Clear any existing timeout
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+
+            // Immediately update active section
+            setActiveSection(sectionId);
+
             element.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
             });
+
+            // Re-enable observer after scroll completes
+            scrollTimeoutRef.current = setTimeout(() => {
+                isScrollingRef.current = false;
+            }, 1000);
         }
     };
 
@@ -40,11 +57,24 @@ const ScrollspyNav = () => {
 
         // Callback to update activeSection when sections intersect
         const observerCallback = (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    setActiveSection(entry.target.id);
-                }
-            });
+            // Skip updates during programmatic scrolling
+            if (isScrollingRef.current) {
+                return;
+            }
+
+            // Find the most visible intersecting section
+            const intersectingEntries = entries.filter(entry => entry.isIntersecting);
+
+            if (intersectingEntries.length > 0) {
+                // If multiple sections are intersecting, pick the first one in document order
+                const sortedEntries = intersectingEntries.sort((a, b) => {
+                    const aIndex = sections.findIndex(s => s.id === a.target.id);
+                    const bIndex = sections.findIndex(s => s.id === b.target.id);
+                    return aIndex - bIndex;
+                });
+
+                setActiveSection(sortedEntries[0].target.id);
+            }
         };
 
         // Create the observer
@@ -61,6 +91,9 @@ const ScrollspyNav = () => {
         // Cleanup function to disconnect observer on unmount
         return () => {
             observer.disconnect();
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
         };
     }, []);
 

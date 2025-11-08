@@ -1,5 +1,6 @@
 import { PROJECTS } from "../constants";
 import { motion } from "framer-motion";
+import { FaGithub } from "react-icons/fa";
 
 const Projects = () => {
   return (
@@ -58,7 +59,20 @@ const Projects = () => {
               transition={{ duration: 1 }}
               className="w-full max-w-xl lg:w-3/4"
             >
-              <h6 className="mb-2 font-semibold text-neutral-100">{project.title}</h6>
+              <div className="flex items-center justify-between mb-2">
+                <h6 className="font-semibold text-neutral-100">{project.title}</h6>
+                {project.github && (
+                  <a
+                    href={project.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-neutral-300 rounded-full bg-neutral-900/60 backdrop-blur-md border border-neutral-700/50 shadow-lg hover:bg-neutral-800/70 hover:border-neutral-600/60 hover:text-white hover:shadow-neutral-900/40 transition-all duration-300 group"
+                  >
+                    <FaGithub className="text-xs group-hover:scale-110 transition-transform" />
+                    <span>View</span>
+                  </a>
+                )}
+              </div>
               <p className="mb-4 text-justify text-neutral-200 font-light">
                 {project.description}
               </p>

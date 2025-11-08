@@ -80,6 +80,7 @@ export const PROJECTS = [
     title: "Transformer Model Implementation",
     image: project5,
     url: "",
+    github: "https://github.com/yourusername/transformer-implementation",
     description:
       "Built the 'Attention is All You Need' transformer architecture from scratch, including self-attention, positional encodings, and beam search for sequence-to-sequence modeling. Created reproducible training pipelines with configuration management and attention map visualizations to improve interpretability of transformer layers.",
     technologies: ["Python", "PyTorch", "Transformers", "NLP"],
@@ -88,6 +89,7 @@ export const PROJECTS = [
     title: "Finance Management App",
     image: project1,
     url: "",
+    github: "https://github.com/yourusername/finance-app",
     description:
       "Built a finance management platform enabling secure multi-bank linking, real-time fund tracking, and seamless transfers. Implemented server-side rendering (SSR) authentication, responsive dashboards, and categorized spending insights for a smooth, dynamic user experience.",
     technologies: ["Next.js", "TypeScript", "Plaid", "Dwolla", "Appwrite"],
@@ -96,6 +98,7 @@ export const PROJECTS = [
     title: "Robot Bionic Arm",
     image: project2,
     url: "",
+    github: "https://github.com/yourusername/robot-bionic-arm",
     description:
       "Developed a lightweight robotic arm with custom PID controllers and inverse kinematics for precise motion; integrated real-time ROS2 nodes for sensor fusion, adaptive actuation, and closed-loop feedback. Designed and 3D-printed modular mechanical components optimized for joint torque, response latency, and high precision manipulation tasks.",
     technologies: ["ROS2", "C++", "Python", "PID Control", "3D Printing"],

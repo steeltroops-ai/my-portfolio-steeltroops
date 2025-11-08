@@ -184,19 +184,35 @@ const TechnologyIcon = ({ tech, duration, index }) => {
       onKeyDown={handleKeyDown}
       aria-label={`${tech.name} - ${tech.description}`}
     >
-      <div className="relative p-4 rounded-2xl min-w-[88px] min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black bg-gradient-to-br from-white/5 via-white/3 to-transparent backdrop-blur-md border border-white/10 shadow-2xl hover:from-white/10 hover:via-white/5 hover:border-white/20 hover:shadow-cyan-500/20">
+      <div className="relative p-4 rounded-2xl min-w-[88px] min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black bg-gradient-to-br from-white/5 via-white/3 to-transparent border border-white/10 shadow-2xl hover:from-white/10 hover:via-white/5 hover:border-white/20 hover:shadow-cyan-500/20">
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30"></div>
         <IconComponent
           className={`${tech.color} text-7xl transition-all duration-200 group-hover:drop-shadow-lg relative z-10`}
         />
       </div>
 
-      {/* Tooltip */}
-      <div className="absolute z-10 px-3 py-2 mb-2 text-sm text-white transition-opacity duration-200 transform -translate-x-1/2 border rounded-lg opacity-0 pointer-events-none bottom-full left-1/2 bg-black/90 group-hover:opacity-100 group-focus:opacity-100 whitespace-nowrap border-neutral-700">
-        <div className="font-medium">{tech.name}</div>
-        <div className="text-xs text-neutral-300">{tech.category}</div>
-        {/* Tooltip arrow */}
-        <div className="absolute transform -translate-x-1/2 border-4 border-transparent top-full left-1/2 border-t-black/90"></div>
+      {/* Compact Liquid Glass Tooltip */}
+      <div className="absolute z-20 mb-2 transition-all duration-300 transform -translate-x-1/2 opacity-0 pointer-events-none bottom-full left-1/2 group-hover:opacity-100 group-focus:opacity-100 group-hover:translate-y-0 translate-y-1">
+        {/* Glass container */}
+        <div className="relative rounded-md overflow-hidden bg-white/5 border border-white/10 shadow-xl">
+          {/* Subtle shine */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+
+          {/* Content - Compact & Centered */}
+          <div className="relative px-3 py-1.5 text-center">
+            <div className="font-medium text-white text-xs tracking-wide whitespace-nowrap">
+              {tech.name}
+            </div>
+            <div className="text-[9px] text-neutral-400 font-light tracking-wider uppercase whitespace-nowrap">
+              {tech.category}
+            </div>
+          </div>
+        </div>
+
+        {/* Simple Arrow */}
+        <div className="absolute left-1/2 top-full -translate-x-1/2 -mt-[1px]">
+          <div className="w-1.5 h-1.5 rotate-45 bg-white/5 border-r border-b border-white/10"></div>
+        </div>
       </div>
     </motion.div>
   );
