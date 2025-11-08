@@ -5,14 +5,16 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Debug logging for production troubleshooting
-console.log("Environment check:", {
-  hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey,
-  urlType: typeof supabaseUrl,
-  keyType: typeof supabaseAnonKey,
-  mode: import.meta.env.MODE,
-  prod: import.meta.env.PROD,
-});
+if (!import.meta.env.PROD) {
+  console.log("Environment check:", {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlType: typeof supabaseUrl,
+    keyType: typeof supabaseAnonKey,
+    mode: import.meta.env.MODE,
+    prod: import.meta.env.PROD,
+  });
+}
 
 // Create a fallback client if environment variables are missing
 let supabase;
@@ -23,10 +25,12 @@ if (
   supabaseUrl === "undefined" ||
   supabaseAnonKey === "undefined"
 ) {
-  console.warn(
-    "Missing or invalid Supabase environment variables - using fallback client",
-    { supabaseUrl, hasKey: !!supabaseAnonKey }
-  );
+  if (!import.meta.env.PROD) {
+    console.warn(
+      "Missing or invalid Supabase environment variables - using fallback client",
+      { supabaseUrl, hasKey: !!supabaseAnonKey }
+    );
+  }
 
   // Create a minimal mock client that won't cause errors
   supabase = {
@@ -145,12 +149,16 @@ if (
     },
   };
 
-  console.warn(
-    "Using mock Supabase client - database operations will fail gracefully"
-  );
+  if (!import.meta.env.PROD) {
+    console.warn(
+      "Using mock Supabase client - database operations will fail gracefully"
+    );
+  }
 } else {
   try {
-    console.log("Creating real Supabase client with URL:", supabaseUrl);
+    if (!import.meta.env.PROD) {
+      console.log("Creating real Supabase client with URL:", supabaseUrl);
+    }
     supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
@@ -158,7 +166,9 @@ if (
         detectSessionInUrl: true,
       },
     });
-    console.log("Supabase client created successfully");
+    if (!import.meta.env.PROD) {
+      console.log("Supabase client created successfully");
+    }
   } catch (error) {
     console.error("Failed to create Supabase client:", error);
     // Fall back to mock client

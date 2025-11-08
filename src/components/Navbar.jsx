@@ -5,16 +5,23 @@ import { FiGithub, FiInstagram } from "react-icons/fi";
 
 const Navbar = () => {
   return (
-    <nav className="flex items-center justify-between py-6 mb-16">
+    <nav className="flex items-center justify-between py-4 lg:py-6 mb-8 lg:mb-16">
       <div className="flex items-center flex-shrink-0">
-        <img className="w-24 mx-0 -ml-4 -mr-4" src={logo} alt="logo" />
+        <img
+          className="w-16 sm:w-20 lg:w-24 mx-0 -ml-2 sm:-ml-4 -mr-2 sm:-mr-4"
+          src={logo}
+          alt="logo"
+          width="96"
+          height="96"
+        />
       </div>
-      <div className="flex justify-center gap-4 -mr-4 text-2xl ems-center">
+      <div className="flex justify-center gap-3 sm:gap-4 -mr-2 sm:-mr-4 text-xl sm:text-2xl items-center">
         <a
           href="https://x.com/steeltroops_ai"
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer hover:text-cyan-300"
+          aria-label="Twitter (opens in new tab)"
         >
           <FaXTwitter />
         </a>
@@ -23,6 +30,7 @@ const Navbar = () => {
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer hover:text-cyan-300"
+          aria-label="GitHub (opens in new tab)"
         >
           <FiGithub />
         </a>
@@ -31,6 +39,7 @@ const Navbar = () => {
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer hover:text-cyan-300"
+          aria-label="Instagram (opens in new tab)"
         >
           <FiInstagram />
         </a>
@@ -39,6 +48,7 @@ const Navbar = () => {
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer hover:text-cyan-300"
+          aria-label="LinkedIn (opens in new tab)"
         >
           <FaLinkedinIn />
         </a>
@@ -47,6 +57,7 @@ const Navbar = () => {
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer hover:text-cyan-300"
+          aria-label="Bento profile (opens in new tab)"
         >
           <AiOutlineLink />
         </a>

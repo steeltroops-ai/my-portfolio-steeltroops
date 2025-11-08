@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { FiSend, FiCheck } from "react-icons/fi";
 import { useSubmitContactMessage } from "../hooks/useContactQueries";
@@ -10,9 +10,11 @@ const Contact = () => {
     email: "",
     subject: "",
     message: "",
+    _hp: "",
   });
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const formStartRef = useRef(Date.now());
 
   const { mutate: submitMessage, isLoading } = useSubmitContactMessage();
 
@@ -35,12 +37,26 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Anti-abuse checks: honeypot and minimum time on page
+    const submissionDurationMs = Date.now() - formStartRef.current;
+    if (formData._hp && formData._hp.trim() !== "") {
+      setErrors({ submit: "Spam detected. Please try again." });
+      return;
+    }
+    if (submissionDurationMs < 2000) {
+      setErrors({
+        submit: "Please take a moment to complete the form before submitting.",
+      });
+      return;
+    }
+
     // Check if all required fields are filled
     const { name, email, subject, message } = formData;
     if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
       setErrors({
         submit: "Please fill in all required fields before sending.",
       });
+
       return;
     }
 
@@ -55,36 +71,46 @@ const Contact = () => {
     setErrors({});
 
     // Submit the message
-    submitMessage(formData, {
-      onSuccess: (result) => {
-        if (result.success) {
-          setShowSuccess(true);
-          setFormData({ name: "", email: "", subject: "", message: "" });
+    submitMessage(
+      { ...formData, submissionDurationMs },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setShowSuccess(true);
+            setFormData({
+              name: "",
+              email: "",
+              subject: "",
+              message: "",
+              _hp: "",
+            });
 
-          // Hide success message after 5 seconds
-          setTimeout(() => {
-            setShowSuccess(false);
-          }, 5000);
-        } else {
-          setErrors({ submit: result.error });
-        }
-      },
-      onError: (error) => {
-        setErrors({
-          submit: error.message || "Failed to send message. Please try again.",
-        });
-      },
-    });
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+              setShowSuccess(false);
+            }, 5000);
+          } else {
+            setErrors({ submit: result.error });
+          }
+        },
+        onError: (error) => {
+          setErrors({
+            submit:
+              error.message || "Failed to send message. Please try again.",
+          });
+        },
+      }
+    );
   };
 
   return (
-    <div className="pb-4 border-b border-neutral-900">
+    <div id="contact" className="pb-4 border-b border-neutral-900 scroll-mt-20">
       {/* Section Header - matching other components */}
       <motion.h2
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
         transition={{ duration: 1.2 }}
-        className="my-20 text-4xl text-center"
+        className="my-12 lg:my-20 text-3xl lg:text-4xl text-center"
       >
         Get In <span className="text-neutral-500">Touch</span>
       </motion.h2>
@@ -110,16 +136,28 @@ const Contact = () => {
             </p>
           </motion.div>
         )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Honeypot field for spam bots - should remain empty */}
+        <div className="hidden" aria-hidden="true">
+          <label htmlFor="_hp">Leave this field empty</label>
+          <input
+            type="text"
+            id="_hp"
+            name="_hp"
+            value={formData._hp}
+            onChange={handleInputChange}
+            autoComplete="off"
+            tabIndex="-1"
+          />
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
           {/* Two-Column Layout */}
-          <div className="grid grid-cols-2 gap-8 lg:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Left Column - Name, Email, Subject */}
             <motion.div
               whileInView={{ opacity: 1, x: 0 }}
               initial={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex flex-col justify-between space-y-6"
+              className="flex flex-col justify-between space-y-4 lg:space-y-6"
             >
               {/* Name Field */}
               <div className="flex-1">
@@ -127,7 +165,7 @@ const Contact = () => {
                   htmlFor="name"
                   className="block mb-2 text-sm font-medium text-neutral-400"
                 >
-                  Name *
+                  Name
                 </label>
                 <input
                   type="text"
@@ -147,7 +185,7 @@ const Contact = () => {
                   htmlFor="email"
                   className="block mb-2 text-sm font-medium text-neutral-400"
                 >
-                  Email *
+                  Email
                 </label>
                 <input
                   type="email"
@@ -167,7 +205,7 @@ const Contact = () => {
                   htmlFor="subject"
                   className="block mb-2 text-sm font-medium text-neutral-400"
                 >
-                  Subject *
+                  Subject
                 </label>
                 <input
                   type="text"
@@ -195,14 +233,14 @@ const Contact = () => {
                   htmlFor="message"
                   className="block mb-2 text-sm font-medium text-neutral-400"
                 >
-                  Message *
+                  Message
                 </label>
                 <textarea
                   id="message"
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
-                  className="w-full flex-1 min-h-[300px] px-4 py-3 transition-all duration-300 border rounded-xl backdrop-blur-sm bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:ring-0 focus:border-neutral-700/50 focus:bg-neutral-900/50 focus:shadow-lg focus:shadow-cyan-500/10 text-white placeholder-neutral-500 resize-none"
+                  className="w-full flex-1 min-h-[200px] lg:min-h-[300px] px-4 py-3 transition-all duration-300 border rounded-xl backdrop-blur-sm bg-neutral-900/30 border-neutral-700/50 focus:outline-none focus:ring-0 focus:border-neutral-700/50 focus:bg-neutral-900/50 focus:shadow-lg focus:shadow-cyan-500/10 text-white placeholder-neutral-500 resize-none"
                   placeholder="Tell me about your project or idea... Share your vision, requirements, timeline, or any questions you have. I'd love to hear from you!"
                   disabled={isLoading}
                 />
@@ -225,11 +263,10 @@ const Contact = () => {
               disabled={isLoading}
               whileHover={{ scale: isLoading ? 1 : 1.02 }}
               whileTap={{ scale: isLoading ? 1 : 0.98 }}
-              className={`inline-flex items-center px-8 py-4 text-sm font-medium rounded-xl transition-all duration-300 backdrop-blur-sm border space-x-3 ${
-                isLoading
-                  ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border-neutral-700/50"
-                  : "bg-neutral-900/50 hover:bg-neutral-800/70 text-white border-neutral-700/50 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
-              }`}
+              className={`inline-flex items-center px-8 py-4 text-sm font-medium rounded-xl transition-all duration-300 backdrop-blur-sm border space-x-3 ${isLoading
+                ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border-neutral-700/50"
+                : "bg-neutral-900/50 hover:bg-neutral-800/70 text-white border-neutral-700/50 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+                }`}
             >
               {isLoading ? (
                 <>

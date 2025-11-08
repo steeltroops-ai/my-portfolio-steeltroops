@@ -1,63 +1,48 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { AiOutlineLink } from "react-icons/ai";
 import { FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
 import { FiGithub, FiInstagram, FiSearch, FiFilter } from "react-icons/fi";
-import { getPublishedPosts, getAllTags } from "../services/SupabaseBlogService";
+import {
+  usePublishedPosts,
+  useTags,
+  useDataSourceInfo,
+} from "../hooks/useBlogQueries";
 import FloatingChatButton from "./FloatingChatButton";
 import SEOHead from "./SEOHead";
 
 const Blog = () => {
-  const [posts, setPosts] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPosts, setTotalPosts] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const postsPerPage = 6;
 
-  const loadPosts = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  // Use React Query hooks for data fetching
+  const {
+    data: postsData,
+    isLoading: postsLoading,
+    error: postsError,
+    refetch: refetchPosts,
+  } = usePublishedPosts({
+    limit: postsPerPage,
+    offset: (currentPage - 1) * postsPerPage,
+    search: searchTerm,
+    tags: selectedTags,
+  });
 
-    try {
-      const { data, count, error } = await getPublishedPosts({
-        limit: postsPerPage,
-        offset: (currentPage - 1) * postsPerPage,
-        search: searchTerm,
-        tags: selectedTags,
-      });
+  const { data: tagsData, isLoading: tagsLoading } = useTags();
 
-      if (error) throw error;
+  const { data: dataSourceInfo } = useDataSourceInfo();
 
-      setPosts(data || []);
-      setTotalPosts(count || 0);
-    } catch (err) {
-      console.error("Error loading posts:", err);
-      setError("Failed to load blog posts");
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, searchTerm, selectedTags, postsPerPage]);
-
-  useEffect(() => {
-    loadPosts();
-    loadTags();
-  }, [loadPosts]);
-
-  const loadTags = async () => {
-    try {
-      const { data, error } = await getAllTags();
-      if (error) throw error;
-      setTags(data || []);
-    } catch (err) {
-      console.error("Error loading tags:", err);
-    }
-  };
+  // Extract data from React Query results
+  const posts = postsData?.posts || [];
+  const totalPosts = postsData?.count || 0;
+  const tags = tagsData || [];
+  const loading = postsLoading || tagsLoading;
+  const error = postsError ? "Failed to load blog posts" : "";
+  const isStatic = postsData?.isStatic || false;
 
   const handleTagToggle = (tag) => {
     setSelectedTags((prev) =>
@@ -91,16 +76,16 @@ const Blog = () => {
       </div>
       <div className="container px-8 mx-auto">
         {/* Navigation */}
-        <nav className="flex justify-between items-center py-6 mb-8">
-          <div className="flex flex-shrink-0 items-center">
+        <nav className="flex items-center justify-between py-6 mb-8">
+          <div className="flex items-center flex-shrink-0">
             <Link
               to="/"
-              className="text-2xl font-bold text-white hover:text-cyan-300 transition-colors"
+              className="text-2xl font-bold text-white transition-colors hover:text-cyan-300"
             >
               ← Back to Portfolio
             </Link>
           </div>
-          <div className="flex gap-4 justify-center -mr-4 text-2xl items-center">
+          <div className="flex items-center justify-center gap-4 -mr-4 text-2xl">
             <a
               href="https://x.com/steeltroops_ai"
               target="_blank"
@@ -145,11 +130,11 @@ const Blog = () => {
         </nav>
 
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="mb-12 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-bold text-white mb-4"
+            className="mb-4 text-4xl font-bold text-white md:text-6xl"
           >
             Blog
           </motion.h1>
@@ -157,7 +142,7 @@ const Blog = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl text-neutral-400 max-w-2xl mx-auto"
+            className="max-w-2xl mx-auto text-xl text-neutral-400"
           >
             Thoughts, tutorials, and insights about web development, technology,
             and more.
@@ -171,17 +156,17 @@ const Blog = () => {
           transition={{ delay: 0.2 }}
           className="mb-8"
         >
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             {/* Search */}
             <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md">
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" />
+                <FiSearch className="absolute transform -translate-y-1/2 left-3 top-1/2 text-neutral-400" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search posts..."
-                  className="w-full pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full py-2 pl-10 pr-4 text-white border rounded-lg bg-neutral-800 border-neutral-700 focus:outline-none focus:border-cyan-500"
                 />
               </div>
             </form>
@@ -189,12 +174,12 @@ const Blog = () => {
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 transition-colors border rounded-lg bg-neutral-800 hover:bg-neutral-700 border-neutral-700"
             >
               <FiFilter />
               Filters
               {selectedTags.length > 0 && (
-                <span className="bg-cyan-600 text-white text-xs px-2 py-1 rounded-full">
+                <span className="px-2 py-1 text-xs text-white rounded-full bg-cyan-600">
                   {selectedTags.length}
                 </span>
               )}
@@ -206,9 +191,9 @@ const Blog = () => {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="mt-4 p-4 bg-neutral-900/50 rounded-lg border border-neutral-800"
+              className="p-4 mt-4 border rounded-lg bg-neutral-900/50 border-neutral-800"
             >
-              <h3 className="text-sm font-medium text-neutral-300 mb-3">
+              <h3 className="mb-3 text-sm font-medium text-neutral-300">
                 Filter by tags:
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -241,20 +226,43 @@ const Blog = () => {
           )}
         </motion.div>
 
+        {/* Data Source Indicator */}
+        {isStatic && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="p-3 mb-6 border rounded-lg bg-amber-900/20 border-amber-700/30"
+          >
+            <div className="flex items-center gap-2 text-amber-400">
+              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+              <span className="text-sm font-medium">
+                Viewing offline content - Some features may be limited
+              </span>
+              <button
+                onClick={() => refetchPosts()}
+                className="ml-auto text-xs underline text-amber-300 hover:text-amber-200"
+              >
+                Try reconnecting
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Loading State */}
         {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+          <div className="flex items-center justify-center py-20">
+            <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-cyan-400"></div>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="text-center py-20">
-            <p className="text-red-400 mb-4">{error}</p>
+          <div className="py-20 text-center">
+            <p className="mb-4 text-red-400">{error}</p>
             <button
               onClick={loadPosts}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded transition-colors"
+              className="px-4 py-2 transition-colors rounded bg-cyan-600 hover:bg-cyan-700"
             >
               Try Again
             </button>
@@ -269,8 +277,8 @@ const Blog = () => {
             transition={{ delay: 0.3 }}
           >
             {posts.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-neutral-400 text-lg">No blog posts found.</p>
+              <div className="py-20 text-center">
+                <p className="text-lg text-neutral-400">No blog posts found.</p>
                 {(searchTerm || selectedTags.length > 0) && (
                   <button
                     onClick={() => {
@@ -286,24 +294,24 @@ const Blog = () => {
               </div>
             ) : (
               <>
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
+                <div className="grid gap-8 mb-12 md:grid-cols-2 lg:grid-cols-3">
                   {posts.map((post, index) => (
                     <motion.article
                       key={post.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * index }}
-                      className="relative p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 border-neutral-800 bg-neutral-900/30 hover:shadow-lg hover:shadow-cyan-500/20 hover:-translate-y-1 group"
+                      className="relative p-6 transition-all duration-300 border rounded-xl backdrop-blur-sm border-neutral-800 bg-neutral-900/30 hover:shadow-lg hover:shadow-cyan-500/20 hover:-translate-y-1 group"
                     >
                       <Link
                         to={`/blog/${post.slug}`}
                         className="block space-y-4"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent rounded-xl transition-colors to-cyan-950/10 group-hover:to-cyan-950/20"></div>
+                        <div className="absolute inset-0 transition-colors bg-gradient-to-b from-transparent rounded-xl to-cyan-950/10 group-hover:to-cyan-950/20"></div>
 
                         {/* Featured Image */}
                         {post.featured_image_url && (
-                          <div className="overflow-hidden relative mb-4 w-full rounded-lg aspect-video">
+                          <div className="relative w-full mb-4 overflow-hidden rounded-lg aspect-video">
                             <img
                               src={post.featured_image_url}
                               alt={post.title}
@@ -328,13 +336,13 @@ const Blog = () => {
                               {post.tags.slice(0, 3).map((tag) => (
                                 <span
                                   key={tag}
-                                  className="text-xs px-2 py-1 bg-neutral-800 text-neutral-400 rounded-full"
+                                  className="px-2 py-1 text-xs rounded-full bg-neutral-800 text-neutral-400"
                                 >
                                   {tag}
                                 </span>
                               ))}
                               {post.tags.length > 3 && (
-                                <span className="text-xs px-2 py-1 bg-neutral-800 text-neutral-400 rounded-full">
+                                <span className="px-2 py-1 text-xs rounded-full bg-neutral-800 text-neutral-400">
                                   +{post.tags.length - 3}
                                 </span>
                               )}
@@ -342,9 +350,9 @@ const Blog = () => {
                           )}
 
                           {/* Meta Info */}
-                          <div className="flex items-center justify-between text-sm text-neutral-500 group-hover:text-neutral-400 transition-colors">
+                          <div className="flex items-center justify-between text-sm transition-colors text-neutral-500 group-hover:text-neutral-400">
                             <div className="flex items-center">
-                              <span className="inline-block mr-2 w-2 h-2 bg-cyan-500 rounded-full"></span>
+                              <span className="inline-block w-2 h-2 mr-2 rounded-full bg-cyan-500"></span>
                               {new Date(post.created_at).toLocaleDateString(
                                 "en-US",
                                 {
@@ -366,13 +374,13 @@ const Blog = () => {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center items-center space-x-2">
+                  <div className="flex items-center justify-center space-x-2">
                     <button
                       onClick={() =>
                         setCurrentPage((prev) => Math.max(prev - 1, 1))
                       }
                       disabled={currentPage === 1}
-                      className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      className="px-4 py-2 transition-colors rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Previous
                     </button>
@@ -400,7 +408,7 @@ const Blog = () => {
                         setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                       }
                       disabled={currentPage === totalPages}
-                      className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      className="px-4 py-2 transition-colors rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>

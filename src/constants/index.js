@@ -4,100 +4,93 @@ import project3 from "../assets/projects/project-3.jpg";
 import project4 from "../assets/projects/project-4.jpg";
 import project5 from "../assets/projects/project-5.jpg";
 
-export const HERO_CONTENT = `I am a passionate full stack developer with a knack for crafting robust and scalable web applications. With 5 years of hands-on experience, I have honed my skills in front-end technologies like React and Next.js, as well as back-end technologies like Node.js, MySQL, PostgreSQL, and MongoDB. My goal is to leverage my expertise to create innovative solutions that drive business growth and deliver exceptional user experiences.`;
+export const HERO_CONTENT = `I am a passionate full stack developer and AI/ML enthusiast with expertise in building robust and scalable web applications. I have honed my skills in modern frontend technologies like React 18, Next.js 14, and Vue 3, as well as backend technologies like Node.js, Express, FastAPI, and databases including PostgreSQL, MongoDB, and Redis. My goal is to leverage my expertise in software development and machine learning to create innovative solutions that drive impact and deliver exceptional user experiences.`;
 
-export const ABOUT_TEXT = `I am a dedicated and versatile full stack developer with a passion for creating efficient and user-friendly web applications. With 5 years of professional experience, I have worked with a variety of technologies, including React, Next.js, Node.js, MySQL, PostgreSQL, and MongoDB. My journey in web development began with a deep curiosity for how things work, and it has evolved into a career where I continuously strive to learn and adapt to new challenges. I thrive in collaborative environments and enjoy solving complex problems to deliver high-quality solutions. Outside of coding, I enjoy staying active, exploring new technologies, and contributing to open-source projects.`;
+export const ABOUT_TEXT = `I am a dedicated and versatile full stack developer with a passion for creating efficient and user-friendly web applications. Currently pursuing B.Tech in Computer Science Engineering with specialization in AI & ML at GLA University (CGPA: 8.3/10), I have hands-on experience working with cutting-edge technologies across web development, robotics, and aerospace simulations. My journey spans from developing VR training platforms and robotics prototypes to building production-ready web applications with modern tech stacks. I thrive in collaborative environments, have led teams of 10+ members, and won 8 hackathons by prototyping innovative solutions. Outside of coding, I enjoy exploring new technologies, contributing to open-source projects, and building tech communities.`;
 
 export const EXPERIENCES = [
   {
-    year: "Oct 2022 - May 2024",
-    role: "Founder & Fullstack Dev",
-    company: "Inexia",
-    description: `Led a team in developing and maintaining web applications using JavaScript, React.js, and Node.js. Implemented RESTful APIs and integrated with MongoDB databases. Collaborated with stakeholders to define project requirements and timelines.`,
-    technologies: ["Unreal Engine 5", "Blender", "Python", "C++"],
+    year: "Oct 2024 - Mar 2025",
+    role: "Software & Integration Intern",
+    company: "SS Innovations, India",
+    description: `• Developed web application components using Next.js, TypeScript, and Node.js to integrate robotics and sensor data into centralized dashboards. Built RESTful APIs and real-time monitoring systems for medical device management.
+• Designed responsive frontend interfaces and database schemas, ensuring seamless communication between heterogeneous systems and improving overall system reliability and user experience.`,
+    technologies: ["Next.js", "TypeScript", "Node.js", "RESTful APIs", "Real-time Systems"],
   },
   {
-    year: "June 2023 - Oct 2023",
-    role: "Research Intern",
-    company: "Orbitx India Aerospace",
-    description: `Worked on Aviation Systems for Reusable Launch Vehicles, contributing to system improvements & reliability. Collaborated with a team of 10 engineers to enhance the efficiency by 15%.`,
-    technologies: ["Python", "Machine Learning", "PyTorch"],
+    year: "Jun 2023 - Oct 2023",
+    role: "Research Intern - Flight Dynamics & Simulation",
+    company: "Orbitx India Aerospace, India",
+    description: `• Contributed to research on flight dynamics and trajectory optimization for aerospace vehicle simulations, leveraging GNC frameworks for reusable launch systems.
+• Developed and refined simulation models, enhancing algorithm efficiency by 48% and prediction accuracy, improvement over traditional methods using PPO and DDPG algorithms, and contributing actionable insights for aerospace R&D projects.`,
+    technologies: ["Python", "PPO", "DDPG", "GNC Frameworks", "Simulation"],
+  },
+  {
+    year: "Oct 2022 - May 2024",
+    role: "Founder & Tech Lead",
+    company: "Inexia, India",
+    description: `• Co-founded a VR startup and developed VR prototypes and training platforms using Unreal Engine 5, C++ and Blender, creating immersive environments for early product testing and startup website.
+• Led a 10-member team and prototype validation and testing workflows, balancing technical feasibility with user experience for VR gaming and training applications.`,
+    technologies: ["Unreal Engine 5", "C++", "Blender", "VR Development"],
   },
   {
     year: "Sep 2022 - Mar 2024",
     role: "Vice President & Tech Head",
-    company: "Droid Robotics Club (GLAU)",
-    description: `Mentored over 50 students in IoT and robotics projects, leading to a 30% increase in project completion rates. Organized and led 10+ workshops and seminars on advanced robotics, impacting over 200 students.`,
-    technologies: ["Python", "C/C++", "Arduino", "Raspberry Pi", "ROS"],
+    company: "Droid Robotics Club, GLAU",
+    description: `• Built 15+ robotics and IoT prototypes including autonomous robots, sensor-driven systems, and real-time dashboards, leveraging ROS2, Arduino, Raspberry Pi, Python, and C++.
+• Contributed to system integration, hardware prototyping, and applied ML for robotics, while supporting peers through workshops and leading small R&D and hackathon projects.`,
+    technologies: ["ROS2", "Arduino", "Raspberry Pi", "Python", "C++", "IoT"],
   },
 ];
 
 export const PROJECTS = [
   {
-    title: "FullStack Banking Web App",
+    title: "Neza Digital Marketplace",
     image: project1,
+    url: "", // Add your project URL here
     description:
-      "A fully functional Banking web application with features like user authentication, account management, and transaction history.",
-    technologies: [
-      "Next.js",
-      "TypeScript",
-      "AppWrite",
-      "Plaid",
-      "Dwolla",
-      "Zod",
-      "Chart.js",
-      "Shad.cn",
-    ],
+      "Developed a digital service marketplace connecting households and businesses with local service providers. Implemented multi-user architecture, secure authentication, real-time service listing, and provider management. Integrated payment workflows via Razorpay, role-based access control, and responsive design, ensuring seamless transactions and optimal user experience.",
+    technologies: ["Next.js", "TypeScript", "Node.js", "Razorpay", "Authentication"],
   },
   {
-    title: "AI Placement Management System",
-    image: project1,
-    description:
-      "Designed and implemented an AI-driven placement management system to streamline the recruitment process. Developed backend algorithms using PyTorch for efficient data processing and predictive analytics. Also chat support for students to connect with mentors and mental health support.",
-    technologies: [
-      "React.js",
-      "MongoDB",
-      "Nest.js",
-      "Tailwind",
-      "PDFKit",
-      "PyTorch",
-      "OAuth2/JWT",
-    ],
-  },
-  {
-    title: "Robot Bionic Hand",
+    title: "Finance Management App",
     image: project2,
+    url: "", // Add your project URL here
     description:
-      "Developed a fully functional robotic hand capable of mimicking human hand movements. Programmed using Python and integrated with ROS for seamless control. Designed and 3D printed components for precise functionality and robustness.",
-    technologies: [
-      "Raspberry Pi",
-      "C/C++",
-      "Python",
-      "ROS2",
-      "OpenCV",
-      "3D Printing",
-    ],
+      "Built a finance management platform enabling secure multi-bank linking, real-time fund tracking, and seamless transfers. Implemented server-side rendering (SSR) authentication, responsive dashboards, and categorized spending insights for a smooth, dynamic user experience.",
+    technologies: ["Next.js", "TypeScript", "Plaid", "Dwolla", "Appwrite"],
   },
   {
-    title: "Placement Query, Cyber-Security, Mental Health Chatbot",
+    title: "AI-Powered Drug Research Platform",
     image: project3,
+    url: "", // Add your project URL here
     description:
-      "Created multiple chatbots to address specific needs: placement queries, cybersecurity, and mental health. Leveraged NLP techniques and libraries such as TensorFlow, NLTK, and SpaCy to enable accurate and contextual responses. Integrated chatbots into various platforms, ensuring accessibility and ease of use.",
-    technologies: ["HTML", "CSS", "React", "Vite", "Tailwind", "Bootstrap"],
+      "Developed an AI-driven platform for molecule generation and 2D protein folding, with real-time visualization for researchers. Enabled group collaboration, role-based access control, and secure authentication via NextAuth, backed by MongoDB based data storage and real-time messaging.",
+    technologies: ["Next.js", "TypeScript", "MongoDB", "Nvidia NeMo", "RDKit"],
   },
   {
-    title: "VR Firefighting & Flood Training Simulator",
+    title: "NeuraLens Neurological Assessment",
     image: project4,
+    url: "", // Add your project URL here
     description:
-      "Built a VR simulator for training firefighters for rescuing people in multiple fire & flood scenarios. Used Unreal Engine 5 to create realistic and interactive training environments. Integrated VR technology for an immersive training experience, and C++ for simulation logic.",
-    technologies: ["Unreal Engine 5", "Blender", "Blueprint/C++"],
+      "Built a multimodal neurological assessment platform integrating speech analysis, retinal imaging, motor evaluation, and cognitive testing into a unified dashboard. Implemented real-time data analysis, secure data management, and responsive visualization for clinical use.",
+    technologies: ["Next.js", "TypeScript", "Python", "ML Frameworks"],
   },
   {
-    title: "Portfolio Web",
+    title: "Hiregeist Job Platform",
     image: project5,
+    url: "", // Add your project URL here
     description:
-      "A platform to showcase my professional journey, with features to share my experiences, projects, and ways to contact me.",
-    technologies: ["React.js", "Tailwind", "Framer Motion"],
+      "Architected modern job placement platform designed to transform how students discover opportunities and companies find talent. Implemented intelligent matching algorithms and comprehensive user management system with real-time communication features.",
+    technologies: ["Next.js 15", "React 19", "TypeScript"],
+  },
+  {
+    title: "House Price Prediction Model with MLOps",
+    image: project1,
+    url: "", // Add your project URL here
+    description:
+      "Developed an end-to-end ML pipeline for house price prediction, including data ingestion, preprocessing, feature engineering, and model training with log transformations, scaling, and one-hot encoding. Implemented multimodal model evaluation using RMSE, R², cross-validation, and set up workflow monitoring to track pipeline performance and ensure reproducibility.",
+    technologies: ["Python", "Scikit-learn", "ZenML", "MLflow"],
   },
 ];
 

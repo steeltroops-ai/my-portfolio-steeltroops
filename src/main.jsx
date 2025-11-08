@@ -61,6 +61,7 @@ const BlogPost = lazy(() => import("./components/BlogPost"));
 const AdminLogin = lazy(() => import("./components/AdminLogin"));
 const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 const BlogEditor = lazy(() => import("./components/BlogEditor"));
+const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -92,9 +93,30 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/post/new" element={<BlogEditor />} />
-                <Route path="/admin/post/edit/:id" element={<BlogEditor />} />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/post/new"
+                  element={
+                    <ProtectedRoute>
+                      <BlogEditor />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/post/edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <BlogEditor />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </Suspense>
           </Router>

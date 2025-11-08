@@ -5,7 +5,7 @@ import { usePostBySlug } from "../hooks/useBlogQueries";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import rehypeRaw from "rehype-raw";
+
 import { FiArrowLeft, FiCalendar, FiClock } from "react-icons/fi";
 import Navbar from "./Navbar";
 import FloatingChatButton from "./FloatingChatButton";
@@ -233,7 +233,7 @@ const BlogPost = () => {
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight, rehypeRaw]}
+              rehypePlugins={[rehypeHighlight]}
               components={{
                 // Custom heading components with anchor links
                 h1: ({ children, ...props }) => (

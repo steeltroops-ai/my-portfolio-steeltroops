@@ -6,6 +6,7 @@ import Experience from "./components/Experience";
 import Projects from "./components/Projects";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
+import ScrollspyNav from "./components/ScrollspyNav";
 
 const App = () => {
   return (
@@ -17,7 +18,7 @@ const App = () => {
         </div>
       </div>
 
-      <div className="container px-8 mx-auto">
+      <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         <Navbar />
         <Hero />
         <About />
@@ -27,6 +28,7 @@ const App = () => {
         <Contact />
         <Footer />
       </div>
+      <ScrollspyNav />
     </div>
   );
 };

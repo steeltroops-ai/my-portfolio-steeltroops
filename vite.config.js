@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -8,7 +9,15 @@ export default defineConfig(({ mode }) => ({
       // Use automatic JSX runtime (no need to import React)
       jsxRuntime: "automatic",
     }),
-  ],
+    // Add bundle analyzer when ANALYZE=true
+    process.env.ANALYZE &&
+      visualizer({
+        filename: "dist/stats.html",
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+      }),
+  ].filter(Boolean),
   // Bun compatibility fixes
   define: {
     global: "globalThis",

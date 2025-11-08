@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 const SEOHead = ({
   title = "Mayank's Portfolio",
   description = "Full-stack developer specializing in modern web technologies",
-  image = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop",
+  image = "/profiletop.png",
   url = window.location.href,
   type = "website",
   author = "Mayank",

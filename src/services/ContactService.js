@@ -12,6 +12,20 @@ export class ContactService {
    */
   static async submitMessage(messageData) {
     try {
+      // Anti-abuse checks (honeypot + minimum time on page)
+      const honeypot = messageData._hp || messageData.honeypot;
+      const submissionDurationMs = messageData.submissionDurationMs;
+      if (honeypot && String(honeypot).trim() !== "") {
+        throw new Error("Spam detected. Please try again.");
+      }
+      if (
+        typeof submissionDurationMs === "number" &&
+        submissionDurationMs < 2000
+      ) {
+        throw new Error(
+          "Submission too fast. Please take a moment and try again."
+        );
+      }
       // Validate required fields
       const { name, email, subject, message } = messageData;
 
