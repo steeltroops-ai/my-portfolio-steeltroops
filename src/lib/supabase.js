@@ -4,17 +4,15 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Debug logging for production troubleshooting
-if (!import.meta.env.PROD) {
-  console.log("Environment check:", {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-    urlType: typeof supabaseUrl,
-    keyType: typeof supabaseAnonKey,
-    mode: import.meta.env.MODE,
-    prod: import.meta.env.PROD,
-  });
-}
+// Debug logging for troubleshooting (always log in production to diagnose issues)
+console.log("🔧 Supabase Environment check:", {
+  hasUrl: !!supabaseUrl,
+  hasKey: !!supabaseAnonKey,
+  urlPreview: supabaseUrl ? supabaseUrl.substring(0, 30) + "..." : "missing",
+  keyPreview: supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + "..." : "missing",
+  mode: import.meta.env.MODE,
+  prod: import.meta.env.PROD,
+});
 
 // Create a fallback client if environment variables are missing
 let supabase;
@@ -25,12 +23,14 @@ if (
   supabaseUrl === "undefined" ||
   supabaseAnonKey === "undefined"
 ) {
-  if (!import.meta.env.PROD) {
-    console.warn(
-      "Missing or invalid Supabase environment variables - using fallback client",
-      { supabaseUrl, hasKey: !!supabaseAnonKey }
-    );
-  }
+  console.warn(
+    "⚠️ Missing or invalid Supabase environment variables - using fallback client",
+    {
+      supabaseUrl: supabaseUrl || "missing",
+      hasKey: !!supabaseAnonKey,
+      allEnvVars: Object.keys(import.meta.env)
+    }
+  );
 
   // Create a minimal mock client that won't cause errors
   supabase = {
@@ -151,16 +151,12 @@ if (
     },
   };
 
-  if (!import.meta.env.PROD) {
-    console.warn(
-      "Using mock Supabase client - database operations will fail gracefully"
-    );
-  }
+  console.warn(
+    "⚠️ Using mock Supabase client - database operations will fail gracefully"
+  );
 } else {
   try {
-    if (!import.meta.env.PROD) {
-      console.log("Creating real Supabase client with URL:", supabaseUrl);
-    }
+    console.log("✅ Creating real Supabase client with URL:", supabaseUrl.substring(0, 30) + "...");
     supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
@@ -168,11 +164,9 @@ if (
         detectSessionInUrl: true,
       },
     });
-    if (!import.meta.env.PROD) {
-      console.log("Supabase client created successfully");
-    }
+    console.log("✅ Supabase client created successfully");
   } catch (error) {
-    console.error("Failed to create Supabase client:", error);
+    console.error("❌ Failed to create Supabase client:", error);
     // Fall back to mock client
     supabase = {
       from: () => ({
