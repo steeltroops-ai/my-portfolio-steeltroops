@@ -123,8 +123,10 @@ if (
       signOut: () => Promise.resolve({ error: null }),
       getSession: () =>
         Promise.resolve({ data: { session: null }, error: null }),
+      getUser: () =>
+        Promise.resolve({ data: { user: null }, error: { message: "Supabase not configured" } }),
       onAuthStateChange: (callback) => ({
-        data: { subscription: { unsubscribe: () => {} } },
+        data: { subscription: { unsubscribe: () => { } } },
       }),
       signUp: () =>
         Promise.resolve({
@@ -204,8 +206,10 @@ if (
         signOut: () => Promise.resolve({ error: null }),
         getSession: () =>
           Promise.resolve({ data: { session: null }, error: null }),
+        getUser: () =>
+          Promise.resolve({ data: { user: null }, error: { message: "Supabase initialization failed" } }),
         onAuthStateChange: () => ({
-          data: { subscription: { unsubscribe: () => {} } },
+          data: { subscription: { unsubscribe: () => { } } },
         }),
       },
       storage: {

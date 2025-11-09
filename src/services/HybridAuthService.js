@@ -33,96 +33,68 @@ const isSupabaseAvailable = async () => {
 };
 
 /**
- * Hybrid sign in function
- * Tries Supabase first, falls back to local authentication
+ * Sign in function - ONLY uses Supabase authentication
  */
 export const signInWithCredentials = async (identifier, password) => {
-  console.log("🔐 HybridAuth: Starting authentication...");
-  console.log("📝 Identifier:", identifier);
-  console.log("📝 Password length:", password?.length);
+  console.log("🔐 Supabase Auth: Starting authentication...");
+  console.log("📝 Email:", identifier);
 
-  // ALWAYS try local auth first for now since Supabase credentials are invalid
-  console.log("🔄 Trying local authentication...");
-
-  try {
-    const localResult = await localSignIn(identifier, password);
-    console.log("📋 Local auth result:", JSON.stringify(localResult, null, 2));
-
-    if (localResult && localResult.data && !localResult.error) {
-      console.log("✅ Local auth successful!");
-      return {
-        data: localResult.data,
-        error: null,
-        authType: "local",
-      };
-    }
-
-    console.log("❌ Local auth failed:", localResult?.error?.message);
-  } catch (localError) {
-    console.error("❌ Local auth exception:", localError);
-  }
-
-  // If local auth fails, try Supabase as backup
   try {
     const supabaseAvail = await isSupabaseAvailable();
     console.log("📡 Supabase available:", supabaseAvail);
 
-    if (supabaseAvail) {
-      console.log("🔄 Trying Supabase authentication...");
-
-      // Try email-based sign in first
-      let result = await supabaseSignIn(identifier, password);
-
-      // If email sign in fails, try username-based sign in
-      if (result.error) {
-        console.log("⚠️ Email auth failed, trying username auth...");
-        result = await supabaseSignInCredentials(identifier, password);
-      }
-
-      if (!result.error) {
-        console.log("✅ Supabase auth successful!");
-        return {
-          ...result,
-          authType: "supabase",
-        };
-      }
-
-      console.warn("⚠️ Supabase auth failed:", result.error?.message);
+    if (!supabaseAvail) {
+      return {
+        data: null,
+        error: {
+          message: "Supabase authentication is not configured",
+          type: "config_error",
+        },
+      };
     }
-  } catch (supabaseError) {
-    console.warn("⚠️ Supabase error:", supabaseError.message);
-  }
 
-  // Both failed
-  return {
-    data: null,
-    error: {
-      message: "Invalid credentials. Please use: admin / admin123",
-      type: "auth_failed",
-    },
-  };
+    console.log("🔄 Authenticating with Supabase...");
+
+    // Use email-based sign in
+    const result = await supabaseSignIn(identifier, password);
+
+    if (!result.error && result.data) {
+      console.log("✅ Supabase auth successful!");
+      return {
+        ...result,
+        authType: "supabase",
+      };
+    }
+
+    console.warn("⚠️ Supabase auth failed:", result.error?.message);
+    return {
+      data: null,
+      error: {
+        message: result.error?.message || "Invalid email or password",
+        type: "auth_failed",
+      },
+    };
+  } catch (error) {
+    console.error("❌ Supabase error:", error);
+    return {
+      data: null,
+      error: {
+        message: error.message || "Authentication failed",
+        type: "auth_error",
+      },
+    };
+  }
 };
 
 /**
- * Hybrid sign out function
+ * Sign out function - ONLY uses Supabase
  */
 export const signOut = async () => {
   try {
-    const results = await Promise.allSettled([
-      supabaseSignOut(),
-      localSignOut(),
-    ]);
-
-    // Return success if at least one sign out succeeded
-    const hasError = results.every(
-      (result) => result.status === "rejected" || result.value?.error
-    );
-
-    return {
-      error: hasError ? { message: "Sign out partially failed" } : null,
-    };
+    const result = await supabaseSignOut();
+    return result;
   } catch (error) {
-    console.error("Hybrid sign out error:", error);
+    console.error("Sign out error:", error);
     return {
       error: { message: "Sign out failed" },
     };
@@ -130,11 +102,10 @@ export const signOut = async () => {
 };
 
 /**
- * Get current session from either Supabase or local storage
+ * Get current session from Supabase ONLY
  */
 export const getSession = async () => {
   try {
-    // Check Supabase first
     if (await isSupabaseAvailable()) {
       const user = await supabaseGetCurrentUser();
       if (user.data && !user.error) {
@@ -148,20 +119,6 @@ export const getSession = async () => {
           error: null,
         };
       }
-    }
-
-    // Fall back to local session
-    const localSession = await localGetSession();
-    if (localSession.data?.session) {
-      return {
-        data: {
-          session: {
-            ...localSession.data.session,
-            authType: "local",
-          },
-        },
-        error: null,
-      };
     }
 
     return {
@@ -178,18 +135,14 @@ export const getSession = async () => {
 };
 
 /**
- * Check if user is authenticated in either system
+ * Check if user is authenticated via Supabase ONLY
  */
 export const isAuthenticated = async () => {
   try {
-    // Check Supabase first
     if (await isSupabaseAvailable()) {
-      const supabaseAuth = await supabaseIsAuthenticated();
-      if (supabaseAuth) return true;
+      return await supabaseIsAuthenticated();
     }
-
-    // Check local authentication
-    return await localIsAuthenticated();
+    return false;
   } catch (error) {
     console.error("Auth check error:", error);
     return false;
@@ -197,7 +150,7 @@ export const isAuthenticated = async () => {
 };
 
 /**
- * Get comprehensive authentication information
+ * Get authentication information from Supabase ONLY
  */
 export const getAuthInfo = async () => {
   try {
@@ -221,20 +174,6 @@ export const getAuthInfo = async () => {
       }
     }
 
-    // If not authenticated via Supabase, check local auth
-    if (!authInfo.isAuthenticated) {
-      const localAuth = localGetAuthInfo();
-      if (localAuth.isAuthenticated) {
-        authInfo = {
-          ...authInfo,
-          authType: "local",
-          user: localAuth.user,
-          isAuthenticated: true,
-          ...localAuth,
-        };
-      }
-    }
-
     return authInfo;
   } catch (error) {
     console.error("Get auth info error:", error);
@@ -249,21 +188,11 @@ export const getAuthInfo = async () => {
 };
 
 /**
- * Extend current session (local auth only)
+ * Extend current session - Supabase handles this automatically
  */
 export const extendSession = async () => {
-  try {
-    const authInfo = await getAuthInfo();
-
-    if (authInfo.authType === "local") {
-      return await localExtendSession();
-    }
-
-    // Supabase handles session extension automatically
-    return { data: null, error: null };
-  } catch (error) {
-    return { error: { message: "Failed to extend session" } };
-  }
+  // Supabase handles session extension automatically
+  return { data: null, error: null };
 };
 
 /**

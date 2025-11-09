@@ -63,24 +63,15 @@ const AdminLogin = () => {
       if (result && result.data && !result.error) {
         // Success
         console.log("✓ Login successful!");
-
-        // Only redirect to dashboard if using Supabase authentication
-        if (result.authType === "supabase") {
-          console.log("✓ Supabase auth - redirecting to dashboard");
-          navigate("/admin/dashboard");
-        } else {
-          console.log("✓ Local auth - staying on login page");
-          // Stay on login page for local auth
-        }
+        console.log("✓ Redirecting to dashboard");
+        navigate("/admin/dashboard");
       } else {
         // Handle different error types
         console.error("✗ Login failed:", result.error);
-        if (result.error?.type === "lockout") {
-          setError(result.error.message);
-        } else if (result.error?.type === "invalid_credentials") {
-          setError(result.error.message);
+        if (result.error?.type === "config_error") {
+          setError("Supabase is not configured. Please check your environment variables.");
         } else {
-          setError(result.error?.message || "Invalid username or password. Try: admin / admin123");
+          setError(result.error?.message || "Invalid email or password");
         }
       }
     } catch (err) {
@@ -138,7 +129,7 @@ const AdminLogin = () => {
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="e.g., admin or admin@example.com"
+              placeholder="Enter your email"
               disabled={loading}
               className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 disabled:opacity-50 transition-all"
               autoComplete="username"
@@ -153,7 +144,7 @@ const AdminLogin = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="e.g., admin123"
+              placeholder="Enter your password"
               disabled={loading}
               className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 disabled:opacity-50 transition-all"
               autoComplete="current-password"
