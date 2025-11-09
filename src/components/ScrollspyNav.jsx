@@ -100,9 +100,9 @@ const ScrollspyNav = () => {
     return (
         <nav
             aria-label="Page sections"
-            className="hidden lg:block fixed right-4 xl:right-8 top-1/2 -translate-y-1/2 z-40 pointer-events-none"
+            className="hidden md:block fixed right-3 md:right-4 xl:right-8 top-1/2 -translate-y-1/2 z-40 pointer-events-none"
         >
-            <ul className="flex flex-col gap-2 items-end pointer-events-auto">
+            <ul className="flex flex-col gap-1.5 md:gap-2 items-end pointer-events-auto">
                 {sections.map((section) => {
                     const isActive = activeSection === section.id;
 
@@ -111,11 +111,11 @@ const ScrollspyNav = () => {
                             <button
                                 onClick={() => handleNavClick(section.id)}
                                 className={`
-                  block text-xs xl:text-sm whitespace-nowrap transition-all duration-300 cursor-pointer
+                  block text-[10px] md:text-xs xl:text-sm whitespace-nowrap transition-all duration-300 cursor-pointer
                   focus:outline-none
                   ${isActive
-                                        ? 'text-purple-300 font-medium bg-purple-500/20 border border-purple-400/50 rounded-full px-3 py-1.5 backdrop-blur-md shadow-lg'
-                                        : 'text-neutral-400 font-normal hover:text-neutral-300 px-2 py-1'
+                                        ? 'text-purple-300 font-medium bg-purple-500/20 border border-purple-400/50 rounded-full px-2 md:px-3 py-1 md:py-1.5 backdrop-blur-md shadow-lg'
+                                        : 'text-neutral-400 font-normal hover:text-neutral-300 px-1.5 md:px-2 py-0.5 md:py-1'
                                     }
                 `}
                                 aria-current={isActive ? 'true' : 'false'}

@@ -14,12 +14,12 @@ const Comments = ({ postId, postTitle }) => {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="mt-12 space-y-8"
+      className="mt-12 space-y-6"
     >
       {/* Comments Section Header */}
-      <div className="border-t border-neutral-800 pt-8">
-        <h3 className="text-2xl font-bold text-neutral-200 mb-2">Discussion</h3>
-        <p className="text-neutral-400 text-sm">
+      <div className="border-t border-white/10 pt-8">
+        <h3 className="text-xl font-bold text-white mb-1">Discussion</h3>
+        <p className="text-neutral-400 text-xs">
           Share your thoughts about &ldquo;{postTitle}&rdquo;
         </p>
       </div>

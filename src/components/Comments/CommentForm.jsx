@@ -15,59 +15,56 @@ import {
 } from "../../hooks/useCommentQueries";
 
 const CommentForm = ({ postId, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    content: "",
-    author_name: "",
-    author_email: "",
-  });
+  const [content, setContent] = useState("");
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const { mutate: addComment, isLoading } = useAddComment();
-  const { validateComment } = useCommentValidation();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+  const handleContentChange = (e) => {
+    setContent(e.target.value);
+    if (errors.content) {
+      setErrors({});
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form
-    const validation = validateComment(formData);
-    if (!validation.isValid) {
-      setErrors(validation.errors);
+    // Simple validation
+    if (!content.trim()) {
+      setErrors({ content: "Comment cannot be empty" });
+      return;
+    }
+
+    if (content.length > 1000) {
+      setErrors({ content: "Comment is too long (max 1000 characters)" });
       return;
     }
 
     // Clear any previous errors
     setErrors({});
 
-    // Submit the comment
+    // Submit the comment with anonymous author
     addComment(
-      { ...formData, post_id: postId },
+      {
+        content: content.trim(),
+        post_id: postId,
+        author_name: "Anonymous",
+        author_email: "anonymous@example.com"
+      },
       {
         onSuccess: (result) => {
           if (result.success) {
             setShowSuccess(true);
-            setFormData({ content: "", author_name: "", author_email: "" });
+            setContent("");
+            setIsFocused(false);
 
-            // Hide success message after 5 seconds
+            // Hide success message after 3 seconds
             setTimeout(() => {
               setShowSuccess(false);
-            }, 5000);
+            }, 3000);
 
             if (onSuccess) onSuccess(result);
           } else {
@@ -84,28 +81,28 @@ const CommentForm = ({ postId, onSuccess }) => {
     );
   };
 
+  const handleCancel = () => {
+    setContent("");
+    setIsFocused(false);
+    setErrors({});
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-neutral-900/30 backdrop-blur-sm rounded-xl p-6 border border-neutral-800/50"
     >
-      <h4 className="text-xl font-semibold text-neutral-200 mb-4 flex items-center gap-2">
-        <FiMessageSquare className="text-cyan-400" />
-        Leave a Comment
-      </h4>
-
       {/* Success Message */}
       {showSuccess && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-green-900/20 border border-green-700/30 rounded-lg flex items-center gap-3"
+          className="mb-3 p-2 bg-green-900/20 border border-green-700/30 rounded-lg flex items-center gap-2"
         >
-          <FiCheck className="text-green-400 text-xl flex-shrink-0" />
-          <p className="text-green-300 text-sm">
-            Comment submitted successfully! It will appear after moderation.
+          <FiCheck className="text-green-400 text-xs flex-shrink-0" />
+          <p className="text-green-300 text-xs">
+            Comment posted!
           </p>
         </motion.div>
       )}
@@ -115,130 +112,101 @@ const CommentForm = ({ postId, onSuccess }) => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-red-900/20 border border-red-700/30 rounded-lg flex items-center gap-3"
+          className="mb-3 p-2 bg-red-900/20 border border-red-700/30 rounded-lg flex items-center gap-2"
         >
-          <FiAlertCircle className="text-red-400 text-xl flex-shrink-0" />
-          <p className="text-red-300 text-sm">{errors.submit}</p>
+          <FiAlertCircle className="text-red-400 text-xs flex-shrink-0" />
+          <p className="text-red-300 text-xs">{errors.submit}</p>
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Comment Content */}
-        <div>
-          <label
-            htmlFor="content"
-            className="block text-sm font-medium text-neutral-300 mb-2"
-          >
-            Comment *
-          </label>
-          <textarea
-            id="content"
-            name="content"
-            value={formData.content}
-            onChange={handleInputChange}
-            rows={4}
-            className={`w-full px-4 py-3 bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all resize-vertical ${
-              errors.content ? "border-red-500" : "border-neutral-700"
-            }`}
-            placeholder="Share your thoughts..."
-            disabled={isLoading}
-          />
-          {errors.content && (
-            <p className="mt-1 text-sm text-red-400">{errors.content}</p>
-          )}
-          <p className="mt-1 text-xs text-neutral-500">
-            {formData.content.length}/1000 characters
-          </p>
-        </div>
-
-        {/* Author Info Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Name Field */}
-          <div>
-            <label
-              htmlFor="author_name"
-              className="block text-sm font-medium text-neutral-300 mb-2"
+      <form onSubmit={handleSubmit}>
+        <div className={`flex gap-3 transition-all duration-300 ease-in-out ${isFocused ? "items-start" : "items-center"
+          }`}>
+          {/* Avatar with user icon */}
+          <div className="flex-shrink-0">
+            <motion.div
+              animate={{
+                scale: isFocused ? 1 : 1,
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="w-10 h-10 rounded-full border backdrop-blur-[2px] border-white/10 bg-white/5 flex items-center justify-center shadow-lg"
             >
-              <FiUser className="inline mr-2" />
-              Name *
-            </label>
-            <input
-              type="text"
-              id="author_name"
-              name="author_name"
-              value={formData.author_name}
-              onChange={handleInputChange}
-              className={`w-full px-4 py-3 bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all ${
-                errors.author_name ? "border-red-500" : "border-neutral-700"
-              }`}
-              placeholder="Your name"
-              disabled={isLoading}
-            />
-            {errors.author_name && (
-              <p className="mt-1 text-sm text-red-400">{errors.author_name}</p>
-            )}
+              <FiUser className="text-neutral-400 text-sm" />
+            </motion.div>
           </div>
 
-          {/* Email Field */}
-          <div>
-            <label
-              htmlFor="author_email"
-              className="block text-sm font-medium text-neutral-300 mb-2"
+          {/* Comment input area */}
+          <div className="flex-1">
+            <motion.div
+              animate={{
+                borderRadius: isFocused ? "0.5rem" : "9999px",
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className={`border backdrop-blur-[2px] shadow-lg ${errors.content
+                ? "border-red-500/50 bg-red-500/5"
+                : isFocused
+                  ? "border-white/20 bg-white/10"
+                  : "border-white/10 bg-white/5 hover:border-white/20"
+                }`}
             >
-              <FiMail className="inline mr-2" />
-              Email *
-            </label>
-            <input
-              type="email"
-              id="author_email"
-              name="author_email"
-              value={formData.author_email}
-              onChange={handleInputChange}
-              className={`w-full px-4 py-3 bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all ${
-                errors.author_email ? "border-red-500" : "border-neutral-700"
-              }`}
-              placeholder="your.email@example.com"
-              disabled={isLoading}
-            />
-            {errors.author_email && (
-              <p className="mt-1 text-sm text-red-400">{errors.author_email}</p>
+              <textarea
+                value={content}
+                onChange={handleContentChange}
+                onFocus={() => setIsFocused(true)}
+                rows={isFocused ? 3 : 1}
+                className={`w-full text-sm bg-transparent focus:outline-none transition-all duration-300 ease-in-out resize-none text-white placeholder:text-neutral-500 ${isFocused
+                  ? "px-3 py-2"
+                  : "px-4 py-2 h-10 leading-6"
+                  }`}
+                placeholder="Add a comment..."
+                disabled={isLoading}
+              />
+
+              {/* Action buttons - only show when focused */}
+              {isFocused && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex justify-between items-center px-3 pb-2 border-t border-white/10 pt-2"
+                >
+                  <p className="text-[10px] text-neutral-500">
+                    {content.length}/1000
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      disabled={isLoading}
+                      className="px-3 py-1.5 text-xs text-neutral-300 rounded-lg border backdrop-blur-[2px] border-white/10 bg-white/5 hover:bg-white/10 transition-all disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <motion.button
+                      type="submit"
+                      disabled={isLoading || !content.trim()}
+                      whileHover={{ scale: isLoading || !content.trim() ? 1 : 1.02 }}
+                      whileTap={{ scale: isLoading || !content.trim() ? 1 : 0.98 }}
+                      className={`px-4 py-1.5 text-xs rounded-lg font-medium transition-all border backdrop-blur-[2px] ${isLoading || !content.trim()
+                        ? "border-white/10 bg-white/5 text-neutral-500 cursor-not-allowed"
+                        : "border-cyan-400/30 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30"
+                        }`}
+                    >
+                      {isLoading ? "Posting..." : "Comment"}
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+
+            {errors.content && (
+              <p className="mt-1.5 text-xs text-red-400">{errors.content}</p>
             )}
           </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-end pt-2">
-          <motion.button
-            type="submit"
-            disabled={isLoading}
-            whileHover={{ scale: isLoading ? 1 : 1.02 }}
-            whileTap={{ scale: isLoading ? 1 : 0.98 }}
-            className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-              isLoading
-                ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                : "bg-cyan-600 hover:bg-cyan-700 text-white"
-            }`}
-          >
-            {isLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 rounded-full border-neutral-400 border-t-transparent animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <FiSend />
-                Post Comment
-              </>
-            )}
-          </motion.button>
         </div>
       </form>
-
-      <p className="mt-4 text-xs text-neutral-500">
-        Your email will not be published. All comments are moderated before
-        appearing.
-      </p>
-    </motion.div>
+    </motion.div >
   );
 };
 
@@ -248,3 +216,4 @@ CommentForm.propTypes = {
 };
 
 export default CommentForm;
+

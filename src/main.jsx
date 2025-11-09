@@ -90,8 +90,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     </>
                   }
                 />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/blogs" element={<Blog />} />
+                <Route path="/blogs/:slug" element={<BlogPost />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route
                   path="/admin/dashboard"

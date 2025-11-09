@@ -61,7 +61,7 @@ const simpleHash = async (text) => {
 const isLockedOut = () => {
   const lockoutUntil = localStorage.getItem(LOCAL_AUTH_CONFIG.lockoutKey);
   if (!lockoutUntil) return false;
-  
+
   const lockoutTime = parseInt(lockoutUntil);
   if (Date.now() > lockoutTime) {
     // Lockout expired, clear it
@@ -69,7 +69,7 @@ const isLockedOut = () => {
     localStorage.removeItem(LOCAL_AUTH_CONFIG.attemptsKey);
     return false;
   }
-  
+
   return true;
 };
 
@@ -79,12 +79,12 @@ const isLockedOut = () => {
 const recordFailedAttempt = () => {
   const attempts = parseInt(localStorage.getItem(LOCAL_AUTH_CONFIG.attemptsKey) || '0') + 1;
   localStorage.setItem(LOCAL_AUTH_CONFIG.attemptsKey, attempts.toString());
-  
+
   if (attempts >= LOCAL_AUTH_CONFIG.maxLoginAttempts) {
     const lockoutUntil = Date.now() + LOCAL_AUTH_CONFIG.lockoutDuration;
     localStorage.setItem(LOCAL_AUTH_CONFIG.lockoutKey, lockoutUntil.toString());
   }
-  
+
   return attempts;
 };
 
@@ -108,10 +108,10 @@ const createSession = async (user) => {
     expiresAt: Date.now() + LOCAL_AUTH_CONFIG.sessionTimeout,
     type: 'local'
   };
-  
+
   localStorage.setItem(LOCAL_AUTH_CONFIG.tokenKey, token);
   localStorage.setItem(LOCAL_AUTH_CONFIG.sessionKey, JSON.stringify(session));
-  
+
   return session;
 };
 
@@ -122,15 +122,15 @@ const getCurrentSession = () => {
   try {
     const sessionData = localStorage.getItem(LOCAL_AUTH_CONFIG.sessionKey);
     if (!sessionData) return null;
-    
+
     const session = JSON.parse(sessionData);
-    
+
     // Check if session is expired
     if (Date.now() > session.expiresAt) {
       clearSession();
       return null;
     }
-    
+
     return session;
   } catch (error) {
     console.error('Error parsing session data:', error);
@@ -151,11 +151,18 @@ const clearSession = () => {
  * Sign in with username/email and password
  */
 export const signInWithPassword = async (identifier, password) => {
+  console.log("🔐 LocalAuth: Starting local authentication...");
+  console.log("📝 Identifier:", identifier);
+  console.log("📝 Password length:", password?.length);
+  console.log("🔑 Expected username:", DEFAULT_CREDENTIALS.username);
+  console.log("🔑 Expected email:", DEFAULT_CREDENTIALS.email);
+
   try {
     // Check if locked out
     if (isLockedOut()) {
       const lockoutUntil = localStorage.getItem(LOCAL_AUTH_CONFIG.lockoutKey);
       const remainingTime = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 60000);
+      console.log("🔒 Account is locked out");
       return {
         data: null,
         error: {
@@ -164,16 +171,21 @@ export const signInWithPassword = async (identifier, password) => {
         }
       };
     }
-    
+
     // Verify credentials
     const isValidUsername = identifier === DEFAULT_CREDENTIALS.username;
     const isValidEmail = identifier === DEFAULT_CREDENTIALS.email;
     const isValidPassword = password === DEFAULT_CREDENTIALS.password;
-    
+
+    console.log("✓ Username match:", isValidUsername);
+    console.log("✓ Email match:", isValidEmail);
+    console.log("✓ Password match:", isValidPassword);
+
     if ((isValidUsername || isValidEmail) && isValidPassword) {
       // Successful login
+      console.log("✅ Credentials valid! Creating session...");
       clearFailedAttempts();
-      
+
       const user = {
         id: 'local-admin',
         email: DEFAULT_CREDENTIALS.email,
@@ -181,9 +193,10 @@ export const signInWithPassword = async (identifier, password) => {
         role: 'admin',
         authType: 'local'
       };
-      
+
       const session = await createSession(user);
-      
+      console.log("✅ Session created successfully");
+
       return {
         data: {
           user,
@@ -193,13 +206,14 @@ export const signInWithPassword = async (identifier, password) => {
       };
     } else {
       // Failed login
+      console.log("❌ Invalid credentials");
       const attempts = recordFailedAttempt();
       const remainingAttempts = LOCAL_AUTH_CONFIG.maxLoginAttempts - attempts;
-      
+
       return {
         data: null,
         error: {
-          message: remainingAttempts > 0 
+          message: remainingAttempts > 0
             ? `Invalid credentials. ${remainingAttempts} attempts remaining.`
             : 'Invalid credentials. Account will be locked after next failed attempt.',
           type: 'invalid_credentials',
@@ -208,11 +222,11 @@ export const signInWithPassword = async (identifier, password) => {
       };
     }
   } catch (error) {
-    console.error('Local auth error:', error);
+    console.error('❌ Local auth error:', error);
     return {
       data: null,
       error: {
-        message: 'Authentication service error',
+        message: 'Authentication service error: ' + error.message,
         type: 'service_error'
       }
     };
@@ -270,7 +284,7 @@ export const getAuthInfo = () => {
   const session = getCurrentSession();
   const lockoutUntil = localStorage.getItem(LOCAL_AUTH_CONFIG.lockoutKey);
   const attempts = parseInt(localStorage.getItem(LOCAL_AUTH_CONFIG.attemptsKey) || '0');
-  
+
   return {
     isAuthenticated: !!session,
     authType: 'local',
@@ -290,10 +304,10 @@ export const extendSession = async () => {
   try {
     const session = getCurrentSession();
     if (!session) return { error: { message: 'No active session' } };
-    
+
     session.expiresAt = Date.now() + LOCAL_AUTH_CONFIG.sessionTimeout;
     localStorage.setItem(LOCAL_AUTH_CONFIG.sessionKey, JSON.stringify(session));
-    
+
     return { data: session, error: null };
   } catch (error) {
     return { error: { message: 'Failed to extend session' } };

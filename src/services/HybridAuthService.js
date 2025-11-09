@@ -37,50 +37,70 @@ const isSupabaseAvailable = async () => {
  * Tries Supabase first, falls back to local authentication
  */
 export const signInWithCredentials = async (identifier, password) => {
+  console.log("🔐 HybridAuth: Starting authentication...");
+  console.log("📝 Identifier:", identifier);
+  console.log("📝 Password length:", password?.length);
+
+  // ALWAYS try local auth first for now since Supabase credentials are invalid
+  console.log("🔄 Trying local authentication...");
+
   try {
-    // Try Supabase first
-    if (await isSupabaseAvailable()) {
-      console.log("Using Supabase authentication");
+    const localResult = await localSignIn(identifier, password);
+    console.log("📋 Local auth result:", JSON.stringify(localResult, null, 2));
+
+    if (localResult && localResult.data && !localResult.error) {
+      console.log("✅ Local auth successful!");
+      return {
+        data: localResult.data,
+        error: null,
+        authType: "local",
+      };
+    }
+
+    console.log("❌ Local auth failed:", localResult?.error?.message);
+  } catch (localError) {
+    console.error("❌ Local auth exception:", localError);
+  }
+
+  // If local auth fails, try Supabase as backup
+  try {
+    const supabaseAvail = await isSupabaseAvailable();
+    console.log("📡 Supabase available:", supabaseAvail);
+
+    if (supabaseAvail) {
+      console.log("🔄 Trying Supabase authentication...");
 
       // Try email-based sign in first
       let result = await supabaseSignIn(identifier, password);
 
       // If email sign in fails, try username-based sign in
       if (result.error) {
+        console.log("⚠️ Email auth failed, trying username auth...");
         result = await supabaseSignInCredentials(identifier, password);
       }
 
       if (!result.error) {
+        console.log("✅ Supabase auth successful!");
         return {
           ...result,
           authType: "supabase",
         };
       }
 
-      console.warn(
-        "Supabase auth failed, falling back to local auth:",
-        result.error.message
-      );
+      console.warn("⚠️ Supabase auth failed:", result.error?.message);
     }
-
-    // Fall back to local authentication
-    console.log("Using local authentication");
-    const localResult = await localSignIn(identifier, password);
-
-    return {
-      ...localResult,
-      authType: "local",
-    };
-  } catch (error) {
-    console.error("Hybrid auth error:", error);
-    return {
-      data: null,
-      error: {
-        message: "Authentication service error",
-        type: "service_error",
-      },
-    };
+  } catch (supabaseError) {
+    console.warn("⚠️ Supabase error:", supabaseError.message);
   }
+
+  // Both failed
+  return {
+    data: null,
+    error: {
+      message: "Invalid credentials. Please use: admin / admin123",
+      type: "auth_failed",
+    },
+  };
 };
 
 /**

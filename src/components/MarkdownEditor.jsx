@@ -15,7 +15,7 @@ const MarkdownEditor = ({
   height = "400px",
   showPreview = true,
 }) => {
-  const [activeTab, setActiveTab] = useState("write");
+  const [activeTab, setActiveTab] = useState("markdown");
   const [content, setContent] = useState(value);
 
   // Quill modules configuration
@@ -118,39 +118,41 @@ const MarkdownEditor = ({
   return (
     <div className="markdown-editor border border-neutral-700 rounded-lg overflow-hidden bg-neutral-900">
       {/* Tab Navigation */}
-      <div className="flex border-b border-neutral-700 bg-neutral-800">
-        <button
-          onClick={() => setActiveTab("write")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "write"
-              ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
-              : "text-neutral-400 hover:text-neutral-200"
-          }`}
-        >
-          Write
-        </button>
-        <button
-          onClick={() => setActiveTab("markdown")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "markdown"
-              ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
-              : "text-neutral-400 hover:text-neutral-200"
-          }`}
-        >
-          Markdown
-        </button>
-        {showPreview && (
+      <div className="flex items-center justify-between border-b border-neutral-700 bg-neutral-800">
+        <div className="flex">
           <button
-            onClick={() => setActiveTab("preview")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === "preview"
+            onClick={() => setActiveTab("markdown")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "markdown"
+              ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
+              : "text-neutral-400 hover:text-neutral-200"
+              }`}
+          >
+            ✍️ Write (Markdown)
+          </button>
+          {showPreview && (
+            <button
+              onClick={() => setActiveTab("preview")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "preview"
                 ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
                 : "text-neutral-400 hover:text-neutral-200"
-            }`}
+                }`}
+            >
+              👁️ Preview
+            </button>
+          )}
+          <button
+            onClick={() => setActiveTab("write")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "write"
+              ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
+              : "text-neutral-400 hover:text-neutral-200"
+              }`}
           >
-            Preview
+            📝 Rich Editor
           </button>
-        )}
+        </div>
+        <div className="px-4 text-xs text-neutral-500">
+          Supports full Markdown syntax
+        </div>
       </div>
 
       {/* Editor Content */}

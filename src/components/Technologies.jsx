@@ -184,10 +184,10 @@ const TechnologyIcon = ({ tech, duration, index }) => {
       onKeyDown={handleKeyDown}
       aria-label={`${tech.name} - ${tech.description}`}
     >
-      <div className="relative p-4 rounded-2xl min-w-[88px] min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black bg-gradient-to-br from-white/5 via-white/3 to-transparent border border-white/10 shadow-2xl hover:from-white/10 hover:via-white/5 hover:border-white/20 hover:shadow-cyan-500/20">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30"></div>
+      <div className="relative p-3 sm:p-4 rounded-xl sm:rounded-2xl min-w-[70px] min-h-[70px] sm:min-w-[88px] sm:min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black bg-gradient-to-br from-white/5 via-white/3 to-transparent border border-white/10 shadow-2xl hover:from-white/10 hover:via-white/5 hover:border-white/20 hover:shadow-cyan-500/20">
+        <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30"></div>
         <IconComponent
-          className={`${tech.color} text-7xl transition-all duration-200 group-hover:drop-shadow-lg relative z-10`}
+          className={`${tech.color} text-5xl sm:text-6xl lg:text-7xl transition-all duration-200 group-hover:drop-shadow-lg relative z-10`}
         />
       </div>
 
@@ -228,7 +228,7 @@ const Technologies = () => {
   return (
     <section
       id="technologies"
-      className="pb-12 lg:pb-24 border-b border-neutral-800 scroll-mt-20"
+      className="pb-8 sm:pb-12 lg:pb-24 border-b border-neutral-800 scroll-mt-20"
       aria-labelledby="technologies-heading"
     >
       <motion.h2
@@ -236,7 +236,7 @@ const Technologies = () => {
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
         transition={{ duration: 1.2 }}
-        className="my-12 lg:my-20 text-3xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center"
+        className="my-8 sm:my-12 lg:my-20 text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center"
       >
         Tech <span className="text-neutral-500">Stack</span>
       </motion.h2>
@@ -245,7 +245,7 @@ const Technologies = () => {
         whileInView={{ opacity: 1, x: 0 }}
         initial={{ opacity: 0, x: -100 }}
         transition={{ duration: 1.5 }}
-        className="flex flex-wrap items-center justify-center gap-5"
+        className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-5"
         role="grid"
         aria-label="Technology skills showcase"
       >

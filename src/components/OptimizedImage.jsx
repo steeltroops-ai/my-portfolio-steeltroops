@@ -26,71 +26,6 @@ const OptimizedImage = ({
   // Sanitize the image URL
   const sanitizedSrc = sanitizeImageUrl(src);
 
-  useEffect(() => {
-    if (!lazy || !imgRef.current) {
-      return;
-    }
-
-    // Intersection Observer for lazy loading
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsInView(true);
-            observerRef.current?.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        rootMargin: "50px", // Start loading 50px before the image comes into view
-        threshold: 0.1,
-      }
-    );
-
-    observerRef.current.observe(imgRef.current);
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [lazy]);
-
-  // Generate optimized sources early to use in preload effect
-  const avifSrc = generateAVIFSrc(sanitizedSrc);
-  const webpSrc = generateWebPSrc(sanitizedSrc);
-  const srcSet = generateSrcSet(sanitizedSrc);
-
-  // Add preload link for priority images - MUST be before any conditional returns
-  useEffect(() => {
-    if (!priority || !sanitizedSrc || typeof document === "undefined") {
-      return;
-    }
-
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
-    link.href = avifSrc || webpSrc || sanitizedSrc;
-    if (avifSrc) link.type = "image/avif";
-    else if (webpSrc) link.type = "image/webp";
-    document.head.appendChild(link);
-
-    return () => {
-      if (document.head.contains(link)) {
-        document.head.removeChild(link);
-      }
-    };
-  }, [priority, sanitizedSrc, avifSrc, webpSrc]);
-
-  const handleLoad = () => {
-    setIsLoaded(true);
-  };
-
-  const handleError = () => {
-    setError(true);
-    setIsLoaded(true);
-  };
-
   // Generate AVIF source if supported
   const generateAVIFSrc = (originalSrc) => {
     if (!avif || !originalSrc) return null;
@@ -142,6 +77,71 @@ const OptimizedImage = ({
       .join(", ");
 
     return srcSet;
+  };
+
+  // Generate optimized sources early to use in preload effect
+  const avifSrc = generateAVIFSrc(sanitizedSrc);
+  const webpSrc = generateWebPSrc(sanitizedSrc);
+  const srcSet = generateSrcSet(sanitizedSrc);
+
+  useEffect(() => {
+    if (!lazy || !imgRef.current) {
+      return;
+    }
+
+    // Intersection Observer for lazy loading
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observerRef.current?.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: "50px", // Start loading 50px before the image comes into view
+        threshold: 0.1,
+      }
+    );
+
+    observerRef.current.observe(imgRef.current);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [lazy]);
+
+  // Add preload link for priority images - MUST be before any conditional returns
+  useEffect(() => {
+    if (!priority || !sanitizedSrc || typeof document === "undefined") {
+      return;
+    }
+
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = avifSrc || webpSrc || sanitizedSrc;
+    if (avifSrc) link.type = "image/avif";
+    else if (webpSrc) link.type = "image/webp";
+    document.head.appendChild(link);
+
+    return () => {
+      if (document.head.contains(link)) {
+        document.head.removeChild(link);
+      }
+    };
+  }, [priority, sanitizedSrc, avifSrc, webpSrc]);
+
+  const handleLoad = () => {
+    setIsLoaded(true);
+  };
+
+  const handleError = () => {
+    setError(true);
+    setIsLoaded(true);
   };
 
   if (!sanitizedSrc) {

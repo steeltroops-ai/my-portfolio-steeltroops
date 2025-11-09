@@ -29,19 +29,19 @@ const CommentItem = ({ comment, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-neutral-900/20 backdrop-blur-sm rounded-lg p-4 border border-neutral-800/30"
+      className="rounded-lg p-3 border backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg"
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3">
         {/* Avatar */}
         <div className="flex-shrink-0">
           {comment.user_profiles?.avatar_url ? (
             <img
               src={comment.user_profiles.avatar_url}
               alt={comment.author_name}
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-8 h-8 rounded-full object-cover"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-cyan-600 flex items-center justify-center text-white font-medium text-sm">
+            <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-white font-medium text-xs">
               {getInitials(comment.author_name)}
             </div>
           )}
@@ -50,27 +50,20 @@ const CommentItem = ({ comment, index }) => {
         {/* Comment Content */}
         <div className="flex-1 min-w-0">
           {/* Header */}
-          <div className="flex items-center gap-2 mb-2">
-            <h5 className="font-medium text-neutral-200 flex items-center gap-2">
-              <FiUser className="text-cyan-400 text-sm" />
+          <div className="flex items-center gap-2 mb-1.5">
+            <h5 className="font-medium text-white text-xs flex items-center gap-1.5">
+              <FiUser className="text-cyan-400 text-[10px]" />
               {comment.user_profiles?.display_name || comment.author_name}
             </h5>
-            <span className="text-neutral-500 text-sm flex items-center gap-1">
-              <FiClock className="text-xs" />
+            <span className="text-neutral-500 text-[10px] flex items-center gap-1">
+              <FiClock className="text-[8px]" />
               {formatDate(comment.created_at)}
             </span>
           </div>
 
           {/* Comment Text */}
-          <div className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="text-neutral-300 text-xs leading-relaxed whitespace-pre-wrap">
             {comment.content}
-          </div>
-
-          {/* Actions (for future features like replies) */}
-          <div className="mt-3 flex items-center gap-4">
-            <button className="text-neutral-500 hover:text-cyan-400 text-xs transition-colors">
-              Reply
-            </button>
           </div>
         </div>
       </div>
@@ -143,15 +136,15 @@ const CommentList = ({ postId }) => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-6">
-        <FiMessageSquare className="text-cyan-400" />
-        <h4 className="text-xl font-semibold text-neutral-200">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 mb-4">
+        <FiMessageSquare className="text-cyan-400 text-sm" />
+        <h4 className="text-sm font-semibold text-white">
           Comments ({comments.length})
         </h4>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {comments.map((comment, index) => (
           <CommentItem key={comment.id} comment={comment} index={index} />
         ))}
@@ -174,3 +167,4 @@ CommentList.propTypes = {
 };
 
 export default CommentList;
+

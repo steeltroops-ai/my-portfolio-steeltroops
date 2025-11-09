@@ -100,6 +100,40 @@ body {
   /* Firefox */
 }
 
+/* Responsive utilities */
+@layer utilities {
+
+  /* Prevent layout shift on mobile */
+  .safe-area-inset {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Smooth font scaling */
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
+  /* Prevent text overflow on small screens */
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
 /* Basic syntax highlighting styles for code blocks */
 .hljs {
   background: #0d1117 !important;

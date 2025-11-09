@@ -32,8 +32,18 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!identifier || !password) {
+
+    // Validate inputs
+    if (!identifier && !password) {
       setError("Please enter both username/email and password");
+      return;
+    }
+    if (!identifier) {
+      setError("Please enter your username or email");
+      return;
+    }
+    if (!password) {
+      setError("Please enter your password");
       return;
     }
 
@@ -41,25 +51,41 @@ const AdminLogin = () => {
     setError("");
 
     try {
+      console.log("=== LOGIN ATTEMPT ===");
+      console.log("Username/Email:", identifier);
+      console.log("Password length:", password.length);
+
       // Use hybrid authentication service
       const result = await signInWithCredentials(identifier, password);
 
-      if (result.data && !result.error) {
-        // Success - redirect to dashboard
-        navigate("/admin/dashboard");
+      console.log("Login result:", JSON.stringify(result, null, 2));
+
+      if (result && result.data && !result.error) {
+        // Success
+        console.log("✓ Login successful!");
+
+        // Only redirect to dashboard if using Supabase authentication
+        if (result.authType === "supabase") {
+          console.log("✓ Supabase auth - redirecting to dashboard");
+          navigate("/admin/dashboard");
+        } else {
+          console.log("✓ Local auth - staying on login page");
+          // Stay on login page for local auth
+        }
       } else {
         // Handle different error types
+        console.error("✗ Login failed:", result.error);
         if (result.error?.type === "lockout") {
           setError(result.error.message);
         } else if (result.error?.type === "invalid_credentials") {
           setError(result.error.message);
         } else {
-          setError(result.error?.message || "Login failed. Please try again.");
+          setError(result.error?.message || "Invalid username or password. Try: admin / admin123");
         }
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError("An error occurred during login");
+      console.error("✗ Login exception:", err);
+      setError("Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -69,68 +95,74 @@ const AdminLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
       <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-[radial-gradient(circle_400px_at_50%_300px,#fbfbfb36,#000)]"></div>
-      <div className="relative p-8 w-96 rounded-xl border backdrop-blur-sm border-neutral-800 bg-neutral-900/30">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+      <div className="relative p-8 w-96 rounded-xl border border-white/10 backdrop-blur-[2px] bg-white/5">
+        <h2 className="text-2xl font-bold text-white mb-3 text-center">
           Admin Login
         </h2>
 
-        {/* Authentication Status Indicator */}
         {authInfo && (
-          <div className="mb-4 p-3 rounded-lg border">
+          <div className="flex justify-center mb-6">
             <div
-              className={`flex items-center gap-2 text-sm ${
-                authInfo.supabaseAvailable
-                  ? "text-green-400 border-green-700/30 bg-green-900/20"
-                  : "text-amber-400 border-amber-700/30 bg-amber-900/20"
-              }`}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border backdrop-blur-md text-[10px] font-medium ${authInfo.supabaseAvailable
+                ? "bg-green-500/10 border-green-500/20 text-green-400"
+                : "bg-red-500/10 border-red-500/20 text-red-400"
+                }`}
             >
               <div
-                className={`w-2 h-2 rounded-full ${
-                  authInfo.supabaseAvailable ? "bg-green-400" : "bg-amber-400"
-                } animate-pulse`}
+                className={`w-1.5 h-1.5 rounded-full ${authInfo.supabaseAvailable
+                  ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                  : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                  }`}
               ></div>
-              <span>
-                {authInfo.supabaseAvailable
-                  ? "Online mode - Full admin features available"
-                  : "Offline mode - Limited admin features"}
-              </span>
+              <span>{authInfo.supabaseAvailable ? "Online" : "Offline"}</span>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 text-red-400 text-center bg-red-500/10 border border-red-700/30 rounded-lg">
-            {error}
+          <div className="flex justify-center mb-4">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-500/30 backdrop-blur-md bg-red-500/10 text-[11px] font-medium text-red-400">
+              <span>⚠</span>
+              <span>{error}</span>
+            </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label htmlFor="identifier" className="block text-sm font-medium text-white/70 mb-2">
+              Email
+            </label>
             <input
+              id="identifier"
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="Username or Email"
+              placeholder="e.g., admin or admin@example.com"
               disabled={loading}
-              className="w-full p-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent disabled:opacity-50 transition-all"
+              className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 disabled:opacity-50 transition-all"
               autoComplete="username"
             />
           </div>
           <div>
+            <label htmlFor="password" className="block text-sm font-medium text-white/70 mb-2">
+              Password
+            </label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder="e.g., admin123"
               disabled={loading}
-              className="w-full p-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent disabled:opacity-50 transition-all"
+              className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 disabled:opacity-50 transition-all"
               autoComplete="current-password"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white rounded transition-colors flex items-center justify-center"
+            className="w-full py-3 px-4 rounded-lg border border-purple-400/30 backdrop-blur-[2px] bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-400/50 disabled:bg-white/5 disabled:border-white/10 disabled:cursor-not-allowed text-white font-medium transition-all flex items-center justify-center shadow-lg shadow-purple-500/10"
           >
             {loading ? (
               <>

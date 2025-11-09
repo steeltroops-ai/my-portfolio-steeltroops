@@ -32,6 +32,18 @@ export default {
           "sans-serif",
         ],
       },
+      // Enhanced responsive breakpoints
+      screens: {
+        'xs': '475px',
+        // => @media (min-width: 475px) { ... }
+      },
+      // Responsive spacing
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
     },
   },
   // Remove unused variants for smaller CSS
