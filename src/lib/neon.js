@@ -1,5 +1,5 @@
 // Neon Database API Client
-// Replaces the Supabase client with direct API calls to Netlify serverless functions
+// Routes to Vercel serverless functions at /api/*
 
 const API_BASE = '/api';
 
