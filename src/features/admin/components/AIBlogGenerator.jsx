@@ -148,8 +148,7 @@ const AIBlogGenerator = () => {
   const [length, setLength] = useState("medium");
   const [audience, setAudience] = useState("developers");
   const [tags, setTags] = useState([]);
-  const [enhance, setEnhance] = useState(true);
-  const [creativity, setCreativity] = useState(0.7);
+  const [includeCodeExamples, setIncludeCodeExamples] = useState(true);
   const [saveAsDraft, setSaveAsDraft] = useState(true);
   
   // UI state
@@ -173,9 +172,8 @@ const AIBlogGenerator = () => {
     setResult(null);
     setPhases([]);
 
-    // Simulate phase progression
+    // Simulate phase progression - simple two-phase now
     const phaseOrder = ["research", "writing"];
-    if (enhance) phaseOrder.push("enhancement");
 
     try {
       // Start phase simulation
@@ -196,8 +194,7 @@ const AIBlogGenerator = () => {
           length,
           audience,
           tags,
-          enhance,
-          creativity,
+          includeCodeExamples,
           saveAsDraft,
         }),
       });
@@ -208,7 +205,7 @@ const AIBlogGenerator = () => {
         throw new Error(data.error || "Generation failed");
       }
 
-      setPhases(data.phases || phaseOrder.map(p => ({ phase: p, status: "complete" })));
+      setPhases(phaseOrder.map(p => ({ phase: p, status: "complete" })));
       setCurrentPhase(null);
       setResult(data.data);
 
@@ -219,7 +216,7 @@ const AIBlogGenerator = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [topic, style, length, audience, tags, enhance, creativity, saveAsDraft]);
+  }, [topic, style, length, audience, tags, includeCodeExamples, saveAsDraft]);
 
   // Copy to clipboard
   const handleCopy = async () => {
@@ -257,7 +254,7 @@ const AIBlogGenerator = () => {
             <h1 className="text-2xl font-bold text-white">AI Blog Generator</h1>
           </div>
           <p className="text-neutral-400">
-            Generate high-quality, publication-ready blog posts using advanced AI with chain-of-thought reasoning.
+            Generate high-quality blog posts using Llama 3.3 70B with ultra-fast Cerebras inference.
           </p>
         </motion.div>
 
@@ -394,39 +391,18 @@ const AIBlogGenerator = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-4 space-y-4 overflow-hidden"
                 >
-                  {/* Creativity Slider */}
-                  <div>
-                    <label className="block text-sm text-neutral-400 mb-2">
-                      Creativity: {creativity.toFixed(1)}
-                    </label>
-                    <input
-                      type="range"
-                      min="0.3"
-                      max="1.0"
-                      step="0.1"
-                      value={creativity}
-                      onChange={(e) => setCreativity(parseFloat(e.target.value))}
-                      className="w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                      disabled={isGenerating}
-                    />
-                    <div className="flex justify-between text-xs text-neutral-500 mt-1">
-                      <span>Precise</span>
-                      <span>Creative</span>
-                    </div>
-                  </div>
-
-                  {/* Enhancement Toggle */}
+                  {/* Code Examples Toggle */}
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={enhance}
-                      onChange={(e) => setEnhance(e.target.checked)}
+                      checked={includeCodeExamples}
+                      onChange={(e) => setIncludeCodeExamples(e.target.checked)}
                       disabled={isGenerating}
                       className="w-4 h-4 rounded border-neutral-600 bg-neutral-800 text-cyan-500 focus:ring-cyan-500"
                     />
                     <div>
-                      <span className="text-sm text-neutral-300">Enable AI Enhancement</span>
-                      <p className="text-xs text-neutral-500">Additional pass to improve quality</p>
+                      <span className="text-sm text-neutral-300">Include Code Examples</span>
+                      <p className="text-xs text-neutral-500">Add practical code snippets</p>
                     </div>
                   </label>
 
