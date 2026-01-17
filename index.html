@@ -15,8 +15,6 @@
       crossorigin
     />
 
-    <!-- Image preloading removed to prevent console warnings -->
-
     <!-- DNS prefetch for external domains -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//fonts.gstatic.com" />
@@ -30,9 +28,8 @@
     <meta name="theme-color" content="#0a0a0a" />
     <meta name="color-scheme" content="dark" />
 
-    <!-- Critical CSS inline (will be populated by build process) -->
+    <!-- Critical CSS inline -->
     <style id="critical-css">
-      /* Critical above-the-fold styles will be inlined here during build */
       body {
         background-color: #0a0a0a;
         color: #e5e7eb;
@@ -46,20 +43,82 @@
       }
     </style>
 
-    <title>Mayank</title>
-
-    <!-- SEO Meta Tags -->
+    <!-- Primary Meta Tags -->
+    <title>Mayank Pratap Singh | Full Stack & ML Engineer</title>
+    <meta name="title" content="Mayank Pratap Singh | Full Stack, ML & Robotics Engineer" />
     <meta
       name="description"
-      content="Full Stack Developer specializing in React, Node.js, and AI/ML solutions. Building modern web applications with cutting-edge technology."
+      content="Full Stack Developer specializing in React, Node.js, Next.js, and AI/ML solutions. Building modern web applications, robotics systems, and machine learning solutions with cutting-edge technology."
     />
     <meta
       name="keywords"
-      content="Full Stack Developer, React, Node.js, AI, Machine Learning, Web Development, JavaScript, TypeScript"
+      content="Mayank Pratap Singh, Full Stack Developer, React Developer, Node.js, Next.js, AI, Machine Learning, Web Development, JavaScript, TypeScript, Python, Robotics, Portfolio"
     />
-    <meta name="author" content="Mayank" />
+    <meta name="author" content="Mayank Pratap Singh" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://steeltroops.vercel.app/" />
+    <meta property="og:title" content="Mayank Pratap Singh | Full Stack & ML Engineer" />
+    <meta
+      property="og:description"
+      content="Full Stack Developer specializing in React, Node.js, Next.js, and AI/ML solutions. Building modern web applications and machine learning solutions."
+    />
+    <meta property="og:image" content="https://steeltroops.vercel.app/profiletop.png" />
+    <meta property="og:site_name" content="Mayank Pratap Singh Portfolio" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://steeltroops.vercel.app/" />
+    <meta name="twitter:title" content="Mayank Pratap Singh | Full Stack & ML Engineer" />
+    <meta
+      name="twitter:description"
+      content="Full Stack Developer specializing in React, Node.js, Next.js, and AI/ML solutions. Building modern web applications and machine learning solutions."
+    />
+    <meta name="twitter:image" content="https://steeltroops.vercel.app/profiletop.png" />
+    <meta name="twitter:creator" content="@steeltroops_ai" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://steeltroops.vercel.app/" />
+
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Mayank Pratap Singh",
+        "url": "https://steeltroops.vercel.app/",
+        "image": "https://steeltroops.vercel.app/profiletop.png",
+        "jobTitle": "Full Stack Developer",
+        "description": "Full Stack, Robotics & Machine Learning Engineer",
+        "sameAs": [
+          "https://github.com/steeltroops-ai",
+          "https://linkedin.com/in/steeltroops-ai",
+          "https://x.com/steeltroops_ai",
+          "https://instagram.com/steeltroops_ai"
+        ],
+        "knowsAbout": [
+          "React",
+          "Node.js",
+          "Next.js",
+          "TypeScript",
+          "Python",
+          "Machine Learning",
+          "Robotics",
+          "Web Development"
+        ]
+      }
+    </script>
   </head>
   <body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-purple-600 focus:text-white focus:rounded">
+      Skip to main content
+    </a>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -78,7 +78,7 @@ export default defineConfig(({ mode }) => ({
           // State management and queries
           query: ["@tanstack/react-query"],
           // Backend services
-          supabase: ["@supabase/supabase-js"],
+          neon: ["@neondatabase/serverless"],
           // Markdown processing (largest chunk)
           markdown: [
             "react-markdown",
