@@ -1,24 +1,78 @@
-import project1 from "../assets/projects/project-1.jpg";
-import project2 from "../assets/projects/project-2.jpg";
-import project3 from "../assets/projects/project-3.jpg";
-import project4 from "../assets/projects/project-4.jpg";
-import project5 from "../assets/projects/project-5.jpg";
+import project1 from "@/assets/projects/project-1.jpg";
+import project2 from "@/assets/projects/project-2.jpg";
+import project3 from "@/assets/projects/project-3.jpg";
+import project4 from "@/assets/projects/project-4.jpg";
+import project5 from "@/assets/projects/project-5.jpg";
 
+// =====================================================
+// PERSONAL INFO - Easy to change
+// =====================================================
+export const PERSONAL = {
+  name: "Mayank Pratap Singh",
+  username: "@steeltroops",
+  tagline: "Building things that matter.",
+  role: "Full Stack, Robotics & ML Dev",
+  location: "India",
+  university: "GLA University",
+  degree: "B.Tech in Computer Science Engineering (AI & ML)",
+  cgpa: "8.3/10",
+};
+
+// =====================================================
+// SOCIAL LINKS - All social media profiles
+// =====================================================
+export const SOCIALS = {
+  twitter: "https://x.com/steeltroops_ai",
+  github: "https://github.com/steeltroops-ai",
+  instagram: "https://instagram.com/steeltroops_ai",
+  linkedin: "https://linkedin.com/in/steeltroops-ai",
+  bento: "https://bento.me/steeltroops",
+};
+
+// =====================================================
+// CONTACT INFO
+// =====================================================
+export const CONTACT = {
+  email: "steeltroops.ai@gmail.com",
+  phoneNo: "+91 82734-83469",
+  address: "India",
+};
+
+// =====================================================
+// SITE META - SEO & Branding
+// =====================================================
+export const SITE_META = {
+  title: "Mayank Pratap Singh | Full Stack & ML Engineer",
+  description: "Full Stack Developer specializing in React, Node.js, Next.js, and AI/ML solutions. Building modern web applications and machine learning solutions.",
+  keywords: "Mayank Pratap Singh, Full Stack Developer, React Developer, Node.js, Next.js, AI, Machine Learning, Web Development, JavaScript, TypeScript, Python, Robotics, Portfolio",
+  siteUrl: "https://steeltroops.vercel.app",
+  ogImage: "https://steeltroops.vercel.app/profiletop.png",
+};
+
+// =====================================================
+// HERO CONTENT
+// =====================================================
 export const HERO_CONTENT = `I am a passionate full stack developer and AI/ML enthusiast with expertise in building robust and scalable web applications. I have honed my skills in modern frontend technologies like React 18, Next.js 14, and Vue 3, as well as backend technologies like Node.js, Express, FastAPI, and databases including PostgreSQL, MongoDB, and Redis. My goal is to leverage my expertise in software development and machine learning to create innovative solutions that drive impact and deliver exceptional user experiences.`;
 
+// =====================================================
+// ABOUT TEXT
+// =====================================================
 export const ABOUT_TEXT = `I am a dedicated and versatile full stack developer with a passion for creating efficient and user-friendly web applications. Currently pursuing B.Tech in Computer Science Engineering with specialization in AI & ML at GLA University (CGPA: 8.3/10), I have hands-on experience working with cutting-edge technologies across web development, robotics, and aerospace simulations. My journey spans from developing VR training platforms and robotics prototypes to building production-ready web applications with modern tech stacks. I thrive in collaborative environments, have led teams of 10+ members, and won 8 hackathons by prototyping innovative solutions. Outside of coding, I enjoy exploring new technologies, contributing to open-source projects, and building tech communities.`;
 
+// =====================================================
+// EXPERIENCES
+// =====================================================
 export const EXPERIENCES = [
   {
-    year: "Oct 2024 - Mar 2025",
-    role: "Software & Integration Intern",
+    year: "Oct 2024 - Nov 2025",
+    role: "Software & Integration Engineer",
     company: "SS Innovations, India",
     description: `• Developed web application components using Next.js, TypeScript, and Node.js to integrate robotics and sensor data into centralized dashboards. Built RESTful APIs and real-time monitoring systems for medical device management.
 • Designed responsive frontend interfaces and database schemas, ensuring seamless communication between heterogeneous systems and improving overall system reliability and user experience.`,
     technologies: ["Next.js", "TypeScript", "Node.js", "RESTful APIs", "Real-time Systems"],
   },
   {
-    year: "Jun 2023 - Oct 2023",
+    year: "Jul 2023 - Dec 2023",
     role: "Research Intern - Flight Dynamics & Simulation",
     company: "Orbitx India Aerospace, India",
     description: `• Contributed to research on flight dynamics and trajectory optimization for aerospace vehicle simulations, leveraging GNC frameworks for reusable launch systems.
@@ -43,6 +97,9 @@ export const EXPERIENCES = [
   },
 ];
 
+// =====================================================
+// PROJECTS
+// =====================================================
 export const PROJECTS = [
   {
     title: "Neza Digital Marketplace",
@@ -80,7 +137,7 @@ export const PROJECTS = [
     title: "Transformer Model Implementation",
     image: project5,
     url: "",
-    github: "https://github.com/yourusername/transformer-implementation",
+    github: "https://github.com/steeltroops-ai/transformer-implementation",
     description:
       "Built the 'Attention is All You Need' transformer architecture from scratch, including self-attention, positional encodings, and beam search for sequence-to-sequence modeling. Created reproducible training pipelines with configuration management and attention map visualizations to improve interpretability of transformer layers.",
     technologies: ["Python", "PyTorch", "Transformers", "NLP"],
@@ -89,7 +146,7 @@ export const PROJECTS = [
     title: "Finance Management App",
     image: project1,
     url: "",
-    github: "https://github.com/yourusername/finance-app",
+    github: "https://github.com/steeltroops-ai/finance-app",
     description:
       "Built a finance management platform enabling secure multi-bank linking, real-time fund tracking, and seamless transfers. Implemented server-side rendering (SSR) authentication, responsive dashboards, and categorized spending insights for a smooth, dynamic user experience.",
     technologies: ["Next.js", "TypeScript", "Plaid", "Dwolla", "Appwrite"],
@@ -98,7 +155,7 @@ export const PROJECTS = [
     title: "Robot Bionic Arm",
     image: project2,
     url: "",
-    github: "https://github.com/yourusername/robot-bionic-arm",
+    github: "https://github.com/steeltroops-ai/robot-bionic-arm",
     description:
       "Developed a lightweight robotic arm with custom PID controllers and inverse kinematics for precise motion; integrated real-time ROS2 nodes for sensor fusion, adaptive actuation, and closed-loop feedback. Designed and 3D-printed modular mechanical components optimized for joint torque, response latency, and high precision manipulation tasks.",
     technologies: ["ROS2", "C++", "Python", "PID Control", "3D Printing"],
@@ -144,9 +201,3 @@ export const PROJECTS = [
     technologies: ["Next.js 15", "React 19", "TypeScript"],
   },
 ];
-
-export const CONTACT = {
-  address: "©steeltroops🗼tokyo ²⁰²⁵",
-  phoneNo: "+91 82734-83469",
-  email: "steeltroops.ai@gmail.com",
-};

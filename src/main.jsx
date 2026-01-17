@@ -3,13 +3,13 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import App from "./App.jsx";
-import FloatingChatButton from "./components/FloatingChatButton";
-import ErrorBoundary from "./components/ErrorBoundary";
-// Error tracking utility - available for future use
-// import errorTracker from "./utils/errorTracking";
-// import "./utils/seedBlogPosts.js"; // Temporarily disabled for deployment debugging
-import "./index.css";
+import App from "@/App.jsx";
+import { ErrorBoundary } from "@/shared";
+import "@/index.css";
+
+// Lazy load non-critical shared components
+const FloatingChatButton = lazy(() => import("@/shared/components/ui/FloatingChatButton"));
+const MobileNav = lazy(() => import("@/shared/components/layout/MobileNav"));
 
 // Add error logging for production debugging
 window.addEventListener("error", (event) => {
@@ -26,20 +26,6 @@ window.addEventListener("unhandledrejection", (event) => {
   console.error("Unhandled promise rejection:", event.reason);
 });
 
-// Register Service Worker for caching - temporarily disabled for debugging
-// if ("serviceWorker" in navigator) {
-//   window.addEventListener("load", () => {
-//     navigator.serviceWorker
-//       .register("/sw.js")
-//       .then((registration) => {
-//         console.log("SW registered: ", registration);
-//       })
-//       .catch((registrationError) => {
-//         console.log("SW registration failed: ", registrationError);
-//       });
-//   });
-// }
-
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,13 +41,16 @@ const queryClient = new QueryClient({
   },
 });
 
-// Lazy load components for code splitting
-const Blog = lazy(() => import("./components/Blog"));
-const BlogPost = lazy(() => import("./components/BlogPost"));
-const AdminLogin = lazy(() => import("./components/AdminLogin"));
-const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
-const BlogEditor = lazy(() => import("./components/BlogEditor"));
-const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
+// Lazy load feature components for code splitting
+const Blog = lazy(() => import("@/features/blog/components/Blog"));
+const BlogPost = lazy(() => import("@/features/blog/components/BlogPost"));
+const BlogEditor = lazy(() => import("@/features/blog/components/BlogEditor"));
+
+const AdminLogin = lazy(() => import("@/features/admin/components/AdminLogin"));
+const AdminDashboard = lazy(() => import("@/features/admin/components/AdminDashboard"));
+const ProtectedRoute = lazy(() => import("@/features/admin/components/ProtectedRoute"));
+
+const NotFound = lazy(() => import("@/shared/components/feedback/NotFound"));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -72,6 +61,9 @@ const LoadingSpinner = () => (
     </div>
   </div>
 );
+
+// Minimal fallback for non-critical floating components
+const MinimalFallback = () => null;
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -86,7 +78,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   element={
                     <>
                       <App />
-                      <FloatingChatButton />
+                      <Suspense fallback={<MinimalFallback />}>
+                        <FloatingChatButton />
+                        <MobileNav />
+                      </Suspense>
                     </>
                   }
                 />
@@ -117,6 +112,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     </ProtectedRoute>
                   }
                 />
+                {/* 404 Not Found - Must be last */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
           </Router>
