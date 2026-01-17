@@ -1,178 +1,88 @@
-# Mayank's Portfolio
+# Personal Portfolio with AI Blog
 
-Personal portfolio website with an integrated blog system.
-
-**Live:** [steeltroops.vercel.app](https://steeltroops.vercel.app)
-
----
+A modern, dark-themed portfolio website with an AI-powered blog system.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React, Vite, Tailwind CSS |
+| Frontend | React 18, Framer Motion, TailwindCSS |
 | Backend | Vercel Serverless Functions |
 | Database | Neon PostgreSQL |
-| AI | Google Gemini (blog generation) |
+| AI | Cerebras (Llama 3.3 70B) |
 
----
+## Features
 
-## Project Structure
+- Responsive dark theme portfolio
+- Blog with Markdown support
+- AI-powered blog generation
+- Admin dashboard with authentication
+- Contact form with database storage
 
-```
-my-portfolio-steeltroops/
-├── api/                    # Vercel Serverless Functions (backend)
-│   ├── auth.js             # Authentication
-│   ├── posts.js            # Blog CRUD
-│   ├── comments.js         # Comment system
-│   ├── contact.js          # Contact form
-│   └── ai/
-│       └── generate-blog.js  # AI blog generation
-│
-├── public/                 # Static assets
-├── src/                    # Frontend React app
-│   ├── features/           # Feature modules
-│   ├── shared/             # Shared components
-│   └── constants/          # App constants
-│
-├── docs/                   # Documentation & SQL schemas
-├── vercel.json             # Vercel configuration
-└── package.json
-```
-
----
-
-## How It Works
-
-### Architecture
-
-```
-                    ┌─────────────────────────────────────┐
-                    │           VERCEL                    │
-                    │  ┌─────────────┐ ┌───────────────┐  │
-   Browser ────────►│  │  Frontend   │ │  Serverless   │  │
-                    │  │  (React)    │ │  Functions    │  │
-                    │  │  /dist      │ │  /api/*       │  │
-                    │  └─────────────┘ └───────┬───────┘  │
-                    └──────────────────────────│──────────┘
-                                               │
-                                               ▼
-                                    ┌─────────────────────┐
-                                    │  Neon PostgreSQL    │
-                                    │  (Database)         │
-                                    └─────────────────────┘
-```
-
-### API Routes
-
-When deployed to Vercel:
-- Frontend calls `/api/posts` → Vercel routes to `api/posts.js`
-- No separate backend deployment needed
-- Same domain, no CORS issues
-
----
-
-## Deployment (via GitHub + Vercel)
-
-### Step 1: Prepare Database
-
-1. Create account at [Neon](https://console.neon.tech)
-2. Create a new project
-3. Run SQL schemas from `docs/*.sql` in Neon SQL Editor
-4. Copy connection string
-
-### Step 2: Set up Gemini API (optional)
-
-1. Get API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-
-### Step 3: Deploy to Vercel
-
-1. **Push code to GitHub**
-
-2. **Go to [Vercel](https://vercel.com)**
-   - Sign in with GitHub
-   - Click "Add New" → "Project"
-   - Import your repository
-
-3. **Add Environment Variables in Vercel Dashboard:**
-
-   | Variable | Value |
-   |----------|-------|
-   | `DATABASE_URL` | `postgresql://user:pass@host/db?sslmode=require` |
-   | `GEMINI_API_KEY` | `your-gemini-api-key` |
-   | `VITE_ADMIN_EMAIL` | `admin@yourdomain.com` |
-
-4. **Click Deploy**
-
-That's it! Vercel automatically:
-- Builds frontend from `src/`
-- Deploys API from `api/`
-- Routes `/api/*` to serverless functions
-
----
-
-## Local Development
+## Quick Start
 
 ```bash
 # Install dependencies
 bun install
 
-# Run dev server
+# Start development server
 bun run dev
-
-# Build for production
-bun run build
 ```
 
-### Environment Variables
+## Environment Variables
 
-Create `.env` file:
+Copy `.env.example` to `.env` and fill in:
 
 ```env
-DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
-GEMINI_API_KEY=your-gemini-api-key
-VITE_ADMIN_EMAIL=admin@yourdomain.com
+DATABASE_URL=your-neon-connection-string
+CEREBRAS_API_KEY=your-cerebras-api-key
 ```
 
----
+## Deployment
 
-## Admin Panel
+### Vercel (Recommended)
 
-- Login: `/admin/login`
-- Dashboard: `/admin/dashboard`
-- Create posts: `/admin/post/new`
+1. Push to GitHub
+2. Connect to Vercel
+3. Add environment variables:
+   - `DATABASE_URL`
+   - `CEREBRAS_API_KEY`
+4. Deploy
 
----
+## Project Structure
+
+```
+.
+├── api/                 # Serverless API functions
+│   ├── ai/              # AI blog generation
+│   ├── posts.js         # Blog CRUD
+│   ├── auth.js          # Authentication
+│   └── ...
+├── src/
+│   ├── features/        # Feature modules
+│   │   ├── admin/       # Admin dashboard
+│   │   └── blog/        # Blog components
+│   ├── shared/          # Shared components
+│   └── constants/       # App constants
+├── docs/                # Documentation
+└── scripts/             # Utility scripts
+```
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/posts` | Get all posts |
-| POST | `/api/posts` | Create post |
-| GET | `/api/posts?slug=xxx` | Get post by slug |
-| PUT | `/api/posts` | Update post |
-| DELETE | `/api/posts` | Delete post |
-| POST | `/api/ai/generate-blog` | Generate blog with AI |
-| POST | `/api/contact` | Submit contact form |
-| POST | `/api/auth` | Admin authentication |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/posts` | GET | List all posts |
+| `/api/posts` | POST | Create post |
+| `/api/ai/generate-blog` | POST | Generate with AI |
+| `/api/auth` | POST | Login/logout |
+| `/api/comments` | GET/POST | Comments |
+| `/api/contact` | POST | Contact form |
 
----
+## Admin Access
 
-## Free Services Used
-
-| Service | Purpose | Free Tier |
-|---------|---------|-----------|
-| Vercel | Frontend + API hosting | 100GB bandwidth |
-| Neon | PostgreSQL database | 0.5GB storage |
-| Gemini | AI blog generation | 1M tokens/month |
-
----
+Navigate to `/admin/login` after deployment.
 
 ## License
 
 MIT
-
----
-
-Built by [@steeltroops](https://github.com/steeltroops-ai)
