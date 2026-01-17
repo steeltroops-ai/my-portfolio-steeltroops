@@ -49,6 +49,7 @@ const BlogEditor = lazy(() => import("@/features/blog/components/BlogEditor"));
 const AdminLogin = lazy(() => import("@/features/admin/components/AdminLogin"));
 const AdminDashboard = lazy(() => import("@/features/admin/components/AdminDashboard"));
 const ProtectedRoute = lazy(() => import("@/features/admin/components/ProtectedRoute"));
+const AIBlogGenerator = lazy(() => import("@/features/admin/components/AIBlogGenerator"));
 
 const NotFound = lazy(() => import("@/shared/components/feedback/NotFound"));
 
@@ -109,6 +110,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   element={
                     <ProtectedRoute>
                       <BlogEditor />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/ai-generator"
+                  element={
+                    <ProtectedRoute>
+                      <AIBlogGenerator />
                     </ProtectedRoute>
                   }
                 />

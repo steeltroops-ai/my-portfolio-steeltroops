@@ -14,6 +14,7 @@ import {
   FiEyeOff,
   FiSearch,
   FiCalendar,
+  FiCpu,
 } from "react-icons/fi";
 
 const AdminDashboard = () => {
@@ -114,6 +115,13 @@ const AdminDashboard = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <h1 className="text-3xl font-bold">Blog Dashboard</h1>
             <div className="flex gap-4">
+              <Link
+                to="/admin/ai-generator"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-400/30 backdrop-blur-md bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 hover:border-purple-400/50 transition-all shadow-lg shadow-purple-500/10"
+              >
+                <FiCpu />
+                AI Generate
+              </Link>
               <button
                 onClick={handleNewPost}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-400/30 backdrop-blur-md bg-cyan-500/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 transition-all shadow-lg shadow-cyan-500/10"
