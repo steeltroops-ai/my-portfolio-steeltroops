@@ -15,7 +15,9 @@ import {
   FiSearch,
   FiCalendar,
   FiCpu,
+  FiInbox,
 } from "react-icons/fi";
+import { useUnreadCount } from "../hooks/useContactMessages";
 
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,6 +36,10 @@ const AdminDashboard = () => {
 
   const posts = postsData?.posts || [];
   const error = queryError ? "Failed to load posts" : "";
+
+  // Get unread messages count for badge
+  const { data: unreadData } = useUnreadCount();
+  const unreadCount = unreadData?.count || 0;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -122,6 +128,18 @@ const AdminDashboard = () => {
                 <FiCpu />
                 AI Generate
               </Link>
+              <Link
+                to="/admin/messages"
+                className="relative flex items-center gap-2 px-4 py-2 rounded-lg border border-orange-400/30 backdrop-blur-md bg-orange-500/20 hover:bg-orange-500/30 hover:border-orange-400/50 transition-all shadow-lg shadow-orange-500/10"
+              >
+                <FiInbox />
+                Messages
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Link>
               <button
                 onClick={handleNewPost}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-400/30 backdrop-blur-md bg-cyan-500/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 transition-all shadow-lg shadow-cyan-500/10"
@@ -157,11 +175,11 @@ const AdminDashboard = () => {
               className="glass-select px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.5' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.75rem center',
-                backgroundSize: '12px',
-                paddingRight: '2.5rem',
-                appearance: 'none'
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 0.75rem center",
+                backgroundSize: "12px",
+                paddingRight: "2.5rem",
+                appearance: "none",
               }}
             >
               <option value="all">All Posts</option>
@@ -173,13 +191,13 @@ const AdminDashboard = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="p-4 rounded-lg border border-white/10 backdrop-blur-md bg-white/5">
-              <h3 className="text-sm font-medium text-white/60">
-                Total Posts
-              </h3>
+              <h3 className="text-sm font-medium text-white/60">Total Posts</h3>
               <p className="text-2xl font-bold text-white">{posts.length}</p>
             </div>
             <div className="p-4 rounded-lg border border-green-500/20 backdrop-blur-md bg-green-500/10">
-              <h3 className="text-sm font-medium text-green-400/70">Published</h3>
+              <h3 className="text-sm font-medium text-green-400/70">
+                Published
+              </h3>
               <p className="text-2xl font-bold text-green-400">
                 {posts.filter((post) => post.published).length}
               </p>
@@ -243,12 +261,15 @@ const AdminDashboard = () => {
                     <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h2 className="text-xl font-semibold">{post.title}</h2>
+                          <h2 className="text-xl font-semibold">
+                            {post.title}
+                          </h2>
                           <span
-                            className={`px-2 py-1 text-xs rounded-full backdrop-blur-md ${post.published
-                              ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                              : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                              }`}
+                            className={`px-2 py-1 text-xs rounded-full backdrop-blur-md ${
+                              post.published
+                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                            }`}
                           >
                             {post.published ? "Published" : "Draft"}
                           </span>
@@ -299,10 +320,11 @@ const AdminDashboard = () => {
                           onClick={() =>
                             handleTogglePublished(post.id, post.published)
                           }
-                          className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-all border backdrop-blur-md ${post.published
-                            ? "bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/30 hover:border-yellow-500/50 text-yellow-400"
-                            : "bg-green-500/20 hover:bg-green-500/30 border-green-500/30 hover:border-green-500/50 text-green-400"
-                            }`}
+                          className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-all border backdrop-blur-md ${
+                            post.published
+                              ? "bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/30 hover:border-yellow-500/50 text-yellow-400"
+                              : "bg-green-500/20 hover:bg-green-500/30 border-green-500/30 hover:border-green-500/50 text-green-400"
+                          }`}
                           title={post.published ? "Unpublish" : "Publish"}
                         >
                           {post.published ? <FiEyeOff /> : <FiEye />}
@@ -349,4 +371,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
