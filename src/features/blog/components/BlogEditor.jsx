@@ -58,6 +58,31 @@ const BlogEditor = () => {
     }
   }, [existingPost]);
 
+  // Load AI-generated content from sessionStorage (for new posts from AI Generator)
+  useEffect(() => {
+    if (!id) {
+      const aiContent = sessionStorage.getItem("ai_generated_content");
+      if (aiContent) {
+        try {
+          const parsed = JSON.parse(aiContent);
+          setPost((prev) => ({
+            ...prev,
+            title: parsed.title || "",
+            content: parsed.content || "",
+            excerpt: parsed.excerpt || "",
+            meta_description: parsed.meta_description || "",
+            tags: parsed.tags || [],
+          }));
+          setTagInput(parsed.tags ? parsed.tags.join(", ") : "");
+          // Clear sessionStorage after loading
+          sessionStorage.removeItem("ai_generated_content");
+        } catch (e) {
+          console.error("Failed to parse AI content:", e);
+        }
+      }
+    }
+  }, [id]);
+
   useEffect(() => {
     if (queryError) {
       setError("Failed to load post");
@@ -149,10 +174,11 @@ const BlogEditor = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className={`px-4 py-2 rounded-lg border backdrop-blur-md transition-all ${showPreview
-                  ? "bg-yellow-500/20 border-yellow-400/30 text-yellow-200 shadow-lg shadow-yellow-500/10"
-                  : "bg-yellow-500/10 border-yellow-400/20 text-yellow-300/70 hover:bg-yellow-500/15 hover:border-yellow-400/25"
-                  }`}
+                className={`px-4 py-2 rounded-lg border backdrop-blur-md transition-all ${
+                  showPreview
+                    ? "bg-yellow-500/20 border-yellow-400/30 text-yellow-200 shadow-lg shadow-yellow-500/10"
+                    : "bg-yellow-500/10 border-yellow-400/20 text-yellow-300/70 hover:bg-yellow-500/15 hover:border-yellow-400/25"
+                }`}
               >
                 {showPreview ? "Hide Preview" : "Live Preview"}
               </button>
@@ -196,11 +222,13 @@ const BlogEditor = () => {
 
                     {/* Meta Info */}
                     <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-400 mb-6">
-                      <span>{new Date().toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}</span>
+                      <span>
+                        {new Date().toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
                       <span>•</span>
                       <span>{post.author || "Author"}</span>
                     </div>
@@ -237,22 +265,34 @@ const BlogEditor = () => {
                       rehypePlugins={[rehypeHighlight]}
                       components={{
                         h1: ({ children, ...props }) => (
-                          <h1 className="text-3xl font-bold text-white mt-8 mb-4 first:mt-0" {...props}>
+                          <h1
+                            className="text-3xl font-bold text-white mt-8 mb-4 first:mt-0"
+                            {...props}
+                          >
                             {children}
                           </h1>
                         ),
                         h2: ({ children, ...props }) => (
-                          <h2 className="text-2xl font-bold text-white mt-8 mb-4" {...props}>
+                          <h2
+                            className="text-2xl font-bold text-white mt-8 mb-4"
+                            {...props}
+                          >
                             {children}
                           </h2>
                         ),
                         h3: ({ children, ...props }) => (
-                          <h3 className="text-xl font-bold text-white mt-6 mb-3" {...props}>
+                          <h3
+                            className="text-xl font-bold text-white mt-6 mb-3"
+                            {...props}
+                          >
                             {children}
                           </h3>
                         ),
                         p: ({ children, ...props }) => (
-                          <p className="text-lg leading-relaxed text-neutral-300 mb-6" {...props}>
+                          <p
+                            className="text-lg leading-relaxed text-neutral-300 mb-6"
+                            {...props}
+                          >
                             {children}
                           </p>
                         ),
@@ -270,23 +310,35 @@ const BlogEditor = () => {
                               </pre>
                             </div>
                           ) : (
-                            <code className="bg-neutral-800 px-2 py-1 rounded text-sm text-cyan-300" {...props}>
+                            <code
+                              className="bg-neutral-800 px-2 py-1 rounded text-sm text-cyan-300"
+                              {...props}
+                            >
                               {children}
                             </code>
                           );
                         },
                         blockquote: ({ children, ...props }) => (
-                          <blockquote className="border-l-4 border-cyan-500 pl-6 py-2 my-6 italic text-neutral-300 bg-neutral-900/30 rounded-r-lg" {...props}>
+                          <blockquote
+                            className="border-l-4 border-cyan-500 pl-6 py-2 my-6 italic text-neutral-300 bg-neutral-900/30 rounded-r-lg"
+                            {...props}
+                          >
                             {children}
                           </blockquote>
                         ),
                         ul: ({ children, ...props }) => (
-                          <ul className="list-disc list-inside space-y-2 text-neutral-300 mb-6" {...props}>
+                          <ul
+                            className="list-disc list-inside space-y-2 text-neutral-300 mb-6"
+                            {...props}
+                          >
                             {children}
                           </ul>
                         ),
                         ol: ({ children, ...props }) => (
-                          <ol className="list-decimal list-inside space-y-2 text-neutral-300 mb-6" {...props}>
+                          <ol
+                            className="list-decimal list-inside space-y-2 text-neutral-300 mb-6"
+                            {...props}
+                          >
                             {children}
                           </ol>
                         ),
@@ -296,27 +348,47 @@ const BlogEditor = () => {
                           </li>
                         ),
                         a: ({ children, href, ...props }) => (
-                          <a href={href} className="text-cyan-400 hover:text-cyan-300 underline transition-colors" target="_blank" rel="noopener noreferrer" {...props}>
+                          <a
+                            href={href}
+                            className="text-cyan-400 hover:text-cyan-300 underline transition-colors"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            {...props}
+                          >
                             {children}
                           </a>
                         ),
                         img: ({ src, alt, ...props }) => (
-                          <img src={src} alt={alt} className="rounded-lg my-6 w-full" {...props} />
+                          <img
+                            src={src}
+                            alt={alt}
+                            className="rounded-lg my-6 w-full"
+                            {...props}
+                          />
                         ),
                         table: ({ children, ...props }) => (
                           <div className="overflow-x-auto my-6">
-                            <table className="min-w-full border border-neutral-700 rounded-lg" {...props}>
+                            <table
+                              className="min-w-full border border-neutral-700 rounded-lg"
+                              {...props}
+                            >
                               {children}
                             </table>
                           </div>
                         ),
                         th: ({ children, ...props }) => (
-                          <th className="border border-neutral-700 px-4 py-3 bg-neutral-800 text-left font-semibold text-white" {...props}>
+                          <th
+                            className="border border-neutral-700 px-4 py-3 bg-neutral-800 text-left font-semibold text-white"
+                            {...props}
+                          >
                             {children}
                           </th>
                         ),
                         td: ({ children, ...props }) => (
-                          <td className="border border-neutral-700 px-4 py-3 text-neutral-300" {...props}>
+                          <td
+                            className="border border-neutral-700 px-4 py-3 text-neutral-300"
+                            {...props}
+                          >
                             {children}
                           </td>
                         ),
@@ -325,7 +397,8 @@ const BlogEditor = () => {
                         ),
                       }}
                     >
-                      {post.content || "*No content yet. Start writing to see the preview.*"}
+                      {post.content ||
+                        "*No content yet. Start writing to see the preview.*"}
                     </ReactMarkdown>
                   </div>
                 </div>
@@ -342,7 +415,9 @@ const BlogEditor = () => {
                         <input
                           type="text"
                           value={post.title}
-                          onChange={(e) => handleInputChange("title", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("title", e.target.value)
+                          }
                           className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-[2px] bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all shadow-lg"
                           placeholder="Enter post title..."
                           required
@@ -363,7 +438,9 @@ const BlogEditor = () => {
                         <input
                           type="text"
                           value={post.slug}
-                          onChange={(e) => handleInputChange("slug", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("slug", e.target.value)
+                          }
                           className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-[2px] bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all shadow-lg"
                           placeholder="post-url-slug"
                         />
@@ -398,10 +475,11 @@ const BlogEditor = () => {
                       <button
                         type="button"
                         onClick={() => setEditorMode("write")}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${editorMode === "write"
-                          ? "bg-purple-500/30 text-white shadow-lg shadow-purple-500/20"
-                          : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                          }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          editorMode === "write"
+                            ? "bg-purple-500/30 text-white shadow-lg shadow-purple-500/20"
+                            : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                        }`}
                       >
                         <FiEdit3 className="w-4 h-4" />
                         <span>Write</span>
@@ -409,10 +487,11 @@ const BlogEditor = () => {
                       <button
                         type="button"
                         onClick={() => setEditorMode("preview")}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${editorMode === "preview"
-                          ? "bg-purple-500/30 text-white shadow-lg shadow-purple-500/20"
-                          : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                          }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          editorMode === "preview"
+                            ? "bg-purple-500/30 text-white shadow-lg shadow-purple-500/20"
+                            : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                        }`}
                       >
                         <FiEye className="w-4 h-4" />
                         <span>Preview</span>
@@ -420,10 +499,11 @@ const BlogEditor = () => {
                       <button
                         type="button"
                         onClick={() => setEditorMode("rich")}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${editorMode === "rich"
-                          ? "bg-purple-500/30 text-white shadow-lg shadow-purple-500/20"
-                          : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                          }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          editorMode === "rich"
+                            ? "bg-purple-500/30 text-white shadow-lg shadow-purple-500/20"
+                            : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                        }`}
                       >
                         <FiType className="w-4 h-4" />
                         <span>Rich</span>
@@ -435,7 +515,9 @@ const BlogEditor = () => {
                       {editorMode === "write" && (
                         <MarkdownEditor
                           value={post.content}
-                          onChange={(content) => handleInputChange("content", content)}
+                          onChange={(content) =>
+                            handleInputChange("content", content)
+                          }
                           height="500px"
                         />
                       )}
@@ -443,9 +525,13 @@ const BlogEditor = () => {
                       {editorMode === "preview" && (
                         <div className="prose prose-invert prose-sm max-w-none min-h-[500px] p-4 rounded-lg border border-white/10 backdrop-blur-[2px] bg-white/5">
                           {post.content ? (
-                            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                            <div
+                              dangerouslySetInnerHTML={{ __html: post.content }}
+                            />
                           ) : (
-                            <p className="text-white/40 text-center py-20">No content to preview yet...</p>
+                            <p className="text-white/40 text-center py-20">
+                              No content to preview yet...
+                            </p>
                           )}
                         </div>
                       )}
@@ -454,7 +540,9 @@ const BlogEditor = () => {
                         <div className="min-h-[500px] p-4 rounded-lg border border-white/10 backdrop-blur-[2px] bg-white/5">
                           <textarea
                             value={post.content}
-                            onChange={(e) => handleInputChange("content", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("content", e.target.value)
+                            }
                             className="w-full h-[500px] p-4 rounded-lg border border-white/10 backdrop-blur-[2px] bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all shadow-lg resize-none font-mono text-sm"
                             placeholder="Write your content here..."
                           />
@@ -469,7 +557,6 @@ const BlogEditor = () => {
             {/* Right Column - Metadata Sidebar (1/3 width) */}
             <div className="space-y-4">
               <form className="space-y-4">
-
                 {/* Unified Excerpt & Tags Card */}
                 <div className="p-5 rounded-xl border border-white/10 backdrop-blur-[2px] bg-white/5 shadow-xl space-y-4">
                   {/* Excerpt Section */}
@@ -479,7 +566,9 @@ const BlogEditor = () => {
                     </label>
                     <textarea
                       value={post.excerpt}
-                      onChange={(e) => handleInputChange("excerpt", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("excerpt", e.target.value)
+                      }
                       className="w-full p-3 text-sm rounded-lg border border-white/10 backdrop-blur-[2px] bg-black/20 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all shadow-inner resize-none"
                       rows="3"
                       placeholder="Brief description of your post..."
@@ -586,7 +675,6 @@ const BlogEditor = () => {
                     Cancel
                   </button>
                 </div>
-
               </form>
             </div>
           </div>
@@ -619,9 +707,7 @@ const BlogEditor = () => {
 
                   {/* Excerpt Preview */}
                   {post.excerpt && (
-                    <p className="text-sm text-white/60">
-                      {post.excerpt}
-                    </p>
+                    <p className="text-sm text-white/60">{post.excerpt}</p>
                   )}
 
                   {/* Tags Preview */}
@@ -657,7 +743,9 @@ const BlogEditor = () => {
                   {/* Content Preview */}
                   {post.content && (
                     <div className="pt-4 mt-4 border-t border-white/10">
-                      <h4 className="text-sm font-medium text-white/70 mb-2">Content Preview:</h4>
+                      <h4 className="text-sm font-medium text-white/70 mb-2">
+                        Content Preview:
+                      </h4>
                       <div className="text-sm text-white/50 line-clamp-6">
                         {post.content.substring(0, 300)}...
                       </div>

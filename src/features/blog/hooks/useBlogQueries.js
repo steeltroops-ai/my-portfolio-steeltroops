@@ -179,7 +179,33 @@ export const useTogglePostPublished = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: togglePostPublished,
+    mutationFn: async (postId) => {
+      // Get the current post from cache or fetch it
+      let currentPost = queryClient.getQueryData(blogQueryKeys.post(postId));
+
+      // If not in cache, check the allPosts cache
+      if (!currentPost?.data) {
+        const allPostsData = queryClient.getQueryData(
+          blogQueryKeys.allPosts({})
+        );
+        if (allPostsData?.data) {
+          const foundPost = allPostsData.data.find((p) => p.id === postId);
+          if (foundPost) {
+            currentPost = { data: foundPost };
+          }
+        }
+      }
+
+      // If still not found, fetch it
+      if (!currentPost?.data) {
+        currentPost = await getPostById(postId);
+      }
+
+      const currentPublished = currentPost?.data?.published ?? false;
+
+      // Toggle the published state
+      return togglePostPublished(postId, !currentPublished);
+    },
     onSuccess: (data, postId) => {
       // Invalidate posts lists to reflect the change
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
