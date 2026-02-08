@@ -82,7 +82,3 @@ CEREBRAS_API_KEY=your-cerebras-api-key
 ## Admin Access
 
 Navigate to `/admin/login` after deployment.
-
-## License
-
-MIT
