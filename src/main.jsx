@@ -8,7 +8,9 @@ import { ErrorBoundary } from "@/shared";
 import "@/index.css";
 
 // Lazy load non-critical shared components
-const FloatingChatButton = lazy(() => import("@/shared/components/ui/FloatingChatButton"));
+const FloatingChatButton = lazy(
+  () => import("@/shared/components/ui/FloatingChatButton")
+);
 const MobileNav = lazy(() => import("@/shared/components/layout/MobileNav"));
 
 // Add error logging for production debugging
@@ -47,9 +49,18 @@ const BlogPost = lazy(() => import("@/features/blog/components/BlogPost"));
 const BlogEditor = lazy(() => import("@/features/blog/components/BlogEditor"));
 
 const AdminLogin = lazy(() => import("@/features/admin/components/AdminLogin"));
-const AdminDashboard = lazy(() => import("@/features/admin/components/AdminDashboard"));
-const ProtectedRoute = lazy(() => import("@/features/admin/components/ProtectedRoute"));
-const AIBlogGenerator = lazy(() => import("@/features/admin/components/AIBlogGenerator"));
+const AdminDashboard = lazy(
+  () => import("@/features/admin/components/AdminDashboard")
+);
+const ProtectedRoute = lazy(
+  () => import("@/features/admin/components/ProtectedRoute")
+);
+const AIBlogGenerator = lazy(
+  () => import("@/features/admin/components/AIBlogGenerator")
+);
+const MessageCenter = lazy(
+  () => import("@/features/admin/components/MessageCenter")
+);
 
 const NotFound = lazy(() => import("@/shared/components/feedback/NotFound"));
 
@@ -71,7 +82,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
-          <Router>
+          <Router
+            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          >
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 <Route
@@ -118,6 +131,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   element={
                     <ProtectedRoute>
                       <AIBlogGenerator />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/messages"
+                  element={
+                    <ProtectedRoute>
+                      <MessageCenter />
                     </ProtectedRoute>
                   }
                 />

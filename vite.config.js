@@ -39,6 +39,14 @@ export default defineConfig({
       usePolling: false,
       interval: 100,
     },
+    // Proxy API requests to local Express server
+    proxy: {
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   build: {
     target: "es2020",
@@ -50,7 +58,7 @@ export default defineConfig({
           vendor: ["react", "react-dom"],
           router: ["react-router-dom"],
           query: ["@tanstack/react-query"],
-          neon: ["@neondatabase/serverless"],
+
           markdown: [
             "react-markdown",
             "remark-gfm",
