@@ -1,289 +1,208 @@
 /**
- * AI Blog Generation API - Cerebras Llama 3.3 70B
- * POST /api/ai/generate-blog
- * 
- * Features:
- * - Ultra-fast inference with Cerebras
- * - Multiple writing styles
- * - Configurable length
- * - Auto-save to Neon database
- * - Proper markdown formatting
+ * AI Blog Generation API - Multi-Stage Generation
+ * Uses Cerebras Llama 3.3 70B for ultra-fast chain-of-thought generation
  */
 
 import { neon } from "@neondatabase/serverless";
 import Cerebras from "@cerebras/cerebras_cloud_sdk";
 
-// Length configurations
+// Length in words (approx)
 const LENGTH_CONFIG = {
-  short: { words: "600-900", maxTokens: 2048 },
-  medium: { words: "1200-1800", maxTokens: 4096 },
-  long: { words: "2500-4000", maxTokens: 6144 },
-  comprehensive: { words: "4000-6000", maxTokens: 8192 },
+  short: { words: "600-800", tokens: 1000 },
+  medium: { words: "1200-1500", tokens: 2000 },
+  long: { words: "2000-3000", tokens: 4000 },
+  comprehensive: { words: "4000+", tokens: 6000 },
 };
 
-// Style configurations with detailed prompts
-const STYLE_CONFIG = {
-  technical: {
-    description: "Technical and detailed with code examples",
-    tone: "Professional, precise, and informative. Use technical terminology appropriately.",
-    includes: "Code examples, technical diagrams descriptions, best practices",
-  },
-  casual: {
-    description: "Friendly and conversational",
-    tone: "Warm, approachable, and engaging. Use personal anecdotes and humor.",
-    includes: "Relatable examples, conversational phrases, personal insights",
-  },
-  tutorial: {
-    description: "Step-by-step instructional format",
-    tone: "Clear, patient, and encouraging. Guide the reader through each step.",
-    includes: "Numbered steps, prerequisites, expected outcomes, common pitfalls",
-  },
-  opinion: {
-    description: "Opinion piece with strong arguments",
-    tone: "Persuasive, confident, and thought-provoking. Back opinions with evidence.",
-    includes: "Strong thesis, supporting arguments, counterarguments addressed",
-  },
-  storytelling: {
-    description: "Narrative style with engaging story elements",
-    tone: "Engaging, dramatic, and immersive. Use narrative techniques.",
-    includes: "Story arc, characters, tension and resolution, lessons learned",
-  },
-};
-
-// Audience configurations
-const AUDIENCE_CONFIG = {
-  beginners: "New to the topic. Explain concepts simply, avoid jargon, provide context.",
-  developers: "Technical professionals. Assume programming knowledge, include code.",
-  general: "General audience. Balance accessibility with depth.",
-  experts: "Advanced practitioners. Focus on nuances, advanced techniques, cutting-edge.",
+const STYLE_PROMPTS = {
+  technical:
+    "Write in a precise, technical manner. Include code blocks where relevant. Focus on best practices and architecture.",
+  casual:
+    "Write in a friendly, conversational tone. Use analogies and keep it engaging.",
+  tutorial:
+    "Write as a step-by-step guide. Use clear instructions and numbered lists.",
+  opinion: "Write a persuasive piece with strong arguments and a clear stance.",
+  storytelling:
+    "Frame the technical concepts within a narrative or case study.",
 };
 
 export default async function handler(req, res) {
-  // CORS headers
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
+
+  const apiKey = process.env.CEREBRAS_API_KEY;
+  if (!apiKey) {
+    return res
+      .status(500)
+      .json({ error: "Server Configuration Error: Missing API Key" });
   }
 
-  const CEREBRAS_API_KEY = process.env.CEREBRAS_API_KEY;
-  const DATABASE_URL = process.env.DATABASE_URL;
+  const {
+    topic,
+    style = "technical",
+    length = "medium",
+    tags = [],
+    saveAsDraft = true,
+  } = req.body;
 
-  if (!CEREBRAS_API_KEY) {
-    return res.status(500).json({ 
-      error: "Cerebras API key not configured",
-      hint: "Add CEREBRAS_API_KEY to environment variables"
-    });
-  }
+  if (!topic) return res.status(400).json({ error: "Topic is required" });
+
+  const client = new Cerebras({ apiKey });
+  const sql = neon(process.env.DATABASE_URL);
+
+  const startTime = Date.now();
+  let fullContent = "";
 
   try {
-    const { 
-      topic, 
-      style = "technical", 
-      length = "medium", 
-      audience = "developers",
-      tags = [],
-      saveAsDraft = true,
-      author = "Mayank",
-      includeCodeExamples = true,
-      includeTOC = false,
-    } = req.body || {};
-
-    if (!topic || topic.trim().length < 3) {
-      return res.status(400).json({ error: "Topic is required (min 3 characters)" });
-    }
-
-    const lengthConfig = LENGTH_CONFIG[length] || LENGTH_CONFIG.medium;
-    const styleConfig = STYLE_CONFIG[style] || STYLE_CONFIG.technical;
-    const audienceDesc = AUDIENCE_CONFIG[audience] || AUDIENCE_CONFIG.developers;
-
-    console.log(`[AI] Generating: "${topic}" | Style: ${style} | Length: ${length}`);
-
-    // Build comprehensive system prompt
-    const systemPrompt = `You are an expert blog writer with deep knowledge across technology, programming, and software development.
-
-Your writing style for this piece:
-- ${styleConfig.description}
-- Tone: ${styleConfig.tone}  
-- Include: ${styleConfig.includes}
-
-Target audience: ${audienceDesc}
-
-You MUST format your response in proper Markdown with:
-- A single # heading for the title
-- ## headings for main sections
-- ### headings for subsections
-- **Bold** for key terms
-- \`inline code\` for technical terms
-- Triple backtick code blocks with language specified
-- Bullet points and numbered lists where appropriate
-- > Blockquotes for important callouts
-
-Write comprehensive, valuable content that readers will want to share.`;
-
-    // Build user prompt
-    let userPrompt = `Write a ${lengthConfig.words} word blog post about: "${topic}"
-
-Structure your post as follows:
-1. # Title - Compelling, specific, SEO-friendly
-2. Introduction - Hook the reader immediately
-3. Main Content - 3-5 well-organized sections with ## headers
-4. ${includeCodeExamples ? "Include practical code examples with explanations" : "Focus on concepts and explanations"}
-5. Key Takeaways - Bullet list of main points
-6. Conclusion - Summarize and include a call-to-action
-
-${includeTOC ? "Include a Table of Contents after the introduction." : ""}
-
-Keywords to naturally incorporate: ${tags.length > 0 ? tags.join(", ") : topic}
-
-Begin writing the blog post now:`;
-
-    // Initialize Cerebras
-    const cerebras = new Cerebras({ apiKey: CEREBRAS_API_KEY });
-
-    const startTime = Date.now();
-
-    // Generate content
-    const completion = await cerebras.chat.completions.create({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
+    // --- STEP 1: GENERATE OUTLINE (JSON) ---
+    console.log(`[AI] Step 1: Generating outline for "${topic}"`);
+    const outlineResponse = await client.chat.completions.create({
       model: "llama-3.3-70b",
-      max_completion_tokens: lengthConfig.maxTokens,
+      messages: [
+        {
+          role: "system",
+          content: `You are an expert technical writer. Create a blog post outline in JSON format.
+                    Topic: ${topic}
+                    Style: ${style}
+                    Target Length: ${length}
+                    
+                    Return ONLY a JSON object with this shape:
+                    {
+                      "title": "Catchy SEO Title",
+                      "sections": [
+                        { "heading": "Introduction", "key_points": ["hook", "thesis"] },
+                        { "heading": "Main Point 1", "key_points": ["details", "examples"] },
+                        ...
+                        { "heading": "Conclusion", "key_points": ["summary", "cta"] }
+                      ]
+                    }`,
+        },
+        { role: "user", content: "Generate the outline." },
+      ],
+      response_format: { type: "json_object" },
       temperature: 0.7,
-      top_p: 0.95,
+      max_completion_tokens: 1024,
     });
 
-    const generationTime = Date.now() - startTime;
-    const content = completion.choices?.[0]?.message?.content;
+    const outline = JSON.parse(outlineResponse.choices[0].message.content);
+    console.log(
+      `[AI] Outline generated with ${outline.sections.length} sections.`
+    );
 
-    if (!content) {
-      return res.status(500).json({ 
-        error: "No content generated",
-        details: "AI returned empty response"
+    // --- STEP 2: GENERATE SECTIONS (Iterative) ---
+    console.log(`[AI] Step 2: Generating sections...`);
+
+    // Generate Introduction
+    fullContent += `# ${outline.title}\n\n`;
+
+    // We will generate sections iteratively to maintain context
+    let currentContext = `Title: ${outline.title}\nDescription: ${topic}\nStyle: ${STYLE_PROMPTS[style]}\n\nOutline:\n${JSON.stringify(outline.sections)}`;
+
+    // Limit concurrency to avoid complexity, Cerebras is fast enough for serial
+    for (const section of outline.sections) {
+      console.log(`[AI] Generating section: ${section.heading}`);
+      const sectionResponse = await client.chat.completions.create({
+        model: "llama-3.3-70b",
+        messages: [
+          {
+            role: "system",
+            content: `You are writing a section for a blog post.
+                          Context: ${currentContext}
+                          
+                          Write the content for the section: "${section.heading}".
+                          Include the heading as "## ${section.heading}".
+                          Cover these points: ${section.key_points.join(", ")}.
+                          Write in Markdown. Do not include the title of the blog post, only the section content.`,
+          },
+          { role: "user", content: "Write this section." },
+        ],
+        temperature: 0.7,
+        max_completion_tokens: 2000,
       });
+
+      const sectionContent = sectionResponse.choices[0].message.content;
+      fullContent += sectionContent + "\n\n";
+
+      // Update context slightly (optional, but good for coherence)
+      currentContext += `\n\nCompleted Section: ${section.heading}`;
     }
 
-    console.log(`[AI] Generated ${content.length} chars in ${generationTime}ms`);
+    // --- STEP 3: METADATA & TAGS ---
+    console.log(`[AI] Step 3: Generating metadata...`);
+    // Already have title, let's generate tags if missing
+    let finalTags = tags;
+    if (!tags || tags.length === 0) {
+      const tagResponse = await client.chat.completions.create({
+        model: "llama-3.3-70b",
+        messages: [
+          {
+            role: "user",
+            content: `Generate 5 SEO tags for a blog post about "${topic}". Return only a comma-separated list.`,
+          },
+        ],
+        max_completion_tokens: 100,
+      });
+      finalTags = tagResponse.choices[0].message.content
+        .split(",")
+        .map((t) => t.trim());
+    }
 
-    // Extract and process metadata
-    const titleMatch = content.match(/^#\s+(.+)$/m);
-    const title = titleMatch 
-      ? titleMatch[1].replace(/\*\*/g, "").trim() 
-      : `Blog: ${topic}`;
-    
-    const slug = title
+    const slug = outline.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-      .substring(0, 100);
+      .replace(/(^-|-$)+/g, "");
+    const readTime = Math.ceil(fullContent.split(/\s+/).length / 200);
 
-    // Extract excerpt from first paragraph after title
-    const paragraphs = content.split(/\n\n+/);
-    let excerpt = "";
-    for (const p of paragraphs) {
-      if (!p.startsWith("#") && !p.startsWith("```") && p.trim().length > 50) {
-        excerpt = p.replace(/[*_`#]/g, "").trim().substring(0, 160);
-        break;
-      }
-    }
-    if (!excerpt) {
-      excerpt = content.replace(/[#*_`]/g, " ").trim().substring(0, 160);
-    }
-    excerpt += "...";
+    // --- STEP 4: SAVE TO DB ---
+    const generationTime = Date.now() - startTime;
+    console.log(`[AI] Finished in ${generationTime}ms. Saving to DB...`);
 
-    // Extract headings for TOC
-    const headings = [];
-    const headingRegex = /^(#{1,3})\s+(.+)$/gm;
-    let match;
-    while ((match = headingRegex.exec(content)) !== null) {
-      headings.push({
-        level: match[1].length,
-        text: match[2].replace(/\*\*/g, "").trim(),
-      });
-    }
-
-    const wordCount = content.split(/\s+/).length;
-    const readTime = Math.ceil(wordCount / 200);
-
-    const blogPost = {
-      title,
-      slug,
-      content,
-      excerpt,
-      tags: tags.length > 0 ? tags : [style, "ai-generated"],
-      read_time: readTime,
-      word_count: wordCount,
-      headings,
-      published: !saveAsDraft,
-      author,
-      ai_model: "llama-3.3-70b",
-      generation_time_ms: generationTime,
-      created_at: new Date().toISOString(),
-      saved: false,
-    };
-
-    // Save to database
-    if (DATABASE_URL) {
-      try {
-        const sql = neon(DATABASE_URL);
-        
-        const result = await sql`
-          INSERT INTO blog_posts (
-            title, slug, content, excerpt, tags, read_time, 
-            published, author, created_at, updated_at
-          )
-          VALUES (
-            ${blogPost.title},
-            ${blogPost.slug},
-            ${blogPost.content},
-            ${blogPost.excerpt},
-            ${blogPost.tags},
-            ${blogPost.read_time},
-            ${blogPost.published},
-            ${blogPost.author},
-            NOW(),
-            NOW()
-          )
-          RETURNING id, slug
-        `;
-
-        blogPost.id = result[0]?.id;
-        blogPost.saved = true;
-        console.log(`[AI] Saved to DB with id: ${blogPost.id}`);
-      } catch (dbError) {
-        console.error("[AI] DB Error:", dbError.message);
-        blogPost.saved = false;
-        blogPost.saveError = dbError.message;
-      }
-    }
+    const result = await sql`
+      INSERT INTO posts (
+        title, slug, content, excerpt, tags, read_time, published, author, created_at, updated_at
+      )
+      VALUES (
+        ${outline.title},
+        ${slug},
+        ${fullContent},
+        ${fullContent.substring(0, 150) + "..."},
+        ${finalTags},
+        ${readTime},
+        ${!saveAsDraft},
+        'Admin',
+        NOW(),
+        NOW()
+      )
+      RETURNING id, slug, title
+    `;
 
     return res.status(200).json({
       success: true,
-      data: blogPost,
-      meta: {
-        model: "llama-3.3-70b",
-        provider: "cerebras",
-        generation_time_ms: generationTime,
-        word_count: wordCount,
+      data: {
+        id: result[0].id,
+        title: result[0].title,
+        slug: result[0].slug,
+        content: fullContent,
+        tags: finalTags,
         read_time: readTime,
+        saved: true,
+        published: !saveAsDraft,
       },
-      message: blogPost.saved 
-        ? `"${title}" saved as ${saveAsDraft ? "draft" : "published"}` 
-        : "Generated successfully",
+      meta: {
+        generation_time_ms: generationTime,
+        steps: outline.sections.length,
+      },
     });
-
   } catch (error) {
-    console.error("[AI] Error:", error);
+    console.error(`[AI] Error during generation:`, error);
     return res.status(500).json({
-      error: "Failed to generate blog post",
+      error: "Generation Failed",
       details: error.message,
     });
   }
