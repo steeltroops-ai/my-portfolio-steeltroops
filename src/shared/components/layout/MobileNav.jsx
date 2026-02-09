@@ -84,7 +84,7 @@ const MobileNav = () => {
                       relative z-10 flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-colors duration-300
                       ${
                         isActive
-                          ? "text-purple-100"
+                          ? "text-purple-300"
                           : "text-neutral-400 hover:text-white"
                       }
                     `}
@@ -106,7 +106,7 @@ const MobileNav = () => {
                       size={18}
                       className={`relative z-20 stroke-[1.5] transition-all duration-300 ${
                         isActive
-                          ? "drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]"
+                          ? "drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]"
                           : ""
                       }`}
                     />

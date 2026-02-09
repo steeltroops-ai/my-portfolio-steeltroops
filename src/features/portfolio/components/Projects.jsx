@@ -117,7 +117,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 e.stopPropagation();
                 onToggle();
               }}
-              className="p-2.5 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all border border-white/20"
+              className="hidden lg:flex p-2.5 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all border border-white/20"
             >
               <FaChevronUp className="text-sm" />
             </button>
@@ -156,7 +156,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               {project.technologies.slice(0, 3).map((tech, i) => (
                 <span
                   key={i}
-                  className="text-[9px] uppercase tracking-wider font-bold text-neutral-400"
+                  className="text-[9px] uppercase tracking-wider font-bold text-purple-300/80 group-hover:text-purple-300 transition-colors"
                 >
                   {tech}
                   {i < 2 ? " •" : ""}
@@ -179,11 +179,12 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 {/* Description Column */}
                 <div className="lg:col-span-3 space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent"></div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 shrink-0">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px w-8 bg-purple-500/50"></div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-purple-300 shrink-0">
                       Core Initiatives
                     </span>
+                    <div className="h-px flex-1 bg-gradient-to-r from-purple-500/20 to-transparent"></div>
                   </div>
                   <div className="space-y-4">
                     {Array.isArray(project.description) ? (
@@ -222,30 +223,61 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                       </div>
                     </div>
 
-                    <div className="pt-6 border-t border-white/5 flex gap-3">
+                    <div className="pt-8 border-t border-white/5 flex flex-col gap-4">
                       {project.github && (
                         <a
                           href={project.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-all text-xs font-semibold text-white"
+                          className="group/btn flex items-center justify-between px-6 py-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/10"
                         >
-                          <FaGithub /> Source Code
+                          <div className="flex items-center gap-3">
+                            <FaGithub className="text-xl text-white/70 group-hover/btn:text-white transition-colors" />
+                            <span className="text-sm font-semibold text-white/70 group-hover/btn:text-white transition-colors">
+                              Source Code
+                            </span>
+                          </div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 group-hover/btn:text-neutral-300 transition-colors">
+                            GitHub
+                          </div>
                         </a>
                       )}
+
                       {project.url && (
                         <a
                           href={project.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-xs font-semibold text-white border border-white/10"
+                          className="group/btn flex items-center justify-between px-6 py-4 rounded-xl bg-indigo-500/5 hover:bg-indigo-500/15 transition-all border border-indigo-500/20"
                         >
-                          <FaExternalLinkAlt /> Live Demo
+                          <div className="flex items-center gap-3">
+                            <FaExternalLinkAlt className="text-base text-indigo-400/70 group-hover/btn:text-indigo-400 transition-colors" />
+                            <span className="text-sm font-semibold text-indigo-300/70 group-hover/btn:text-indigo-300 transition-colors">
+                              Live Demo
+                            </span>
+                          </div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/50 group-hover/btn:text-indigo-400/50 transition-colors">
+                            Preview
+                          </div>
                         </a>
                       )}
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Unified Collapse Footer (Symmetrical to Expand button) */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggle();
+                }}
+                className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between cursor-pointer group/close"
+              >
+                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest group-hover/close:text-white transition-colors">
+                  Collapse Project
+                </span>
+                <FaChevronUp className="text-neutral-600 group-hover/close:text-white group-hover/close:-translate-y-0.5 transition-all text-[10px]" />
               </div>
             </motion.div>
           ) : (
@@ -290,34 +322,36 @@ const Projects = () => {
   };
 
   return (
-    <div
+    <section
       id="projects"
       className="pb-16 sm:pb-24 lg:pb-32 border-b border-neutral-800 scroll-mt-20"
     >
-      <h2 className="my-12 sm:my-16 lg:my-24 section-title">
-        My <span>Projects</span>
-      </h2>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <h2 className="my-12 sm:my-16 lg:my-24 section-title">
+          My <span>Projects</span>
+        </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-min">
-        {PROJECTS.map((project, index) => {
-          const isExpanded = expandedId === index;
-          return (
-            <div
-              id={`project-${index}`}
-              key={`${project.title}-${index}`}
-              className={`transition-all duration-300 ease-out 
-                ${isExpanded ? "sm:col-span-2 sm:row-span-2 lg:col-span-2 lg:row-span-2 z-10" : "z-0"}`}
-            >
-              <ProjectCard
-                project={project}
-                isExpanded={isExpanded}
-                onToggle={() => toggleExpand(index)}
-              />
-            </div>
-          );
-        })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-min">
+          {PROJECTS.map((project, index) => {
+            const isExpanded = expandedId === index;
+            return (
+              <div
+                id={`project-${index}`}
+                key={`${project.title}-${index}`}
+                className={`transition-all duration-300 ease-out 
+                  ${isExpanded ? "md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2 z-10" : "z-0"}`}
+              >
+                <ProjectCard
+                  project={project}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleExpand(index)}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

@@ -311,77 +311,79 @@ const Technologies = () => {
       className="pb-8 sm:pb-12 lg:pb-24 border-b border-neutral-800 scroll-mt-20"
       aria-labelledby="technologies-heading"
     >
-      <motion.h2
-        id="technologies-heading"
-        initial={{ opacity: 0, y: -30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={viewportSettings.standard}
-        transition={{ duration: 0.7, ease: appleEasing.easeOut }}
-        className="my-8 sm:my-12 lg:my-20 section-title"
-      >
-        Tech <span>Stack</span>
-      </motion.h2>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <motion.h2
+          id="technologies-heading"
+          initial={{ opacity: 0, y: -30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={viewportSettings.standard}
+          transition={{ duration: 0.7, ease: appleEasing.easeOut }}
+          className="my-8 sm:my-12 lg:my-20 section-title"
+        >
+          Tech <span>Stack</span>
+        </motion.h2>
 
-      {/* Category Filter */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={viewportSettings.standard}
-        className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-12 px-4"
-      >
-        {filterCategories.map((category) => (
-          <button
-            key={category.label}
-            onClick={() => {
-              setSelectedCategory(category.label);
-              // Reset show all when changing category logic removed
-            }}
-            className={`
+        {/* Category Filter */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={viewportSettings.standard}
+          className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-12 px-4"
+        >
+          {filterCategories.map((category) => (
+            <button
+              key={category.label}
+              onClick={() => {
+                setSelectedCategory(category.label);
+                // Reset show all when changing category logic removed
+              }}
+              className={`
               px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300
               ${
                 selectedCategory === category.label
-                  ? "bg-purple-500/20 text-purple-100 border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] backdrop-blur-md"
+                  ? "bg-purple-500/20 text-purple-300 border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] backdrop-blur-md"
                   : "text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent"
               }
             `}
-          >
-            {category.label}
-          </button>
-        ))}
-      </motion.div>
+            >
+              {category.label}
+            </button>
+          ))}
+        </motion.div>
 
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={viewportSettings.standard}
-        transition={{ duration: 0.8, ease: appleEasing.easeOut, delay: 0.1 }}
-        className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-5 min-h-[200px]"
-        role="grid"
-        aria-label="Technology skills showcase"
-        style={{ willChange: "transform, opacity" }}
-      >
-        {displayedTechs.map((tech, index) => (
-          <TechnologyIcon key={tech.name} tech={tech} index={index} />
-        ))}
-      </motion.div>
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={viewportSettings.standard}
+          transition={{ duration: 0.8, ease: appleEasing.easeOut, delay: 0.1 }}
+          className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-5 min-h-[200px]"
+          role="grid"
+          aria-label="Technology skills showcase"
+          style={{ willChange: "transform, opacity" }}
+        >
+          {displayedTechs.map((tech, index) => (
+            <TechnologyIcon key={tech.name} tech={tech} index={index} />
+          ))}
+        </motion.div>
 
-      {/* Screen reader only description */}
-      <div className="sr-only">
-        <h3>Technology Categories</h3>
-        <ul>
-          {filterCategories
-            .filter((c) => c.label !== "All")
-            .map((category) => (
-              <li key={category.label}>
-                {category.label}:{" "}
-                {technologies
-                  .filter((t) => category.match.includes(t.category))
-                  .map((t) => t.name)
-                  .join(", ")}
-              </li>
-            ))}
-        </ul>
+        {/* Screen reader only description */}
+        <div className="sr-only">
+          <h3>Technology Categories</h3>
+          <ul>
+            {filterCategories
+              .filter((c) => c.label !== "All")
+              .map((category) => (
+                <li key={category.label}>
+                  {category.label}:{" "}
+                  {technologies
+                    .filter((t) => category.match.includes(t.category))
+                    .map((t) => t.name)
+                    .join(", ")}
+                </li>
+              ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

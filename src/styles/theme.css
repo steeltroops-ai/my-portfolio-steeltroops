@@ -7,9 +7,16 @@
 
 :root {
   /* --- Primary Color Palette --- */
-  --color-primary-light: theme("colors.purple.400");
-  --color-primary-main: theme("colors.purple.500");
-  --color-primary-dark: theme("colors.purple.600");
+  /* --- Unified Purple Design System --- */
+  --brand-purple: #a855f7; /* Main (purple-500) */
+  --brand-purple-light: #d8b4fe; /* Text/Accent (purple-300) */
+  --brand-purple-soft: rgba(168, 85, 247, 0.15); /* Backgrounds */
+  --brand-purple-glow: rgba(168, 85, 247, 0.6); /* Effects/Nodes */
+
+  /* --- Primary Color Palette --- */
+  --color-primary-light: var(--brand-purple-light);
+  --color-primary-main: var(--brand-purple);
+  --color-primary-dark: #7e22ce; /* purple-700 */
 
   /* --- Typography Colors --- */
   /* Main Section Headings (e.g., "My Experience") */

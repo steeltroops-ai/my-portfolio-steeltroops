@@ -122,14 +122,14 @@ const Hero = () => {
                     }
                     className="relative group cursor-pointer"
                   >
-                    <div className="relative px-10 py-1 sm:px-14 sm:py-1.5 rounded-2xl overflow-hidden transition-all duration-700 bg-white/[0.03] border border-white/10 ring-1 ring-white/5 flex flex-col items-center min-w-[220px] sm:min-w-[260px] group-hover:bg-purple-900/40 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+                    <div className="relative px-10 py-1 sm:px-14 sm:py-1.5 rounded-2xl overflow-hidden transition-all duration-700 bg-white/[0.03] border border-white/10 ring-1 ring-white/5 flex flex-col items-center min-w-[220px] sm:min-w-[260px] group-hover:bg-purple-500/20 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)]">
                       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                       <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-widest text-purple-300 group-hover:text-white transition-colors duration-500">
                         Hire Me
                       </span>
                       <div className="relative z-10 flex items-center gap-1.5 mt-0.5">
                         <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                        <span className="text-[9px] sm:text-[10px] text-white/50 font-light tracking-[0.3em] uppercase transition-colors duration-500 group-hover:text-purple-200">
+                        <span className="text-[9px] sm:text-[10px] text-white/50 font-light tracking-[0.3em] uppercase transition-colors duration-500 group-hover:text-purple-300">
                           Available
                         </span>
                       </div>
