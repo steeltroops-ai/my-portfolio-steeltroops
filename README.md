@@ -1,102 +1,66 @@
 # Portfolio & AI Blog Platform
 
-A high-performance personal portfolio and blog platform engineering with a custom AI generation engine. Built for speed, seo, and deep technical content creation.
+High-performance portfolio engine with a custom Llama 3.3 powered technical blog generation pipeline.
 
-## System Architecture
+## Backend Architecture
 
-### Frontend
+Built on **Vercel Serverless Functions** (Node.js) for zero-cold-start edge compatibility.
 
-- **Framework**: React 18 (Vite)
-- **Styling**: TailwindCSS
-- **Animation**: Framer Motion
-- **State Granularity**: Local component state + React Query for server state
+- **API Layer**: RESTful endpoints with strict method validation.
+- **Database**: Neon (Serverless PostgreSQL) using `@neondatabase/serverless`.
+- **Optimization**: raw SQL queries for minimal overhead and maximum throughput.
 
-### Backend & Database
+## Security Implementation
 
-- **Runtime**: Vercel Serverless Functions (Node.js)
-- **Database**: Neon (Serverless PostgreSQL)
-- **ORM**: Raw SQL via `@neondatabase/serverless` for maximum performance
+Custom authentication system designed for minimal dependency surface area.
 
-### AI Engine (Mayank OS)
+- **Authentication**: Bearer token session management.
+- **Hashing**: PBKDF2 (SHA-512) password hashing with unique per-user salts.
+- **Session Control**: Database-backed sessions with explicit expiration policies.
+- **Access Control**: Role-based middleware (`verifyAuth`) protecting administrative routes.
 
-The platform features a custom AI blog generation pipeline powered by **Cerebras Llama 3.3 70B**.
+## AI Generation Pipeline
 
-**Core Capabilities:**
+Integrated autonomous content engine using **Cerebras Llama 3.3 70B**.
 
-- **Two-Phase Generation**:
-  1.  **Architecting**: Creates a detailed content strategy and outline.
-  2.  **Drafting**: Writes section-by-section using context-aware prompts.
-- **Dynamic Personas**:
-  - **Professional Mode**: Acts as a Senior Systems Engineer. Focuses on architecture, constraints, and high-signal technical depth.
-  - **Casual Mode**: Acts as a Thoughtful Tech Writer. Focuses on narrative, accessibility, and human-centric storytelling.
-- **Strict Code Control**: Enforces code inclusion/exclusion based on user intent.
-- **Automatic Tagging**: Generates taxonomy-aligned tags.
+1.  **Phase 1: Architecting**
+    - Analyzes topic and requested persona (Professional Engineer vs. Tech Writer).
+    - Generates a structural master plan with distinct functional sections.
+2.  **Phase 2: Drafting**
+    - Iteratively generates content section-by-section.
+    - Maintains context awareness using the master plan anchor.
+    - Enforces strict constraints on code block inclusion and technical depth.
 
-## Key Features
+## Project Structure
 
-- **Admin Dashboard**: Secure interface for managing content and AI generation.
-- **Markdown Support**: Full GFM support with syntax highlighting.
-- **Responsive Design**: Fluid layouts optimized for all devices.
-- **SEO Optimized**: Dynamic meta tags and semantic HTML structure.
-- **Performance**: Sub-second page loads via static generation and efficient caching.
+```
+├── api/                  # Serverless Functions
+│   ├── ai/               # AI Generation Logic
+│   │   ├── generate-blog.js
+│   │   └── ...
+│   ├── auth.js           # Authentication & Session Management
+│   ├── posts.js          # Blog CRUD Operations
+│   └── ...
+├── src/
+│   ├── features/
+│   │   ├── admin/        # Protected Admin Dashboard
+│   │   └── blog/         # Public Blog Components
+│   └── lib/
+│       └── neon.js       # Database Connection Utility
+└── ...
+```
 
 ## Local Development
 
-### Prerequisites
+```bash
+# Install dependencies
+bun install
 
-- Node.js 18+
-- Bun (Package Manager)
+# Configure Environment
+# DATABASE_URL=postgres://...
+# CEREBRAS_API_KEY=...
+# VITE_ADMIN_PASSWORD_HASH=...
 
-### Setup
-
-1.  **Clone Repository**
-
-    ```bash
-    git clone <repository-url>
-    cd my-portfolio-steeltroops
-    ```
-
-2.  **Install Dependencies**
-
-    ```bash
-    bun install
-    ```
-
-3.  **Environment Configuration**
-    Create a `.env` file in the root directory:
-
-    ```env
-    DATABASE_URL="postgres://user:pass@host/db?sslmode=require"
-    CEREBRAS_API_KEY="your-cerebras-key"
-    VITE_ADMIN_PASSWORD_HASH="your-password-hash"
-    ```
-
-4.  **Start Development Server**
-    ```bash
-    bun run dev
-    ```
-
-## Deployment
-
-This project is optimized for **Vercel**.
-
-1.  Connect your GitHub repository to Vercel.
-2.  Configure the Environment Variables in the Vercel dashboard.
-3.  Deploy.
-
-## API Reference
-
-**Content**
-
-- `GET /api/posts`: Retrieve published posts.
-- `GET /api/posts?slug=xyz`: Retrieve single post.
-
-**AI Generation (Protected)**
-
-- `POST /api/ai/generate-blog`: Triggers the Mayank OS generation pipeline.
-  - Payload: `{ topic, style, length, tags }`
-
-**Administration**
-
-- `POST /api/auth`: Session management.
-- `POST /api/posts`: Create/Update posts.
+# Start Development Server
+bun run dev
+```
