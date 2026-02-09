@@ -10,7 +10,7 @@ const FloatingChatButton = () => {
         type: "spring",
         stiffness: 100,
         damping: 15,
-        delay: 0.5
+        delay: 0.5,
       }}
       className="fixed right-0 bottom-6 sm:bottom-8 z-50"
     >
@@ -21,8 +21,10 @@ const FloatingChatButton = () => {
       >
         <Link
           to={window.location.pathname === "/blogs" ? "/" : "/blogs"}
-          className="group relative flex justify-center items-center px-2 py-4 text-xs font-semibold text-purple-300 rounded-l-xl border border-r-0 border-purple-400/50 transition-all duration-300 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-400/70 backdrop-blur-[2px] shadow-lg focus:outline-none focus:ring-1 focus:ring-purple-400/50 overflow-hidden"
-          aria-label={window.location.pathname === "/blogs" ? "Go to Home" : "Go to Blogs"}
+          className="group relative flex justify-center items-center px-2 py-4 text-xs font-semibold text-purple-100 rounded-l-xl border border-r-0 border-purple-400/50 transition-all duration-300 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-400/70 backdrop-blur-[2px] shadow-lg ring-1 ring-white/10 focus:outline-none focus:ring-1 focus:ring-purple-400/50 overflow-hidden"
+          aria-label={
+            window.location.pathname === "/blogs" ? "Go to Home" : "Go to Blogs"
+          }
         >
           {/* Subtle glass shine effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-400/8 via-transparent to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300" />
@@ -39,4 +41,3 @@ const FloatingChatButton = () => {
 };
 
 export default FloatingChatButton;
-

@@ -1,7 +1,10 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { FiSend, FiCheck } from "react-icons/fi";
-import { useSubmitContactMessage, useContactFormValidation } from "@/shared/hooks/useContactQueries";
+import {
+  useSubmitContactMessage,
+  useContactFormValidation,
+} from "@/shared/hooks/useContactQueries";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -104,7 +107,10 @@ const Contact = () => {
   };
 
   return (
-    <div id="contact" className="pb-8 lg:pb-12 border-b border-neutral-800 scroll-mt-20">
+    <div
+      id="contact"
+      className="pb-8 lg:pb-12 border-b border-neutral-800 scroll-mt-20"
+    >
       {/* Section Header - Responsive & Sleek */}
       <motion.h2
         whileInView={{ opacity: 1, y: 0 }}
@@ -130,7 +136,9 @@ const Contact = () => {
             className="flex items-center justify-center p-3 sm:p-4 mb-6 space-x-2 border border-green-400/50 rounded-full bg-green-500/20 backdrop-blur-md shadow-lg shadow-green-500/10"
           >
             <FiCheck className="text-base sm:text-lg text-green-400" />
-            <p className="text-xs sm:text-sm text-green-400 font-medium">Message sent successfully!</p>
+            <p className="text-xs sm:text-sm text-green-400 font-medium">
+              Message sent successfully!
+            </p>
           </motion.div>
         )}
 
@@ -157,7 +165,10 @@ const Contact = () => {
               initial={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <label htmlFor="name" className="block text-sm font-medium text-neutral-300 mb-1.5">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-neutral-300 mb-1.5"
+              >
                 Name
               </label>
               <input
@@ -180,7 +191,10 @@ const Contact = () => {
               initial={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-1.5">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-neutral-300 mb-1.5"
+              >
                 Email
               </label>
               <input
@@ -204,7 +218,10 @@ const Contact = () => {
             initial={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <label htmlFor="subject" className="block text-sm font-medium text-neutral-300 mb-1.5">
+            <label
+              htmlFor="subject"
+              className="block text-sm font-medium text-neutral-300 mb-1.5"
+            >
               Subject
             </label>
             <input
@@ -228,7 +245,10 @@ const Contact = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="relative"
           >
-            <label htmlFor="message" className="block text-sm font-medium text-neutral-300 mb-1.5">
+            <label
+              htmlFor="message"
+              className="block text-sm font-medium text-neutral-300 mb-1.5"
+            >
               Message
             </label>
             <textarea
@@ -244,7 +264,10 @@ const Contact = () => {
               maxLength={2000}
               aria-describedby="message-counter"
             />
-            <span id="message-counter" className="absolute bottom-2.5 sm:bottom-3 right-3 sm:right-4 text-xs text-neutral-500">
+            <span
+              id="message-counter"
+              className="absolute bottom-2.5 sm:bottom-3 right-3 sm:right-4 text-xs text-neutral-500"
+            >
               {formData.message.length}/2000
             </span>
           </motion.div>
@@ -261,10 +284,11 @@ const Contact = () => {
               disabled={isLoading}
               whileHover={{ scale: isLoading ? 1 : 1.05 }}
               whileTap={{ scale: isLoading ? 1 : 0.95 }}
-              className={`inline-flex items-center justify-center px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300 backdrop-blur-md shadow-lg ${isLoading
-                ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
-                : "bg-purple-500/20 text-purple-300 border border-purple-400/50 hover:bg-purple-500/30 hover:border-purple-400/70 hover:shadow-xl hover:shadow-purple-500/20"
-                }`}
+              className={`inline-flex items-center justify-center px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300 backdrop-blur-md shadow-lg ${
+                isLoading
+                  ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
+                  : "bg-purple-500/20 text-purple-300 border border-purple-400/50 hover:bg-purple-500/30 hover:border-purple-400/70 hover:shadow-xl hover:shadow-purple-500/20"
+              }`}
             >
               <span className="flex items-center space-x-2">
                 {isLoading ? (

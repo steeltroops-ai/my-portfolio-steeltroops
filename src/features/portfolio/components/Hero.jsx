@@ -65,7 +65,7 @@ const Hero = () => {
                 variants={itemVariants}
                 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-light tracking-tight leading-snug sm:leading-snug md:leading-snug lg:leading-snug text-center lg:text-left"
               >
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-500 via-slate-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-200 via-slate-300 to-purple-400">
                   Full Stack, Robotics &<br className="hidden sm:block" />
                   <span className="sm:hidden"> </span>Machine Learning Engineer
                 </span>

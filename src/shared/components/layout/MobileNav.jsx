@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiHome,
   FiUser,
@@ -63,10 +64,10 @@ const MobileNav = () => {
       className="xl:hidden fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-8rem)] sm:w-[85%] md:w-[70%] max-w-md"
       aria-label="Mobile navigation"
     >
-      <div className="relative bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl border border-white/20">
-        {/* Glassmorphism inner glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50"></div>
-        <div className="absolute inset-0 bg-gradient-to-tl from-purple-500/5 via-transparent to-transparent"></div>
+      <div className="relative bg-white/[0.01] backdrop-blur-[4px] rounded-xl overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] border border-white/30">
+        {/* Liquid highlight - mimics light on water surface */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent pointer-events-none"></div>
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
 
         {/* Content */}
         <div className="relative px-2 sm:px-3 py-2">
@@ -76,29 +77,40 @@ const MobileNav = () => {
               const Icon = section.icon;
 
               return (
-                <li key={section.id}>
+                <li key={section.id} className="relative">
                   <button
                     onClick={() => handleNavClick(section.id)}
                     className={`
-                      flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-all duration-300
+                      relative z-10 flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-colors duration-300
                       ${
                         isActive
-                          ? "bg-purple-500/25 border border-purple-400/50 aspect-square shadow-lg"
-                          : "text-neutral-400 hover:text-white hover:bg-white/5"
+                          ? "text-purple-100"
+                          : "text-neutral-400 hover:text-white"
                       }
                     `}
                     aria-label={section.label}
                     aria-current={isActive ? "true" : undefined}
                   >
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-pill-mobile"
+                        className="absolute inset-0 bg-purple-500/20 border border-purple-400/50 rounded-lg shadow-lg"
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 30,
+                        }}
+                      />
+                    )}
                     <Icon
                       size={18}
-                      className={`stroke-[1.5] transition-all duration-300 ${
+                      className={`relative z-20 stroke-[1.5] transition-all duration-300 ${
                         isActive
-                          ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+                          ? "drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]"
                           : ""
                       }`}
                     />
-                    <span className="text-[8px] font-medium hidden xs:block">
+                    <span className="relative z-20 text-[8px] font-medium hidden xs:block">
                       {section.label}
                     </span>
                   </button>

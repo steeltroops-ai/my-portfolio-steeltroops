@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 
 const sections = [
   { id: "hero", label: "Home" },
@@ -112,21 +113,32 @@ const ScrollspyNav = () => {
           const isActive = activeSection === section.id;
 
           return (
-            <li key={section.id} className="w-auto">
+            <li key={section.id} className="relative w-auto group">
               <button
                 onClick={() => handleNavClick(section.id)}
                 className={`
-                  block text-[10px] md:text-xs xl:text-sm whitespace-nowrap transition-all duration-300 cursor-pointer
-                  focus:outline-none
+                  relative z-10 block text-[10px] md:text-xs xl:text-sm whitespace-nowrap transition-colors duration-300 cursor-pointer
+                  focus:outline-none px-2 md:px-3 py-1 md:py-1.5
                   ${
                     isActive
-                      ? "text-purple-300 font-medium bg-purple-500/20 border border-purple-400/50 rounded-full px-2 md:px-3 py-1 md:py-1.5 backdrop-blur-md shadow-lg"
-                      : "text-neutral-400 font-normal hover:text-neutral-300 px-1.5 md:px-2 py-0.5 md:py-1"
+                      ? "text-purple-100 font-medium"
+                      : "text-neutral-400 font-normal hover:text-neutral-200"
                   }
                 `}
                 aria-current={isActive ? "true" : "false"}
               >
-                {section.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="active-pill-scrollspy"
+                    className="absolute inset-0 bg-purple-500/10 border border-purple-400/50 rounded-full shadow-lg ring-1 ring-white/10"
+                    transition={{
+                      type: "spring",
+                      stiffness: 380,
+                      damping: 30,
+                    }}
+                  />
+                )}
+                <span className="relative z-20">{section.label}</span>
               </button>
             </li>
           );
