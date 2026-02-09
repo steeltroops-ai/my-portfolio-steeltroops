@@ -77,7 +77,8 @@ const Hero = () => {
                 {HERO_CONTENT.map((paragraph, index) => (
                   <p
                     key={index}
-                    className="text-sm sm:text-base lg:text-base font-light leading-relaxed text-neutral-200 text-justify"
+                    className="text-sm sm:text-base lg:text-base font-light leading-relaxed text-justify"
+                    style={{ color: "var(--text-body-main)" }}
                   >
                     {paragraph}
                   </p>

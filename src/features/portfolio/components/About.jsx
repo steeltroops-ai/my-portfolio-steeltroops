@@ -56,9 +56,9 @@ const About = () => {
   return (
     <section
       id="about"
-      className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
+      className="pb-8 sm:pb-12 md:pb-12 lg:pb-4 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl lg:py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl md:py-12 lg:py-16">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -84,9 +84,9 @@ const About = () => {
             <div className="flex flex-col items-center lg:items-start space-y-4 sm:space-y-5 lg:space-y-8">
               <motion.h2
                 variants={headingVariants}
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-thin tracking-tight mt-4 sm:mt-8 lg:mt-0 leading-tight text-center lg:text-left"
+                className="section-title lg:text-left"
               >
-                About <span className="text-neutral-500">Me</span>
+                About <span>Me</span>
               </motion.h2>
               <motion.div
                 variants={contentVariants}
@@ -95,7 +95,8 @@ const About = () => {
                 {ABOUT_TEXT.map((paragraph, index) => (
                   <p
                     key={index}
-                    className="text-sm sm:text-base lg:text-base font-light leading-relaxed text-neutral-200 text-justify"
+                    className="text-sm sm:text-base lg:text-base font-light leading-relaxed text-justify"
+                    style={{ color: "var(--text-body-main)" }}
                   >
                     {paragraph}
                   </p>

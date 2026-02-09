@@ -12,9 +12,9 @@ const Projects = () => {
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
         transition={{ duration: 1.2 }}
-        className="my-8 sm:my-12 lg:my-20 text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center"
+        className="my-8 sm:my-12 lg:my-20 section-title"
       >
-        My <span className="text-neutral-500">Projects</span>
+        My <span>Projects</span>
       </motion.h2>
       <div className="space-y-8 sm:space-y-10 lg:space-y-8">
         {PROJECTS.map((project, index) => (
@@ -63,7 +63,10 @@ const Projects = () => {
               className="w-full max-w-xl md:w-3/4 mx-auto md:mx-0"
             >
               <div className="flex flex-col md:flex-row items-center md:items-center justify-between mb-3 gap-2 px-4 md:px-0">
-                <h6 className="text-base sm:text-lg font-semibold text-neutral-100 text-center md:text-left">
+                <h6
+                  className="text-base sm:text-lg title-font text-center md:text-left"
+                  style={{ color: "var(--heading-sub-main)" }}
+                >
                   {project.title}
                 </h6>
                 {project.github && (
@@ -84,14 +87,18 @@ const Projects = () => {
                     {project.description.map((point, i) => (
                       <li
                         key={i}
-                        className="text-sm sm:text-base text-neutral-300 font-light pl-2 marker:text-purple-500"
+                        className="text-sm sm:text-base font-light pl-2 marker:text-purple-500"
+                        style={{ color: "var(--text-body-main)" }}
                       >
                         {point}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm sm:text-base text-neutral-200 font-light">
+                  <p
+                    className="text-sm sm:text-base font-light"
+                    style={{ color: "var(--text-body-main)" }}
+                  >
                     {project.description}
                   </p>
                 )}

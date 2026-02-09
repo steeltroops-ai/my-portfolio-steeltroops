@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
+import { ReactLenis } from "lenis/react";
 import App from "@/App.jsx";
 import { ErrorBoundary } from "@/shared";
 import "@/index.css";
@@ -94,49 +95,60 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           }}
         />
         <HelmetProvider>
-          <Router
-            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          <ReactLenis
+            root
+            options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}
           >
-            <Suspense fallback={<LoadingSpinner />}>
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <>
-                      <App />
-                      <Suspense fallback={<MinimalFallback />}>
-                        <FloatingChatButton />
-                        <MobileNav />
-                      </Suspense>
-                    </>
-                  }
-                />
-                <Route path="/blogs" element={<Blog />} />
-                <Route path="/blogs/:slug" element={<BlogPost />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-
-                {/* Admin Routes with Layout */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <AdminLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/post/new" element={<BlogEditor />} />
-                  <Route path="/admin/post/edit/:id" element={<BlogEditor />} />
+            <Router
+              future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+            >
+              <Suspense fallback={<LoadingSpinner />}>
+                <Routes>
                   <Route
-                    path="/admin/ai-generator"
-                    element={<AIBlogGenerator />}
+                    path="/"
+                    element={
+                      <>
+                        <App />
+                        <Suspense fallback={<MinimalFallback />}>
+                          <FloatingChatButton />
+                          <MobileNav />
+                        </Suspense>
+                      </>
+                    }
                   />
-                  <Route path="/admin/messages" element={<MessageCenter />} />
-                </Route>
-                {/* 404 Not Found - Must be last */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </Router>
+                  <Route path="/blogs" element={<Blog />} />
+                  <Route path="/blogs/:slug" element={<BlogPost />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+
+                  {/* Admin Routes with Layout */}
+                  <Route
+                    element={
+                      <ProtectedRoute>
+                        <AdminLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route
+                      path="/admin/dashboard"
+                      element={<AdminDashboard />}
+                    />
+                    <Route path="/admin/post/new" element={<BlogEditor />} />
+                    <Route
+                      path="/admin/post/edit/:id"
+                      element={<BlogEditor />}
+                    />
+                    <Route
+                      path="/admin/ai-generator"
+                      element={<AIBlogGenerator />}
+                    />
+                    <Route path="/admin/messages" element={<MessageCenter />} />
+                  </Route>
+                  {/* 404 Not Found - Must be last */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </Router>
+          </ReactLenis>
         </HelmetProvider>
       </QueryClientProvider>
     </ErrorBoundary>

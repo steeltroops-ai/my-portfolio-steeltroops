@@ -23,6 +23,8 @@ export default defineConfig({
       "@/lib": resolve(__dirname, "./src/lib"),
       "@/data": resolve(__dirname, "./src/data"),
       "@/constants": resolve(__dirname, "./src/constants"),
+      react: resolve(__dirname, "node_modules/react"),
+      "react-dom": resolve(__dirname, "node_modules/react-dom"),
     },
   },
   server: {

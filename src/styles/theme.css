@@ -1,0 +1,85 @@
+/**
+ * Global Design Tokens
+ * 
+ * Centralized control for typography, colors, and repeated UI patterns.
+ * Update these variables to propagate changes across all sections.
+ */
+
+:root {
+  /* --- Primary Color Palette --- */
+  --color-primary-light: theme("colors.purple.400");
+  --color-primary-main: theme("colors.purple.500");
+  --color-primary-dark: theme("colors.purple.600");
+
+  /* --- Typography Colors --- */
+  /* Main Section Headings (e.g., "My Experience") */
+  --heading-main-primary: #ffffff;
+  --heading-main-secondary: theme("colors.neutral.500");
+
+  /* Subheadings & Roles (e.g., "Software Engineer") */
+  --heading-sub-main: theme("colors.neutral.200");
+  --heading-sub-accent: theme("colors.purple.200");
+
+  /* Body Text & Descriptions (Upgraded to a cleaner, more vibrant white) */
+  --text-body-main: theme("colors.neutral.100");
+  --text-body-muted: theme("colors.neutral.400");
+
+  /* Special Text (Dates, Tags) */
+  --text-accent-purple: theme("colors.purple.300 / 0.9");
+  --text-tag-white: #ffffff;
+
+  /* --- UI Component Styles --- */
+  /* Glass Card Presets */
+  --glass-bg: rgba(255, 255, 255, 0.01);
+  --glass-bg-hover: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-border-hover: rgba(255, 255, 255, 0.1);
+
+  /* Accent & Interaction Glows */
+  --glow-accent-subtle: rgba(168, 85, 247, 0.15);
+  --glow-accent-strong: rgba(168, 85, 247, 0.6);
+
+  /* Scifi / Circuit Accents */
+  --circuit-line: theme("colors.neutral.800");
+  --circuit-accent: rgba(168, 85, 247, 0.4);
+
+  /* Font Styles */
+  --font-heading: "Inter", sans-serif;
+  --font-heading-weight: 100;
+  --font-heading-tracking: -0.025em;
+}
+
+@layer components {
+  /* Centralized Section Heading Style */
+  .section-title {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl text-center;
+    font-family: var(--font-heading);
+    font-weight: var(--font-heading-weight);
+    letter-spacing: var(--font-heading-tracking);
+    color: var(--heading-main-primary);
+  }
+
+  .section-title span {
+    color: var(--heading-main-secondary);
+  }
+
+  /* Shared Font Style for Roles and Project Names */
+  .title-font {
+    font-family: var(--font-heading);
+    font-weight: 500; /* Medium for readability but same family/tracking */
+    letter-spacing: var(--font-heading-tracking);
+  }
+
+  /* Shared Glass Card Base */
+  .glass-card {
+    @apply relative overflow-hidden transition-all duration-500 rounded-2xl border;
+    background-color: var(--glass-bg);
+    border-color: var(--glass-border);
+  }
+
+  .glass-card:hover {
+    background-color: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+    box-shadow: 10px 10px 30px -5px var(--glow-accent-subtle);
+  }
+}

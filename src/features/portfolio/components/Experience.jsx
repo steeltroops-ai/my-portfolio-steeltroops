@@ -1,9 +1,18 @@
 import { EXPERIENCES } from "@/constants";
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { motion, useInView } from "framer-motion";
+import { useState, useRef } from "react";
 
 const ExperienceCard = ({ experience, index, isLast }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const cardRef = useRef(null);
+
+  // Detect if the card is in the vertical center of the screen (the "reading zone")
+  const isInCenter = useInView(cardRef, {
+    margin: "-45% 0px -45% 0px", // Only triggers when card is in the middle 10% of viewport
+    once: false,
+  });
+
+  const isFocused = isInCenter || isExpanded;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[120px_auto_1fr] gap-x-4 lg:gap-x-8 group">
@@ -48,32 +57,48 @@ const ExperienceCard = ({ experience, index, isLast }) => {
         transition={{ duration: 0.5, delay: index * 0.1 }}
         className="relative lg:pl-0"
       >
-        {/* Mobile Header (Date) */}
-        <div className="flex items-center gap-3 lg:hidden mb-4">
-          <div className="w-2 h-2 rounded-full bg-purple-400/60 shadow-[0_0_10px_rgba(168,85,247,0.2)]" />
-          <span className="text-sm font-mono font-bold text-purple-300/90">
+        {/* Mobile Header (Date) - Scifi Capsule Style */}
+        <div className="flex items-center gap-4 lg:hidden mb-4">
+          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-neutral-800 to-purple-500/40" />
+          <span className="px-3 py-1 text-[10px] font-mono font-bold text-purple-200/90 whitespace-nowrap tracking-[0.2em] uppercase rounded-full border border-purple-500/20 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
             {experience.year}
           </span>
-          <div className="h-[1px] flex-1 bg-neutral-800" />
+          <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-neutral-800 to-purple-500/40" />
         </div>
 
-        {/* Glass Card with Directional Glow (Tech Stack Style) */}
-        <div className="relative overflow-hidden p-6 sm:p-8 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-500 group-hover:bg-white/[0.02] group-hover:shadow-[10px_10px_30px_-5px_rgba(168,85,247,0.15)] group-hover:border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2 relative z-10">
-            <h3 className="text-xl font-bold text-neutral-200 tracking-tight group-hover:text-purple-200 transition-colors">
+        {/* Glass Card - Ultra Compact on Mobile */}
+        <div
+          ref={cardRef}
+          className={`relative overflow-hidden p-4 sm:p-6 md:p-5 lg:p-8 rounded-2xl transition-all duration-700 border
+            ${
+              isFocused
+                ? "bg-white/[0.02] border-white/10 shadow-[10px_10px_30px_-5px_rgba(168,85,247,0.15)]"
+                : "bg-white/[0.01] border-white/5 shadow-none"
+            } 
+            group-hover:bg-white/[0.02] group-hover:shadow-[10px_10px_30px_-5px_rgba(168,85,247,0.15)] group-hover:border-white/10`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 md:mb-2 lg:mb-4 gap-1 relative z-10">
+            <h3
+              className="text-lg sm:text-xl title-font group-hover:text-[var(--heading-sub-accent)] transition-colors"
+              style={{ color: "var(--heading-sub-main)" }}
+            >
               {experience.role}
             </h3>
-            <span className="text-sm font-medium text-purple-300/90 bg-purple-500/5 px-3 py-1 rounded-full border border-purple-500/10 w-fit">
+            <span
+              className="text-[12px] sm:text-sm font-medium bg-purple-500/5 px-2.5 py-0.5 rounded-full border border-purple-500/10 w-fit"
+              style={{ color: "var(--text-accent-purple)" }}
+            >
               {experience.company}
             </span>
           </div>
 
-          {/* Desktop View: Full List */}
-          <ul className="hidden lg:block space-y-2.5 mb-6 relative z-10">
+          {/* Full List: Visible on Tablet and Desktop */}
+          <ul className="hidden md:block space-y-2.5 md:space-y-1.5 lg:space-y-2.5 mb-6 md:mb-4 lg:mb-6 relative z-10">
             {experience.description.map((point, i) => (
               <li
                 key={i}
-                className="flex items-start gap-3 text-sm text-neutral-400/90 font-light leading-relaxed"
+                className="flex items-start gap-3 text-sm font-light leading-relaxed"
+                style={{ color: "var(--text-body-main)" }}
               >
                 <span className="mt-2 min-w-[5px] h-[5px] rounded-full bg-purple-500/40" />
                 <span>{point}</span>
@@ -81,15 +106,16 @@ const ExperienceCard = ({ experience, index, isLast }) => {
             ))}
           </ul>
 
-          {/* Mobile View: Inline Read More */}
-          <div className="lg:hidden mb-6 relative z-10">
+          {/* Mobile View: Inline Read More - Highly Compact */}
+          <div className="md:hidden mb-4 relative z-10">
             {isExpanded ? (
-              <div className="space-y-4">
-                <ul className="space-y-2.5">
+              <div className="space-y-3">
+                <ul className="space-y-2">
                   {experience.description.map((point, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-3 text-sm text-neutral-400/90 font-light leading-relaxed"
+                      className="flex items-start gap-2.5 text-sm font-light leading-relaxed"
+                      style={{ color: "var(--text-body-main)" }}
                     >
                       <span className="mt-2 min-w-[5px] h-[5px] rounded-full bg-purple-500/40" />
                       <span>{point}</span>
@@ -98,23 +124,26 @@ const ExperienceCard = ({ experience, index, isLast }) => {
                 </ul>
                 <button
                   onClick={() => setIsExpanded(false)}
-                  className="text-xs font-bold text-purple-300 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1"
+                  className="text-sm font-bold text-purple-300 hover:text-white transition-colors flex items-center gap-1"
                 >
                   Show Less <span className="text-[10px]">▲</span>
                 </button>
               </div>
             ) : (
-              <div className="flex items-start gap-3 text-sm text-neutral-400/90 font-light leading-relaxed">
+              <div
+                className="flex items-start gap-2.5 text-sm font-light leading-relaxed"
+                style={{ color: "var(--text-body-main)" }}
+              >
                 <span className="mt-1.5 min-w-[5px] h-[5px] rounded-full bg-purple-400/50 shrink-0" />
                 <span>
-                  {experience.description[0].length > 100
-                    ? experience.description[0].slice(0, 100) + "..."
+                  {experience.description[0].length > 160
+                    ? experience.description[0].slice(0, 160) + "..."
                     : experience.description[0]}
                   {(experience.description.length > 1 ||
-                    experience.description[0].length > 100) && (
+                    experience.description[0].length > 160) && (
                     <button
                       onClick={() => setIsExpanded(true)}
-                      className="ml-2 text-purple-300 font-bold hover:text-white transition-colors uppercase text-xs tracking-wide"
+                      className="ml-1 text-purple-300 font-bold hover:text-white transition-colors"
                     >
                       Read More
                     </button>
@@ -124,11 +153,11 @@ const ExperienceCard = ({ experience, index, isLast }) => {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5 relative z-10">
+          <div className="flex flex-wrap gap-1 sm:gap-1.5 pt-2 sm:pt-3 md:pt-3 lg:pt-4 border-t border-white/5 relative z-10">
             {experience.technologies.map((tech, i) => (
               <span
                 key={i}
-                className="px-2.5 py-1 text-[11px] font-medium text-purple-300/70 bg-purple-500/5 border border-purple-500/10 rounded-full transition-all duration-300"
+                className="px-1.5 py-0 sm:px-2 sm:py-0.5 text-[9px] sm:text-[11px] font-medium text-white/90 bg-purple-500/5 border border-purple-500/10 rounded-full transition-all duration-300"
               >
                 {tech}
               </span>
@@ -147,9 +176,9 @@ const Experience = () => {
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
         transition={{ duration: 1.2 }}
-        className="my-8 sm:my-12 lg:my-20 text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center"
+        className="my-8 sm:my-12 lg:my-20 section-title"
       >
-        My <span className="text-neutral-500">Experience</span>
+        My <span>Experience</span>
       </motion.h2>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         <div className="relative ml-3 lg:ml-0 space-y-12">

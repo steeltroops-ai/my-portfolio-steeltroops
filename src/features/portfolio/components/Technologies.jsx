@@ -159,31 +159,26 @@ const technologies = [
   },
 ];
 
-// Apple-style smooth floating animation
-const iconVariants = (duration) => ({
-  initial: { y: 0, opacity: 0.9 },
+// Coordinated floating wave animation
+const iconVariants = (index) => ({
+  initial: { y: 0, x: 0, opacity: 0.9 },
   animate: {
-    y: [8, -8],
+    y: [0, 6, 0, -6, 0],
+    x: [3, 0, -3, 0, 3],
     opacity: 1,
     transition: {
-      y: {
-        duration: duration,
-        ease: appleEasing.easeInOut,
-        repeat: Infinity,
-        repeatType: "reverse",
-      },
-      opacity: {
-        duration: 0.4,
-        ease: appleEasing.easeOut,
-      },
+      duration: 5,
+      repeat: Infinity,
+      ease: "easeInOut",
+      delay: index * 0.15, // Creates the coordinated wave/flow pattern
     },
   },
   // Static variant for reduced motion
-  static: { y: 0, opacity: 1 },
+  static: { y: 0, x: 0, opacity: 1 },
 });
 
 // Technology icon component with accessibility features and performance optimization
-const TechnologyIcon = ({ tech, duration }) => {
+const TechnologyIcon = ({ tech, index }) => {
   const IconComponent = tech.icon;
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: false, margin: "-100px" });
@@ -198,7 +193,7 @@ const TechnologyIcon = ({ tech, duration }) => {
   return (
     <motion.div
       ref={ref}
-      variants={iconVariants(duration)}
+      variants={iconVariants(index)}
       initial="initial"
       animate={
         prefersReducedMotion ? "static" : isInView ? "animate" : "initial"
@@ -217,8 +212,8 @@ const TechnologyIcon = ({ tech, duration }) => {
       </div>
 
       {/* Mobile Label (Always visible on small screens) */}
-      <div className="block sm:hidden text-center mt-2">
-        <span className="text-[10px] text-neutral-400 font-light tracking-wide">
+      <div className="block sm:hidden text-center mt-0">
+        <span className="text-[10px] text-neutral-400 font-light tracking-wide leading-none">
           {tech.name}
         </span>
       </div>
@@ -322,9 +317,9 @@ const Technologies = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={viewportSettings.standard}
         transition={{ duration: 0.7, ease: appleEasing.easeOut }}
-        className="my-8 sm:my-12 lg:my-20 text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-thin tracking-tight text-center"
+        className="my-8 sm:my-12 lg:my-20 section-title"
       >
-        Tech <span className="text-neutral-500">Stack</span>
+        Tech <span>Stack</span>
       </motion.h2>
 
       {/* Category Filter */}
@@ -367,11 +362,7 @@ const Technologies = () => {
         style={{ willChange: "transform, opacity" }}
       >
         {displayedTechs.map((tech, index) => (
-          <TechnologyIcon
-            key={tech.name}
-            tech={tech}
-            duration={getDuration(index)}
-          />
+          <TechnologyIcon key={tech.name} tech={tech} index={index} />
         ))}
       </motion.div>
 
