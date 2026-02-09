@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "react-hot-toast";
 import App from "@/App.jsx";
 import { ErrorBoundary } from "@/shared";
 import "@/index.css";
@@ -62,6 +63,8 @@ const MessageCenter = lazy(
   () => import("@/features/admin/components/MessageCenter")
 );
 
+const AdminLayout = lazy(() => import("@/features/admin/layouts/AdminLayout"));
+
 const NotFound = lazy(() => import("@/shared/components/feedback/NotFound"));
 
 // Loading component
@@ -81,6 +84,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "#333",
+              color: "#fff",
+            },
+          }}
+        />
         <HelmetProvider>
           <Router
             future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -102,46 +114,24 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 <Route path="/blogs" element={<Blog />} />
                 <Route path="/blogs/:slug" element={<BlogPost />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
+
+                {/* Admin Routes with Layout */}
                 <Route
-                  path="/admin/dashboard"
                   element={
                     <ProtectedRoute>
-                      <AdminDashboard />
+                      <AdminLayout />
                     </ProtectedRoute>
                   }
-                />
-                <Route
-                  path="/admin/post/new"
-                  element={
-                    <ProtectedRoute>
-                      <BlogEditor />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/post/edit/:id"
-                  element={
-                    <ProtectedRoute>
-                      <BlogEditor />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/ai-generator"
-                  element={
-                    <ProtectedRoute>
-                      <AIBlogGenerator />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/messages"
-                  element={
-                    <ProtectedRoute>
-                      <MessageCenter />
-                    </ProtectedRoute>
-                  }
-                />
+                >
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/post/new" element={<BlogEditor />} />
+                  <Route path="/admin/post/edit/:id" element={<BlogEditor />} />
+                  <Route
+                    path="/admin/ai-generator"
+                    element={<AIBlogGenerator />}
+                  />
+                  <Route path="/admin/messages" element={<MessageCenter />} />
+                </Route>
                 {/* 404 Not Found - Must be last */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

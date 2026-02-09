@@ -1,354 +1,317 @@
-import { useState } from "react";
-import {
-  useContactMessages,
-  useUpdateMessageStatus,
-  useDeleteMessage,
-} from "../hooks/useContactMessages";
+import { useState, useMemo, useEffect } from "react";
 import {
   FiMail,
-  FiEye,
   FiCheck,
   FiTrash2,
-  FiX,
-  FiUser,
-  FiClock,
-  FiMessageCircle,
-  FiFilter,
+  FiSearch,
+  FiCalendar,
+  FiMessageSquare,
 } from "react-icons/fi";
+import { useContactMessages } from "../hooks/useContactMessages";
+import { useUpdateMessageStatus } from "../hooks/useContactMessages";
+import { useDeleteMessage } from "../hooks/useContactMessages";
+import { toast } from "react-hot-toast";
 
 const MessageCenter = () => {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedMessage, setSelectedMessage] = useState(null);
-  const [adminNotes, setAdminNotes] = useState("");
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { data, isLoading, error, refetch } = useContactMessages(statusFilter);
+  const { data, isLoading, error, refetch } = useContactMessages();
   const updateStatusMutation = useUpdateMessageStatus();
-  const deleteMutation = useDeleteMessage();
+  const deleteMessageMutation = useDeleteMessage();
 
-  const messages = data?.data || [];
+  const messages = data?.messages || [];
 
-  const handleMarkRead = async (id) => {
-    try {
-      await updateStatusMutation.mutateAsync({ id, action: "read" });
-    } catch (err) {
-      console.error("Failed to mark as read:", err);
+  // Group messages by email
+  const threads = useMemo(() => {
+    const grouped = messages.reduce((acc, message) => {
+      const email = message.email;
+      if (!acc[email]) {
+        acc[email] = {
+          email,
+          name: message.name,
+          messages: [],
+          lastMessage: null,
+          unreadCount: 0,
+        };
+      }
+      acc[email].messages.push(message);
+      if (message.status === "unread") {
+        acc[email].unreadCount += 1;
+      }
+      return acc;
+    }, {});
+
+    // Sort messages within threads
+    Object.values(grouped).forEach((thread) => {
+      thread.messages.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+      thread.lastMessage = thread.messages[0];
+    });
+
+    // Sort threads by most recent message
+    return Object.values(grouped).sort((a, b) => {
+      return (
+        new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at)
+      );
+    });
+  }, [messages]);
+
+  // Filter threads
+  const filteredThreads = threads.filter((thread) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      thread.name.toLowerCase().includes(searchLower) ||
+      thread.email.toLowerCase().includes(searchLower) ||
+      thread.messages.some((m) => m.message.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Select first thread by default
+  useEffect(() => {
+    if (!selectedEmail && filteredThreads.length > 0 && !isLoading) {
+      setSelectedEmail(filteredThreads[0].email);
     }
-  };
+  }, [filteredThreads, isLoading, selectedEmail]);
 
-  const handleMarkReplied = async (id) => {
+  const activeThread = threads.find((t) => t.email === selectedEmail);
+
+  // Sort for chat view (oldest to newest)
+  const activeMessages = activeThread
+    ? [...activeThread.messages].sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      )
+    : [];
+
+  const handleStatusUpdate = async (id, status) => {
     try {
-      await updateStatusMutation.mutateAsync({
-        id,
-        action: "replied",
-        notes: adminNotes,
-      });
-      setSelectedMessage(null);
-      setAdminNotes("");
-    } catch (err) {
-      console.error("Failed to mark as replied:", err);
+      await updateStatusMutation.mutateAsync({ id, status });
+    } catch (error) {
+      console.error("Failed to update status:", error);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this message?")) {
+    if (window.confirm("Delete this message?")) {
       try {
-        await deleteMutation.mutateAsync(id);
-        setSelectedMessage(null);
-      } catch (err) {
-        console.error("Failed to delete:", err);
+        await deleteMessageMutation.mutateAsync(id);
+        toast.success("Message deleted");
+      } catch (error) {
+        toast.error("Failed to delete");
       }
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "unread":
-        return <FiMail className="text-cyan-400" />;
-      case "read":
-        return <FiEye className="text-yellow-400" />;
-      case "replied":
-        return <FiCheck className="text-green-400" />;
-      default:
-        return <FiMail className="text-white/40" />;
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    const styles = {
-      unread: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-      read: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-      replied: "bg-green-500/20 text-green-400 border-green-500/30",
-      archived: "bg-white/10 text-white/50 border-white/20",
-    };
-
+  if (isLoading) {
     return (
-      <span
-        className={`px-2 py-1 text-xs rounded-full backdrop-blur-md border ${styles[status] || styles.archived}`}
-      >
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
+      <div className="flex justify-center items-center h-[calc(100vh-140px)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
     );
-  };
+  }
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffHours < 1) return "Just now";
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
+  if (error) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-red-400 mb-4">Failed to load messages</p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 rounded-lg border border-white/10 backdrop-blur-[2px] bg-white/5 hover:bg-white/10 transition-all text-white"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Background Effects */}
-      <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
-      <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-[radial-gradient(circle_400px_at_50%_300px,#fbfbfb36,#000)]"></div>
-
-      <div className="relative container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <FiMessageCircle className="text-cyan-400" />
-              Message Center
-            </h1>
-            <p className="text-white/60 mt-1">
-              View and manage contact form submissions
-            </p>
-          </div>
-
-          {/* Filter */}
-          <div className="flex items-center gap-3">
-            <FiFilter className="text-white/40" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 transition-all"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.5' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 0.75rem center",
-                backgroundSize: "12px",
-                paddingRight: "2.5rem",
-                appearance: "none",
-              }}
-            >
-              <option value="all">All Messages</option>
-              <option value="unread">Unread</option>
-              <option value="read">Read</option>
-              <option value="replied">Replied</option>
-            </select>
-          </div>
+    <div className="h-[calc(100vh-140px)] max-h-[800px] flex gap-6">
+      {/* Left Sidebar: Thread List */}
+      <div className="w-1/3 min-w-[320px] max-w-[400px] flex flex-col gap-4">
+        {/* Search Header */}
+        <div className="relative">
+          <FiSearch
+            size={18}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500"
+          />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search messages..."
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-[2px] text-white placeholder:text-neutral-500 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
+          />
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="p-4 rounded-lg border border-white/10 backdrop-blur-md bg-white/5">
-            <h3 className="text-sm font-medium text-white/60">Total</h3>
-            <p className="text-2xl font-bold text-white">{data?.count || 0}</p>
-          </div>
-          <div className="p-4 rounded-lg border border-cyan-500/20 backdrop-blur-md bg-cyan-500/10">
-            <h3 className="text-sm font-medium text-cyan-400/70">Unread</h3>
-            <p className="text-2xl font-bold text-cyan-400">
-              {messages.filter((m) => m.status === "unread").length}
-            </p>
-          </div>
-          <div className="p-4 rounded-lg border border-yellow-500/20 backdrop-blur-md bg-yellow-500/10">
-            <h3 className="text-sm font-medium text-yellow-400/70">Read</h3>
-            <p className="text-2xl font-bold text-yellow-400">
-              {messages.filter((m) => m.status === "read").length}
-            </p>
-          </div>
-          <div className="p-4 rounded-lg border border-green-500/20 backdrop-blur-md bg-green-500/10">
-            <h3 className="text-sm font-medium text-green-400/70">Replied</h3>
-            <p className="text-2xl font-bold text-green-400">
-              {messages.filter((m) => m.status === "replied").length}
-            </p>
-          </div>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="text-center py-20">
-            <p className="text-red-400 mb-4">Failed to load messages</p>
+        {/* Thread List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+          {filteredThreads.map((thread) => (
             <button
-              onClick={() => refetch()}
-              className="px-4 py-2 rounded-lg border border-cyan-400/30 backdrop-blur-md bg-cyan-500/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 transition-all shadow-lg shadow-cyan-500/10"
+              key={thread.email}
+              onClick={() => setSelectedEmail(thread.email)}
+              className={`w-full text-left p-4 rounded-xl border transition-all group ${
+                selectedEmail === thread.email
+                  ? "bg-white/10 border-white/20 shadow-lg shadow-purple-500/5"
+                  : "bg-white/5 border-white/5 hover:bg-white/[0.07] hover:border-white/10"
+              }`}
             >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {/* Messages List */}
-        {!isLoading && !error && (
-          <div className="space-y-3">
-            {messages.length === 0 ? (
-              <div className="text-center py-20">
-                <FiMail className="mx-auto text-6xl text-white/20 mb-4" />
-                <p className="text-white/40 text-lg">No messages yet</p>
-                <p className="text-white/30 text-sm mt-2">
-                  Messages from your contact form will appear here
-                </p>
+              <div className="flex justify-between items-start mb-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center border border-white/10 shrink-0">
+                    <span className="text-xs font-bold text-white">
+                      {thread.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span
+                    className={`font-semibold truncate ${
+                      selectedEmail === thread.email
+                        ? "text-white"
+                        : "text-neutral-300 group-hover:text-white"
+                    }`}
+                  >
+                    {thread.name}
+                  </span>
+                </div>
+                {thread.unreadCount > 0 && (
+                  <span className="bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg shadow-purple-500/20 shrink-0">
+                    {thread.unreadCount}
+                  </span>
+                )}
               </div>
-            ) : (
-              messages.map((message) => (
+              <p className="text-sm text-neutral-400 truncate pl-10">
+                {thread.lastMessage.message}
+              </p>
+              <div className="mt-2 pl-10 flex items-center gap-2 text-[10px] text-neutral-500">
+                <FiCalendar size={10} />
+                <span>
+                  {new Date(thread.lastMessage.created_at).toLocaleDateString()}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-neutral-600"></span>
+                <span>
+                  {new Date(thread.lastMessage.created_at).toLocaleTimeString(
+                    [],
+                    { hour: "2-digit", minute: "2-digit" }
+                  )}
+                </span>
+              </div>
+            </button>
+          ))}
+          {filteredThreads.length === 0 && (
+            <div className="text-center py-10 text-neutral-500">
+              No conversations found.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right Area: Chat View */}
+      <div className="flex-1 flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur-[2px] overflow-hidden shadow-2xl">
+        {activeThread ? (
+          <>
+            {/* Active Header */}
+            <div className="p-4 border-b border-white/10 bg-white/5 backdrop-blur-md flex justify-between items-center z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  {activeThread.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">
+                    {activeThread.name}
+                  </h2>
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <FiMail size={12} />
+                    {activeThread.email}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages Scroll Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+              {activeMessages.map((msg) => (
                 <div
-                  key={message.id}
-                  onClick={() => {
-                    setSelectedMessage(message);
-                    setAdminNotes(message.admin_notes || "");
-                    if (message.status === "unread") {
-                      handleMarkRead(message.id);
-                    }
-                  }}
-                  className={`p-5 rounded-xl border backdrop-blur-md cursor-pointer transition-all ${
-                    message.status === "unread"
-                      ? "border-cyan-400/30 bg-cyan-500/10 hover:bg-cyan-500/15"
-                      : "border-white/10 bg-white/5 hover:bg-white/10"
-                  }`}
+                  key={msg.id}
+                  className="group flex flex-col gap-2 max-w-3xl"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">
-                      {getStatusIcon(message.status)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-semibold text-white truncate">
-                          {message.name}
+                  <div className="flex items-end gap-3">
+                    {/* Message Bubble */}
+                    <div
+                      className={`p-4 rounded-2xl rounded-tl-none border backdrop-blur-sm transition-all ${
+                        msg.status === "unread"
+                          ? "bg-purple-500/10 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
+                          : "bg-white/10 border-white/10"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-4 mb-1">
+                        <span className="text-xs font-semibold text-white/50">
+                          {msg.subject || "No Subject"}
                         </span>
-                        {getStatusBadge(message.status)}
-                        <span className="text-white/40 text-sm flex items-center gap-1 ml-auto">
-                          <FiClock className="text-xs" />
-                          {formatDate(message.created_at)}
-                        </span>
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {msg.status !== "read" && (
+                            <button
+                              onClick={() => handleStatusUpdate(msg.id, "read")}
+                              className="p-1 hover:bg-white/10 rounded text-neutral-400 hover:text-white"
+                              title="Mark as Read"
+                            >
+                              <FiCheck size={14} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDelete(msg.id)}
+                            className="p-1 hover:bg-red-500/20 rounded text-neutral-400 hover:text-red-400"
+                            title="Delete Message"
+                          >
+                            <FiTrash2 size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-white/80 font-medium mb-1 truncate">
-                        {message.subject}
+                      <p className="text-neutral-200 leading-relaxed whitespace-pre-wrap">
+                        {msg.message}
                       </p>
-                      <p className="text-white/50 text-sm line-clamp-2">
-                        {message.message}
-                      </p>
+                      <div className="mt-2 flex items-center justify-end gap-2 text-[10px] text-neutral-500">
+                        <span>
+                          {new Date(msg.created_at).toLocaleDateString()}{" "}
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {msg.status === "read" && (
+                          <FiCheck size={12} className="text-green-500/50" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
+              ))}
+            </div>
+
+            {/* Input Area (Visual only for now, or for Notes) */}
+            <div className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-md">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Reply via email (coming soon)..."
+                  disabled
+                  className="w-full p-4 pr-12 rounded-xl bg-black/20 border border-white/10 text-neutral-500 cursor-not-allowed"
+                />
+                <button
+                  disabled
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/5 text-neutral-600"
+                >
+                  <FiMessageSquare size={18} />
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-neutral-500">
+            <FiMessageSquare size={48} className="mb-4 text-white/10" />
+            <p>Select a conversation to view details</p>
           </div>
         )}
       </div>
-
-      {/* Message Detail Modal */}
-      {selectedMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl border border-white/10 backdrop-blur-md bg-black/90 shadow-2xl">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-xl font-bold text-white">Message Details</h2>
-              <button
-                onClick={() => setSelectedMessage(null)}
-                className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all"
-              >
-                <FiX />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-4">
-              {/* Sender Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-white/40 text-sm">From</label>
-                  <p className="text-white font-medium flex items-center gap-2">
-                    <FiUser className="text-cyan-400" />
-                    {selectedMessage.name}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-white/40 text-sm">Email</label>
-                  <p className="text-white font-medium">
-                    <a
-                      href={`mailto:${selectedMessage.email}`}
-                      className="text-cyan-400 hover:underline"
-                    >
-                      {selectedMessage.email}
-                    </a>
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-white/40 text-sm">Subject</label>
-                <p className="text-white font-medium">
-                  {selectedMessage.subject}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-white/40 text-sm">Message</label>
-                <div className="mt-2 p-4 rounded-lg border border-white/10 bg-white/5">
-                  <p className="text-white whitespace-pre-wrap">
-                    {selectedMessage.message}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-white/40 text-sm">Admin Notes</label>
-                <textarea
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="Add notes about this message..."
-                  className="w-full mt-2 p-3 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 transition-all resize-none"
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-white/10">
-              <button
-                onClick={() => handleDelete(selectedMessage.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-500/30 backdrop-blur-md bg-red-500/20 hover:bg-red-500/30 hover:border-red-500/50 text-red-400 transition-all"
-              >
-                <FiTrash2 />
-                Delete
-              </button>
-
-              <div className="flex items-center gap-3">
-                {selectedMessage.status !== "replied" && (
-                  <button
-                    onClick={() => handleMarkReplied(selectedMessage.id)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-400/30 backdrop-blur-md bg-green-500/20 hover:bg-green-500/30 hover:border-green-400/50 text-green-400 transition-all"
-                  >
-                    <FiCheck />
-                    Mark as Replied
-                  </button>
-                )}
-                <a
-                  href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-400/30 backdrop-blur-md bg-cyan-500/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 text-cyan-400 transition-all"
-                >
-                  <FiMail />
-                  Reply via Email
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { FiSearch, FiFilter, FiArrowLeft, FiGrid, FiList } from "react-icons/fi";
+import {
+  FiSearch,
+  FiFilter,
+  FiArrowLeft,
+  FiGrid,
+  FiList,
+} from "react-icons/fi";
 import { usePublishedPosts, useTags } from "../hooks/useBlogQueries";
 import { FloatingChatButton, SocialLinks, SEOHead } from "@/shared";
-
 
 const Blog = () => {
   const navigate = useNavigate();
@@ -128,10 +133,11 @@ const Blog = () => {
               <div className="flex items-stretch border rounded-lg bg-purple-500/5 border-purple-400/20 backdrop-blur-sm shadow-lg">
                 <button
                   onClick={() => setLayoutView("grid")}
-                  className={`px-3 py-2 flex items-center justify-center transition-all duration-300 rounded-l-lg ${layoutView === "grid"
-                    ? "bg-purple-500/20 text-purple-100"
-                    : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/10"
-                    }`}
+                  className={`px-3 py-2 flex items-center justify-center transition-all duration-300 rounded-l-lg ${
+                    layoutView === "grid"
+                      ? "bg-purple-500/20 text-purple-100"
+                      : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/10"
+                  }`}
                   aria-label="Grid view"
                 >
                   <FiGrid className="w-4 h-4" />
@@ -139,10 +145,11 @@ const Blog = () => {
                 <div className="w-px bg-purple-400/20"></div>
                 <button
                   onClick={() => setLayoutView("list")}
-                  className={`px-3 py-2 flex items-center justify-center transition-all duration-300 rounded-r-lg ${layoutView === "list"
-                    ? "bg-purple-500/20 text-purple-100"
-                    : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/10"
-                    }`}
+                  className={`px-3 py-2 flex items-center justify-center transition-all duration-300 rounded-r-lg ${
+                    layoutView === "list"
+                      ? "bg-purple-500/20 text-purple-100"
+                      : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/10"
+                  }`}
                   aria-label="List view"
                 >
                   <FiList className="w-4 h-4" />
@@ -180,10 +187,11 @@ const Blog = () => {
                   <button
                     key={tag}
                     onClick={() => handleTagToggle(tag)}
-                    className={`px-3 py-1 text-sm rounded-md transition-all duration-300 ${selectedTags.includes(tag)
-                      ? "bg-purple-500/20 text-purple-100 border border-purple-400/40 font-medium"
-                      : "bg-purple-500/5 text-purple-300/70 border border-purple-400/20 hover:bg-purple-500/10 hover:border-purple-400/30 hover:text-purple-100"
-                      }`}
+                    className={`px-3 py-1 text-sm rounded-md transition-all duration-300 ${
+                      selectedTags.includes(tag)
+                        ? "bg-purple-500/20 text-purple-100 border border-purple-400/40 font-medium"
+                        : "bg-purple-500/5 text-purple-300/70 border border-purple-400/20 hover:bg-purple-500/10 hover:border-purple-400/30 hover:text-purple-100"
+                    }`}
                   >
                     {tag}
                   </button>
@@ -203,8 +211,6 @@ const Blog = () => {
             </motion.div>
           )}
         </motion.div>
-
-
 
         {/* Loading State */}
         {loading && (
@@ -251,85 +257,88 @@ const Blog = () => {
               </div>
             ) : (
               <>
-                <div className={`mb-12 ${layoutView === "grid"
-                  ? "grid gap-8 md:grid-cols-2 lg:grid-cols-3"
-                  : "flex flex-col gap-6"
-                  }`}>
+                <div
+                  className={`mb-12 ${
+                    layoutView === "grid"
+                      ? "grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                      : "flex flex-col gap-6"
+                  }`}
+                >
                   {posts.map((post, index) => (
                     <motion.article
                       key={post.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * index }}
-                      className={`relative transition-all duration-300 border rounded-xl backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 hover:border-white/20 group ${layoutView === "grid"
-                        ? "p-6 hover:-translate-y-1"
-                        : "p-6"
-                        }`}
+                      className={`relative group overflow-hidden transition-all duration-300 border rounded-xl backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 hover:border-white/20 ${
+                        layoutView === "grid"
+                          ? "h-full flex flex-col hover:-translate-y-1"
+                          : "flex flex-col sm:flex-row"
+                      }`}
                     >
                       <Link
                         to={`/blogs/${post.slug}`}
-                        className={`block ${layoutView === "grid" ? "space-y-4" : "flex gap-6"}`}
+                        className={`flex flex-col flex-1 h-full ${layoutView === "list" ? "sm:flex-row" : ""}`}
                       >
-
-                        {/* Featured Image */}
+                        {/* Featured Image - Square-ish aspect ratio for grid */}
                         {post.featured_image_url && (
-                          <div className={`relative overflow-hidden rounded-lg ${layoutView === "grid"
-                            ? "w-full mb-4 aspect-video"
-                            : "w-64 h-40 flex-shrink-0"
-                            }`}>
+                          <div
+                            className={`relative overflow-hidden ${
+                              layoutView === "grid"
+                                ? "w-full aspect-[4/3]"
+                                : "w-full sm:w-64 h-48 sm:h-auto flex-shrink-0"
+                            }`}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
                             <img
                               src={post.featured_image_url}
                               alt={post.title}
-                              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                              className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                             />
                           </div>
                         )}
 
-                        {/* Content */}
-                        <div className={`relative ${layoutView === "grid" ? "space-y-3" : "flex-1 space-y-2"}`}>
-                          <h2 className="text-xl font-semibold text-white transition-colors group-hover:text-white line-clamp-2">
+                        {/* Content Container */}
+                        <div
+                          className={`flex flex-col flex-1 p-6 ${layoutView === "list" ? "justify-center" : ""}`}
+                        >
+                          {/* Title */}
+                          <h2 className="text-xl font-semibold text-white mb-3 leading-tight transition-colors group-hover:text-purple-300 line-clamp-2">
                             {post.title}
                           </h2>
 
-                          <p className="transition-colors text-neutral-300/80 group-hover:text-neutral-200 line-clamp-3">
+                          {/* Excerpt */}
+                          <p className="text-neutral-300/80 text-sm leading-relaxed mb-4 line-clamp-3 group-hover:text-neutral-200 transition-colors">
                             {post.excerpt}
                           </p>
 
-                          {/* Tags */}
-                          {post.tags && post.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {post.tags.slice(0, 3).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-300/70 border border-purple-400/20"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                              {post.tags.length > 3 && (
-                                <span className="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-300/70 border border-purple-400/20">
-                                  +{post.tags.length - 3}
+                          {/* Spacer to push meta to bottom in grid view */}
+                          <div className="flex-1" />
+
+                          {/* Meta Info */}
+                          <div className="flex items-center justify-between text-sm text-purple-300/60 group-hover:text-purple-300 transition-colors mt-2">
+                            <div className="flex items-center gap-2">
+                              {post.read_time && (
+                                <span className="flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                  {post.read_time} min read
                                 </span>
                               )}
                             </div>
-                          )}
 
-                          {/* Meta Info */}
-                          <div className="flex items-center justify-between text-sm transition-colors text-purple-300/50 group-hover:text-purple-300/70">
-                            <div className="flex items-center">
-                              <span className="inline-block w-2 h-2 mr-2 rounded-full bg-purple-400"></span>
+                            <time
+                              dateTime={post.created_at}
+                              className="font-medium"
+                            >
                               {new Date(post.created_at).toLocaleDateString(
                                 "en-US",
                                 {
-                                  year: "numeric",
-                                  month: "long",
+                                  month: "short",
                                   day: "numeric",
+                                  year: "numeric",
                                 }
                               )}
-                            </div>
-                            {post.read_time && (
-                              <span>{post.read_time} min read</span>
-                            )}
+                            </time>
                           </div>
                         </div>
                       </Link>
@@ -356,10 +365,11 @@ const Blog = () => {
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-2 rounded transition-colors ${currentPage === page
-                              ? "bg-cyan-600 text-white"
-                              : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"
-                              }`}
+                            className={`px-3 py-2 rounded transition-colors ${
+                              currentPage === page
+                                ? "bg-cyan-600 text-white"
+                                : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"
+                            }`}
                           >
                             {page}
                           </button>
@@ -389,5 +399,3 @@ const Blog = () => {
 };
 
 export default Blog;
-
-

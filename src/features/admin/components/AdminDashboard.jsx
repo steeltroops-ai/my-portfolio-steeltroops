@@ -5,7 +5,7 @@ import {
   useDeletePost,
   useTogglePostPublished,
 } from "@/features/blog/hooks/useBlogQueries";
-import { signOut, isAuthenticated } from "../services/HybridAuthService";
+import { isAuthenticated } from "../services/HybridAuthService";
 import {
   FiPlus,
   FiEdit,
@@ -14,10 +14,7 @@ import {
   FiEyeOff,
   FiSearch,
   FiCalendar,
-  FiCpu,
-  FiInbox,
 } from "react-icons/fi";
-import { useUnreadCount } from "../hooks/useContactMessages";
 
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,10 +34,6 @@ const AdminDashboard = () => {
   const posts = postsData?.posts || [];
   const error = queryError ? "Failed to load posts" : "";
 
-  // Get unread messages count for badge
-  const { data: unreadData } = useUnreadCount();
-  const unreadCount = unreadData?.count || 0;
-
   useEffect(() => {
     const checkAuth = async () => {
       const authenticated = await isAuthenticated();
@@ -50,11 +43,6 @@ const AdminDashboard = () => {
     };
     checkAuth();
   }, [navigate]);
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/admin/login");
-  };
 
   const handleNewPost = () => {
     navigate("/admin/post/new");
@@ -111,261 +99,229 @@ const AdminDashboard = () => {
           background: rgba(255, 255, 255, 0.1);
         }
         select.glass-select option:checked {
-          background: rgba(6, 182, 212, 0.2);
+          background: rgba(255, 255, 255, 0.2);
         }
       `}</style>
-      <div className="min-h-screen bg-black text-white">
-        <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
-        <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-[radial-gradient(circle_400px_at_50%_300px,#fbfbfb36,#000)]"></div>
-        <div className="relative container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <h1 className="text-3xl font-bold">Blog Dashboard</h1>
-            <div className="flex gap-4">
-              <Link
-                to="/admin/ai-generator"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-400/30 backdrop-blur-md bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 hover:border-purple-400/50 transition-all shadow-lg shadow-purple-500/10"
-              >
-                <FiCpu />
-                AI Generate
-              </Link>
-              <Link
-                to="/admin/messages"
-                className="relative flex items-center gap-2 px-4 py-2 rounded-lg border border-orange-400/30 backdrop-blur-md bg-orange-500/20 hover:bg-orange-500/30 hover:border-orange-400/50 transition-all shadow-lg shadow-orange-500/10"
-              >
-                <FiInbox />
-                Messages
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </Link>
-              <button
-                onClick={handleNewPost}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-400/30 backdrop-blur-md bg-cyan-500/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 transition-all shadow-lg shadow-cyan-500/10"
-              >
-                <FiPlus />
-                New Post
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
 
-          {/* Search and Filter Controls */}
-          <div className="mb-6 flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search posts..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all"
-              />
-            </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-neutral-400 text-sm mt-1">
+            Manage your blog posts and content.
+          </p>
+        </div>
 
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="glass-select px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.5' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 0.75rem center",
-                backgroundSize: "12px",
-                paddingRight: "2.5rem",
-                appearance: "none",
-              }}
-            >
-              <option value="all">All Posts</option>
-              <option value="published">Published</option>
-              <option value="draft">Drafts</option>
-            </select>
-          </div>
+        <button
+          onClick={handleNewPost}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 hover:border-purple-500/50 text-purple-100 font-medium transition-all backdrop-blur-[2px] shadow-lg shadow-purple-500/20"
+        >
+          <FiPlus size={20} />
+          New Post
+        </button>
+      </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="p-4 rounded-lg border border-white/10 backdrop-blur-md bg-white/5">
-              <h3 className="text-sm font-medium text-white/60">Total Posts</h3>
-              <p className="text-2xl font-bold text-white">{posts.length}</p>
-            </div>
-            <div className="p-4 rounded-lg border border-green-500/20 backdrop-blur-md bg-green-500/10">
-              <h3 className="text-sm font-medium text-green-400/70">
-                Published
-              </h3>
-              <p className="text-2xl font-bold text-green-400">
-                {posts.filter((post) => post.published).length}
-              </p>
-            </div>
-            <div className="p-4 rounded-lg border border-yellow-500/20 backdrop-blur-md bg-yellow-500/10">
-              <h3 className="text-sm font-medium text-yellow-400/70">Drafts</h3>
-              <p className="text-2xl font-bold text-yellow-400">
-                {posts.filter((post) => !post.published).length}
-              </p>
-            </div>
-          </div>
-
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <div className="text-center py-20">
-              <p className="text-red-400 mb-4">{error}</p>
-              <button
-                onClick={() => refetch()}
-                className="px-4 py-2 rounded-lg border border-cyan-400/30 backdrop-blur-md bg-cyan-500/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 transition-all shadow-lg shadow-cyan-500/10"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-
-          {/* Posts Grid */}
-          {!loading && !error && (
-            <div className="space-y-4">
-              {filteredPosts.length === 0 ? (
-                <div className="text-center py-20">
-                  <p className="text-neutral-400 text-lg mb-4">
-                    {searchTerm || filterStatus !== "all"
-                      ? "No posts match your filters."
-                      : "No blog posts yet."}
-                  </p>
-                  {(searchTerm || filterStatus !== "all") && (
-                    <button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setFilterStatus("all");
-                      }}
-                      className="text-cyan-400 hover:text-cyan-300"
-                    >
-                      Clear filters
-                    </button>
-                  )}
-                </div>
-              ) : (
-                filteredPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="p-6 rounded-xl border border-white/10 backdrop-blur-md bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all"
-                  >
-                    <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h2 className="text-xl font-semibold">
-                            {post.title}
-                          </h2>
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full backdrop-blur-md ${
-                              post.published
-                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                            }`}
-                          >
-                            {post.published ? "Published" : "Draft"}
-                          </span>
-                        </div>
-
-                        <p className="text-white/60 mb-3 line-clamp-2">
-                          {post.excerpt}
-                        </p>
-
-                        {/* Tags */}
-                        {post.tags && post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {post.tags.slice(0, 3).map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-xs px-2 py-1 rounded border border-white/10 backdrop-blur-md bg-white/5 text-white/60"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {post.tags.length > 3 && (
-                              <span className="text-xs px-2 py-1 rounded border border-white/10 backdrop-blur-md bg-white/5 text-white/60">
-                                +{post.tags.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-4 text-sm text-white/50">
-                          <div className="flex items-center gap-1">
-                            <FiCalendar />
-                            {new Date(post.created_at).toLocaleDateString()}
-                          </div>
-                          {post.read_time && (
-                            <span>{post.read_time} min read</span>
-                          )}
-                          {post.updated_at !== post.created_at && (
-                            <span className="text-white/40">
-                              Updated{" "}
-                              {new Date(post.updated_at).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() =>
-                            handleTogglePublished(post.id, post.published)
-                          }
-                          className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-all border backdrop-blur-md ${
-                            post.published
-                              ? "bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/30 hover:border-yellow-500/50 text-yellow-400"
-                              : "bg-green-500/20 hover:bg-green-500/30 border-green-500/30 hover:border-green-500/50 text-green-400"
-                          }`}
-                          title={post.published ? "Unpublish" : "Publish"}
-                        >
-                          {post.published ? <FiEyeOff /> : <FiEye />}
-                          {post.published ? "Unpublish" : "Publish"}
-                        </button>
-
-                        <button
-                          onClick={() => handleEditPost(post.id)}
-                          className="flex items-center gap-1 px-3 py-2 rounded-lg border border-cyan-400/30 backdrop-blur-md bg-cyan-500/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 text-cyan-400 text-sm transition-all"
-                        >
-                          <FiEdit />
-                          Edit
-                        </button>
-
-                        <button
-                          onClick={() => handleDeletePost(post.id)}
-                          className="flex items-center gap-1 px-3 py-2 rounded-lg border border-red-500/30 backdrop-blur-md bg-red-500/20 hover:bg-red-500/30 hover:border-red-500/50 text-red-400 text-sm transition-all"
-                        >
-                          <FiTrash2 />
-                          Delete
-                        </button>
-
-                        {post.published && (
-                          <Link
-                            to={`/blogs/${post.slug}`}
-                            target="_blank"
-                            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 hover:bg-white/10 hover:border-white/20 text-white text-sm transition-all"
-                          >
-                            <FiEye />
-                            View
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-[2px] shadow-xl">
+          <h3 className="text-sm font-medium text-neutral-400 mb-2">
+            Total Posts
+          </h3>
+          <p className="text-3xl font-bold text-white">{posts.length}</p>
+        </div>
+        <div className="p-6 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-[2px] shadow-xl shadow-green-900/10">
+          <h3 className="text-sm font-medium text-green-400/80 mb-2">
+            Published
+          </h3>
+          <p className="text-3xl font-bold text-green-400">
+            {posts.filter((post) => post.published).length}
+          </p>
+        </div>
+        <div className="p-6 rounded-xl bg-yellow-500/10 border border-yellow-500/20 backdrop-blur-[2px] shadow-xl shadow-yellow-900/10">
+          <h3 className="text-sm font-medium text-yellow-400/80 mb-2">
+            Drafts
+          </h3>
+          <p className="text-3xl font-bold text-yellow-400">
+            {posts.filter((post) => !post.published).length}
+          </p>
         </div>
       </div>
+
+      {/* Search and Filter Controls */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative group">
+          <FiSearch
+            size={20}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 group-focus-within:text-white transition-colors"
+          />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search posts..."
+            className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/10 bg-white/5 backdrop-blur-[2px] text-white placeholder:text-neutral-500 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
+          />
+        </div>
+
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="glass-select px-4 py-3 rounded-lg border border-white/10 bg-white/5 backdrop-blur-[2px] text-white focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all cursor-pointer min-w-[150px]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.5' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right 1rem center",
+            backgroundSize: "10px",
+            paddingRight: "2.5rem",
+            appearance: "none",
+          }}
+        >
+          <option value="all">All Status</option>
+          <option value="published">Published</option>
+          <option value="draft">Drafts</option>
+        </select>
+      </div>
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="text-center py-20">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-all backdrop-blur-[2px]"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Posts Grid */}
+      {!loading && !error && (
+        <div className="space-y-4">
+          {filteredPosts.length === 0 ? (
+            <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/5 border-dashed backdrop-blur-[2px]">
+              <p className="text-neutral-400 text-lg mb-4">
+                {searchTerm || filterStatus !== "all"
+                  ? "No posts match your filters."
+                  : "No blog posts yet."}
+              </p>
+              {searchTerm || filterStatus !== "all" ? (
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilterStatus("all");
+                  }}
+                  className="text-white hover:underline font-medium"
+                >
+                  Clear filters
+                </button>
+              ) : (
+                <button
+                  onClick={handleNewPost}
+                  className="text-white hover:underline font-medium"
+                >
+                  Create your first post
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredPosts.map((post) => (
+              <div
+                key={post.id}
+                className="group p-5 rounded-xl border border-white/10 bg-white/5 backdrop-blur-[2px] hover:bg-white/[0.07] hover:border-white/20 transition-all duration-200"
+              >
+                <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <h2 className="text-lg font-semibold text-white group-hover:text-white transition-colors truncate max-w-full">
+                        {post.title}
+                      </h2>
+                      <span
+                        className={`px-2.5 py-0.5 text-xs font-medium rounded-full border ${
+                          post.published
+                            ? "bg-green-500/10 text-green-400 border-green-500/20"
+                            : "bg-neutral-500/10 text-neutral-400 border-neutral-500/20"
+                        }`}
+                      >
+                        {post.published ? "Published" : "Draft"}
+                      </span>
+                    </div>
+
+                    <p className="text-neutral-400 text-sm mb-3 line-clamp-2 pr-4">
+                      {post.excerpt || "No excerpt provided."}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-xs text-neutral-500">
+                      <div className="flex items-center gap-1.5">
+                        <FiCalendar size={12} />
+                        {new Date(post.created_at).toLocaleDateString()}
+                      </div>
+                      {post.read_time && <span>{post.read_time} min read</span>}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <button
+                      onClick={() =>
+                        handleTogglePublished(post.id, post.published)
+                      }
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        post.published
+                          ? "bg-white/5 hover:bg-white/10 text-neutral-300"
+                          : "bg-white/5 hover:bg-white/10 text-neutral-300"
+                      }`}
+                      title={post.published ? "Unpublish" : "Publish"}
+                    >
+                      {post.published ? (
+                        <FiEyeOff size={14} />
+                      ) : (
+                        <FiEye size={14} />
+                      )}
+                      {post.published ? "Unpublish" : "Publish"}
+                    </button>
+
+                    <button
+                      onClick={() => handleEditPost(post.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-medium transition-all"
+                    >
+                      <FiEdit size={14} />
+                      Edit
+                    </button>
+
+                    <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block"></div>
+
+                    <button
+                      onClick={() => handleDeletePost(post.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-all"
+                    >
+                      <FiTrash2 size={14} />
+                    </button>
+
+                    {post.published && (
+                      <Link
+                        to={`/blogs/${post.slug}`}
+                        target="_blank"
+                        className="flex items-center px-2 py-1.5 rounded-lg text-neutral-400 hover:text-white transition-colors"
+                        title="View Live"
+                      >
+                        <FiEye size={16} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </>
   );
 };

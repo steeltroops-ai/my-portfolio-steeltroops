@@ -96,125 +96,47 @@ export function useAIGenerator({
     async ({ topic, style = "technical", length = "medium", tags = [] }) => {
       // Reset state
       reset();
-      setStatus(GENERATION_STATUS.PLANNING);
+      setStatus(GENERATION_STATUS.PLANNING); // Initial state
       abortControllerRef.current = new AbortController();
 
       const startTime = Date.now();
 
       try {
-        // ========================================
-        // STEP 1: Generate Outline
-        // ========================================
-        setCurrentStep("Generating outline...");
+        // Start simulated progress for the monolithic generation
+        setCurrentStep("Architecting the narrative (Mayank OS)...");
         setProgress(10);
+
+        const progressInterval = setInterval(() => {
+          setProgress((prev) => {
+            if (prev >= 90) return prev;
+            return prev + 5;
+          });
+        }, 800);
+
         onProgress?.({
-          step: "outline",
+          step: "init",
           progress: 10,
-          message: "Planning blog structure...",
+          message: "Initializing Mayank OS engine...",
         });
 
-        const outlineResult = await apiRequest("/ai/generate-outline", {
+        // Call the single monolithic endpoint
+        const apiResponse = await apiRequest("/ai/generate-blog", {
           topic,
           style,
           length,
+          tags,
+          saveAsDraft: true,
         });
 
-        const { title, description, sections, suggested_tags } =
-          outlineResult.data;
-        setProgress(20);
-        onProgress?.({
-          step: "outline",
-          progress: 20,
-          message: `Outline ready: ${sections.length} sections`,
-        });
+        clearInterval(progressInterval);
 
-        // ========================================
-        // STEP 2: Generate Sections
-        // ========================================
-        setStatus(GENERATION_STATUS.WRITING);
+        const data = apiResponse.data;
 
-        let fullContent = `# ${title}\n\n`;
-        const totalSections = sections.length;
-
-        for (let i = 0; i < totalSections; i++) {
-          const section = sections[i];
-          const sectionProgress = 20 + Math.floor((i / totalSections) * 60);
-
-          setCurrentStep(`Writing: ${section.heading}`);
-          setProgress(sectionProgress);
-          onProgress?.({
-            step: "section",
-            progress: sectionProgress,
-            message: `Writing section ${i + 1}/${totalSections}: ${section.heading}`,
-            section_index: i,
-          });
-
-          const sectionResult = await apiRequest("/ai/generate-section", {
-            title,
-            topic,
-            style,
-            section,
-            previous_content: fullContent,
-            section_index: i,
-            total_sections: totalSections,
-          });
-
-          // Append section content
-          fullContent += sectionResult.data.content + "\n\n";
-
-          // Callback for section completion
-          onSectionComplete?.({
-            section_index: i,
-            heading: section.heading,
-            content: sectionResult.data.content,
-            word_count: sectionResult.data.word_count,
-          });
-
-          // Autosave after each section
-          if (onAutosave && i < totalSections - 1) {
-            onAutosave({
-              title,
-              content: fullContent,
-              tags: suggested_tags,
-              status: "draft",
-              generation_status: "writing",
-            });
-          }
-        }
-
-        setProgress(80);
-
-        // ========================================
-        // STEP 3: Enrich with Metadata
-        // ========================================
-        setStatus(GENERATION_STATUS.ENRICHING);
-        setCurrentStep("Generating SEO metadata...");
-        onProgress?.({
-          step: "enrich",
-          progress: 85,
-          message: "Optimizing for SEO...",
-        });
-
-        const enrichResult = await apiRequest("/ai/enrich", {
-          title,
-          content: fullContent,
-          tags: tags.length > 0 ? tags : suggested_tags,
-        });
-
-        setProgress(95);
-
-        // ========================================
-        // COMPLETE
-        // ========================================
-        const totalTime = Date.now() - startTime;
-
+        // Construct final result matching the shape expected by UI
         const finalResult = {
-          title,
-          content: fullContent,
-          ...enrichResult.data,
-          generation_time_ms: totalTime,
-          sections: sections.map((s) => s.heading),
-          outline: sections,
+          ...data,
+          generation_time_ms: Date.now() - startTime,
+          sections: [], // Monolithic generation doesn't return granular sections list in same way, but that's fine
         };
 
         setResult(finalResult);
@@ -236,14 +158,14 @@ export function useAIGenerator({
           console.error("[AI Generator] Error:", err);
           setError(err.message);
           setStatus(GENERATION_STATUS.ERROR);
-          onProgress?.({ step: "error", progress, message: err.message });
+          onProgress?.({ step: "error", progress: 0, message: err.message });
         }
         throw err;
       } finally {
         abortControllerRef.current = null;
       }
     },
-    [reset, onProgress, onSectionComplete, onAutosave]
+    [reset, onProgress]
   );
 
   return {

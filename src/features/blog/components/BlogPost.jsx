@@ -6,16 +6,23 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
-import { FiArrowLeft, FiCalendar, FiClock, FiGithub, FiInstagram, FiChevronRight } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiCalendar,
+  FiClock,
+  FiGithub,
+  FiInstagram,
+  FiChevronRight,
+} from "react-icons/fi";
 import { AiOutlineLink } from "react-icons/ai";
 import { FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
-import { 
-  FloatingChatButton, 
-  SEOHead, 
-  OptimizedImage, 
+import {
+  FloatingChatButton,
+  SEOHead,
+  OptimizedImage,
   BlogImage,
   BlogReadingProgress,
-  InlineSocialShare 
+  InlineSocialShare,
 } from "@/shared";
 import Comments from "./Comments/Comments";
 
@@ -49,7 +56,10 @@ const BlogPost = () => {
     const extractedHeadings = matches.map((match, index) => {
       const level = match[1].length;
       const text = match[2].trim();
-      const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const id = text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
 
       return { id, text, level };
     });
@@ -67,10 +77,10 @@ const BlogPost = () => {
           }
         });
       },
-      { rootMargin: '-100px 0px -80% 0px' }
+      { rootMargin: "-100px 0px -80% 0px" }
     );
 
-    const headingElements = document.querySelectorAll('h1[id], h2[id], h3[id]');
+    const headingElements = document.querySelectorAll("h1[id], h2[id], h3[id]");
     headingElements.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
@@ -85,7 +95,7 @@ const BlogPost = () => {
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -246,7 +256,7 @@ const BlogPost = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="lg:col-span-9"
+            className="lg:col-span-9 p-6 sm:p-8 md:p-10 rounded-xl border backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg"
           >
             {/* Featured Image */}
             {post.featured_image_url && (
@@ -294,7 +304,10 @@ const BlogPost = () => {
                   // Custom heading components with anchor links
                   h1: ({ children, ...props }) => {
                     const text = String(children);
-                    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    const id = text
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "-")
+                      .replace(/(^-|-$)/g, "");
                     return (
                       <h1
                         id={id}
@@ -307,7 +320,10 @@ const BlogPost = () => {
                   },
                   h2: ({ children, ...props }) => {
                     const text = String(children);
-                    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    const id = text
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "-")
+                      .replace(/(^-|-$)/g, "");
                     return (
                       <h2
                         id={id}
@@ -320,7 +336,10 @@ const BlogPost = () => {
                   },
                   h3: ({ children, ...props }) => {
                     const text = String(children);
-                    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    const id = text
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "-")
+                      .replace(/(^-|-$)/g, "");
                     return (
                       <h3
                         id={id}
@@ -352,51 +371,53 @@ const BlogPost = () => {
                   pre: ({ children, ...props }) => {
                     // Find the code element and extract language
                     const codeElement = children?.props;
-                    const className = codeElement?.className || '';
+                    const className = codeElement?.className || "";
                     const match = /language-(\w+)/.exec(className);
-                    const language = match ? match[1] : 'code';
-                    
+                    const language = match ? match[1] : "code";
+
                     // Format language names for display
                     const languageLabels = {
-                      js: 'JavaScript',
-                      jsx: 'JSX',
-                      ts: 'TypeScript',
-                      tsx: 'TSX',
-                      py: 'Python',
-                      python: 'Python',
-                      css: 'CSS',
-                      html: 'HTML',
-                      json: 'JSON',
-                      bash: 'Bash',
-                      sh: 'Shell',
-                      sql: 'SQL',
-                      yaml: 'YAML',
-                      yml: 'YAML',
-                      md: 'Markdown',
-                      go: 'Go',
-                      rust: 'Rust',
-                      java: 'Java',
-                      cpp: 'C++',
-                      c: 'C',
+                      js: "JavaScript",
+                      jsx: "JSX",
+                      ts: "TypeScript",
+                      tsx: "TSX",
+                      py: "Python",
+                      python: "Python",
+                      css: "CSS",
+                      html: "HTML",
+                      json: "JSON",
+                      bash: "Bash",
+                      sh: "Shell",
+                      sql: "SQL",
+                      yaml: "YAML",
+                      yml: "YAML",
+                      md: "Markdown",
+                      go: "Go",
+                      rust: "Rust",
+                      java: "Java",
+                      cpp: "C++",
+                      c: "C",
                     };
-                    
-                    const displayLanguage = languageLabels[language.toLowerCase()] || language.toUpperCase();
-                    
+
+                    const displayLanguage =
+                      languageLabels[language.toLowerCase()] ||
+                      language.toUpperCase();
+
                     return (
                       <div className="code-block-wrapper my-6">
                         <div className="code-block-header">
-                          <span className="code-block-language">{displayLanguage}</span>
+                          <span className="code-block-language">
+                            {displayLanguage}
+                          </span>
                         </div>
-                        <pre {...props}>
-                          {children}
-                        </pre>
+                        <pre {...props}>{children}</pre>
                       </div>
                     );
                   },
                   // Inline code styling
                   code: ({ node, inline, className, children, ...props }) => {
-                    const match = /language-(\w+)/.exec(className || '');
-                    
+                    const match = /language-(\w+)/.exec(className || "");
+
                     // Inline code
                     if (inline || !match) {
                       return (
@@ -408,7 +429,7 @@ const BlogPost = () => {
                         </code>
                       );
                     }
-                    
+
                     // Code block - let highlight.js handle it
                     return (
                       <code className={className} {...props}>
@@ -499,8 +520,6 @@ const BlogPost = () => {
                 {post.content}
               </ReactMarkdown>
             </motion.div>
-
-
           </motion.article>
 
           {/* Sidebar - Right Side */}
@@ -515,15 +534,24 @@ const BlogPost = () => {
               <div className="p-6 rounded-xl border backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg">
                 {/* Breadcrumb */}
                 <div className="flex items-center text-xs text-neutral-400 mb-6">
-                  <Link to="/" className="hover:text-cyan-400 transition-colors">
+                  <Link
+                    to="/"
+                    className="hover:text-cyan-400 transition-colors"
+                  >
                     Home
                   </Link>
                   <FiChevronRight className="mx-1.5 text-neutral-600" />
-                  <Link to="/blogs" className="hover:text-cyan-400 transition-colors">
+                  <Link
+                    to="/blogs"
+                    className="hover:text-cyan-400 transition-colors"
+                  >
                     Blog
                   </Link>
                   <FiChevronRight className="mx-1.5 text-neutral-600" />
-                  <span className="text-neutral-500 truncate max-w-[150px]" title={post.title}>
+                  <span
+                    className="text-neutral-500 truncate max-w-[150px]"
+                    title={post.title}
+                  >
                     {post.title}
                   </span>
                 </div>
@@ -539,10 +567,11 @@ const BlogPost = () => {
                         <button
                           key={heading.id}
                           onClick={() => scrollToHeading(heading.id)}
-                          className={`block w-full text-left text-sm transition-colors leading-relaxed ${activeId === heading.id
-                            ? 'text-cyan-400 font-medium'
-                            : 'text-neutral-400 hover:text-neutral-200'
-                            } ${heading.level === 1 ? 'pl-0 font-medium' : heading.level === 2 ? 'pl-0' : 'pl-4'}`}
+                          className={`block w-full text-left text-sm transition-colors leading-relaxed ${
+                            activeId === heading.id
+                              ? "text-cyan-400 font-medium"
+                              : "text-neutral-400 hover:text-neutral-200"
+                          } ${heading.level === 1 ? "pl-0 font-medium" : heading.level === 2 ? "pl-0" : "pl-4"}`}
                         >
                           {heading.text}
                         </button>
@@ -554,7 +583,9 @@ const BlogPost = () => {
 
               {/* Post Info */}
               <div className="p-6 rounded-xl border backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg">
-                <h3 className="text-lg font-semibold text-white mb-4">Post Info</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Post Info
+                </h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-start gap-3">
                     <FiCalendar className="mt-1 text-purple-400 flex-shrink-0" />
@@ -579,7 +610,9 @@ const BlogPost = () => {
                     </div>
                   )}
                   <div className="flex items-start gap-3">
-                    <span className="mt-1 text-purple-400 flex-shrink-0">✍️</span>
+                    <span className="mt-1 text-purple-400 flex-shrink-0">
+                      ✍️
+                    </span>
                     <div>
                       <p className="text-neutral-400">Author</p>
                       <p className="text-white">{post.author}</p>
@@ -591,7 +624,9 @@ const BlogPost = () => {
               {/* Tags */}
               {post.tags && post.tags.length > 0 && (
                 <div className="p-6 rounded-xl border backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg">
-                  <h3 className="text-lg font-semibold text-white mb-4">Tags</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Tags
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {post.tags.map((tag) => (
                       <span
@@ -639,10 +674,8 @@ const BlogPost = () => {
       </div>
 
       <FloatingChatButton />
-    </div >
+    </div>
   );
 };
 
 export default BlogPost;
-
-

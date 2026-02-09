@@ -69,7 +69,9 @@ const AdminLogin = () => {
         // Handle different error types
         console.error("✗ Login failed:", result.error);
         if (result.error?.type === "config_error") {
-          setError("Authentication service is not configured. Please check your environment variables.");
+          setError(
+            "Authentication service is not configured. Please check your environment variables."
+          );
         } else {
           setError(result.error?.message || "Invalid email or password");
         }
@@ -94,16 +96,18 @@ const AdminLogin = () => {
         {authInfo && (
           <div className="flex justify-center mb-6">
             <div
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border backdrop-blur-md text-[10px] font-medium ${authInfo.neonAvailable
-                ? "bg-green-500/10 border-green-500/20 text-green-400"
-                : "bg-red-500/10 border-red-500/20 text-red-400"
-                }`}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border backdrop-blur-md text-[10px] font-medium ${
+                authInfo.neonAvailable
+                  ? "bg-green-500/10 border-green-500/20 text-green-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-400"
+              }`}
             >
               <div
-                className={`w-1.5 h-1.5 rounded-full ${authInfo.neonAvailable
-                  ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.8)]"
-                  : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
-                  }`}
+                className={`w-1.5 h-1.5 rounded-full ${
+                  authInfo.neonAvailable
+                    ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                    : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                }`}
               ></div>
               <span>{authInfo.neonAvailable ? "Online" : "Offline"}</span>
             </div>
@@ -121,7 +125,10 @@ const AdminLogin = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="identifier" className="block text-sm font-medium text-white/70 mb-2">
+            <label
+              htmlFor="identifier"
+              className="block text-sm font-medium text-white/70 mb-2"
+            >
               Email
             </label>
             <input
@@ -131,12 +138,15 @@ const AdminLogin = () => {
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder="Enter your email"
               disabled={loading}
-              className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 disabled:opacity-50 transition-all"
+              className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent disabled:opacity-50 transition-all shadow-inner"
               autoComplete="username"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-white/70 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-white/70 mb-2"
+            >
               Password
             </label>
             <input
@@ -146,14 +156,14 @@ const AdminLogin = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               disabled={loading}
-              className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 disabled:opacity-50 transition-all"
+              className="w-full p-3 rounded-lg border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent disabled:opacity-50 transition-all shadow-inner"
               autoComplete="current-password"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-lg border border-purple-400/30 backdrop-blur-[2px] bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-400/50 disabled:bg-white/5 disabled:border-white/10 disabled:cursor-not-allowed text-white font-medium transition-all flex items-center justify-center shadow-lg shadow-purple-500/10"
+            className="w-full py-3 px-4 rounded-lg border border-white/10 backdrop-blur-[2px] bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 disabled:bg-white/5 disabled:text-white/50 disabled:border-white/10 disabled:cursor-not-allowed text-white font-medium transition-all flex items-center justify-center shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-[1.02]"
           >
             {loading ? (
               <>
