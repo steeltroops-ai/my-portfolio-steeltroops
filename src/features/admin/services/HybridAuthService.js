@@ -18,7 +18,15 @@ const isNeonAvailable = async () => {
     // Check if we have a token and can verify it
     if (getToken()) {
       const result = await neonGetCurrentUser();
-      return !result.error || result.error.message !== "Unauthorized";
+
+      // If we get "Unauthorized", it means the service IS available and working,
+      // just the token is invalid or expired. So we should return true.
+      if (result.error && result.error.message === "Unauthorized") {
+        return true;
+      }
+
+      // For other errors (network, 500), return false
+      return !result.error;
     }
     // If no token, assume Neon is available for login
     return true;
