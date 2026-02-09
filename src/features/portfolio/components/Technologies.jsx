@@ -9,6 +9,7 @@ import {
   SiTensorflow,
   SiUnrealengine,
   SiNestjs,
+  SiRos,
 } from "react-icons/si";
 import { FaNodeJs, FaRust, FaGitAlt } from "react-icons/fa";
 import { FaGolang } from "react-icons/fa6";
@@ -69,6 +70,14 @@ const technologies = [
     color: "text-white",
     category: "Game Development",
     description: "Advanced game engine for VR/AR and simulation development",
+  },
+  {
+    name: "ROS 2",
+    icon: SiRos,
+    color: "text-white",
+    category: "Robotics",
+    description:
+      "Robot middleware and set of software libraries for building robot applications",
   },
   {
     name: "TensorFlow",
@@ -191,7 +200,9 @@ const TechnologyIcon = ({ tech, duration }) => {
       ref={ref}
       variants={iconVariants(duration)}
       initial="initial"
-      animate={prefersReducedMotion ? "static" : (isInView ? "animate" : "initial")}
+      animate={
+        prefersReducedMotion ? "static" : isInView ? "animate" : "initial"
+      }
       className="relative group"
       role="button"
       tabIndex={0}
@@ -205,8 +216,15 @@ const TechnologyIcon = ({ tech, duration }) => {
         />
       </div>
 
-      {/* Compact Liquid Glass Tooltip */}
-      <div className="absolute z-20 mb-2 transition-all duration-300 transform -translate-x-1/2 opacity-0 pointer-events-none bottom-full left-1/2 group-hover:opacity-100 group-focus:opacity-100 group-hover:translate-y-0 translate-y-1">
+      {/* Mobile Label (Always visible on small screens) */}
+      <div className="block sm:hidden text-center mt-2">
+        <span className="text-[10px] text-neutral-400 font-light tracking-wide">
+          {tech.name}
+        </span>
+      </div>
+
+      {/* Compact Liquid Glass Tooltip (Desktop Hover Only) */}
+      <div className="hidden sm:block absolute z-20 mb-2 transition-all duration-300 transform -translate-x-1/2 opacity-0 pointer-events-none bottom-full left-1/2 group-hover:opacity-100 group-focus:opacity-100 group-hover:translate-y-0 translate-y-1">
         {/* Glass container */}
         <div className="relative rounded-md overflow-hidden bg-white/5 border border-white/10 shadow-xl">
           {/* Subtle shine */}
@@ -233,6 +251,59 @@ const TechnologyIcon = ({ tech, duration }) => {
 };
 
 const Technologies = () => {
+  const [selectedCategory, setSelectedCategory] = React.useState("All");
+
+  // Define custom filter categories mapping
+  const filterCategories = [
+    { label: "All", match: "All" },
+    { label: "Languages", match: ["Programming Languages"] },
+    {
+      label: "Full Stack",
+      match: [
+        "Web Development",
+        "Databases",
+        "Runtime",
+        "Programming Languages",
+      ],
+    },
+    { label: "ML", match: ["Machine Learning", "Programming Languages"] },
+    {
+      label: "Robotics",
+      match: ["Robotics", "Game Development", "Programming Languages"],
+    },
+    { label: "Databases", match: ["Databases"] },
+    { label: "DevOps", match: ["DevOps", "Cloud Services", "Version Control"] },
+  ];
+
+  // Filter technologies based on selected category with smart cross-referencing
+  const filteredTechs = technologies.filter((tech) => {
+    if (selectedCategory === "All") return true;
+
+    const categoryConfig = filterCategories.find(
+      (c) => c.label === selectedCategory
+    );
+    if (!categoryConfig) return false;
+
+    // Check if the tech's category is included in the filter's matches
+    const isCategoryMatch = categoryConfig.match.includes(tech.category);
+
+    if (!isCategoryMatch) return false;
+
+    // Fine-grained filtering for Programming Languages to avoid showing irrelevant languages
+    if (tech.category === "Programming Languages") {
+      if (selectedCategory === "ML") return ["Python"].includes(tech.name);
+      if (selectedCategory === "Robotics")
+        return ["C++", "Python"].includes(tech.name);
+      if (selectedCategory === "Full Stack")
+        return !["C++", "Rust"].includes(tech.name); // Exclude system languages
+    }
+
+    return true;
+  });
+
+  // Determine displayed technologies for progressive disclosure
+  const displayedTechs = filteredTechs;
+
   // Generate varied animation durations for visual interest
   const getDuration = (index) => {
     const durations = [2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6];
@@ -256,22 +327,50 @@ const Technologies = () => {
         Tech <span className="text-neutral-500">Stack</span>
       </motion.h2>
 
+      {/* Category Filter */}
       <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={viewportSettings.standard}
+        className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-12 px-4"
+      >
+        {filterCategories.map((category) => (
+          <button
+            key={category.label}
+            onClick={() => {
+              setSelectedCategory(category.label);
+              // Reset show all when changing category logic removed
+            }}
+            className={`
+              px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300
+              ${
+                selectedCategory === category.label
+                  ? "bg-purple-500/20 text-purple-100 border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] backdrop-blur-md"
+                  : "text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent"
+              }
+            `}
+          >
+            {category.label}
+          </button>
+        ))}
+      </motion.div>
+
+      <motion.div
+        layout
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={viewportSettings.standard}
         transition={{ duration: 0.8, ease: appleEasing.easeOut, delay: 0.1 }}
-        className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-5"
+        className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-5 min-h-[200px]"
         role="grid"
         aria-label="Technology skills showcase"
         style={{ willChange: "transform, opacity" }}
       >
-        {technologies.map((tech, index) => (
+        {displayedTechs.map((tech, index) => (
           <TechnologyIcon
             key={tech.name}
             tech={tech}
             duration={getDuration(index)}
-            index={index}
           />
         ))}
       </motion.div>
@@ -280,15 +379,17 @@ const Technologies = () => {
       <div className="sr-only">
         <h3>Technology Categories</h3>
         <ul>
-          <li>
-            Programming Languages: Python, Go, C++, TypeScript, Java, Rust
-          </li>
-          <li>Web Development: React, Next.js, NestJS, Node.js</li>
-          <li>Machine Learning: TensorFlow, PyTorch</li>
-          <li>Databases: MongoDB, PostgreSQL</li>
-          <li>Game Development: Unreal Engine</li>
-          <li>Cloud Services: AWS</li>
-          <li>DevOps: Docker, Git</li>
+          {filterCategories
+            .filter((c) => c.label !== "All")
+            .map((category) => (
+              <li key={category.label}>
+                {category.label}:{" "}
+                {technologies
+                  .filter((t) => category.match.includes(t.category))
+                  .map((t) => t.name)
+                  .join(", ")}
+              </li>
+            ))}
         </ul>
       </div>
     </section>

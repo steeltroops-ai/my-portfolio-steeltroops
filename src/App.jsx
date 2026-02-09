@@ -1,5 +1,12 @@
 // Portfolio components
-import { Hero, About, Technologies, Experience, Projects, Contact } from "@/features/portfolio";
+import {
+  Hero,
+  About,
+  Technologies,
+  Experience,
+  Projects,
+  Contact,
+} from "@/features/portfolio";
 
 // Shared layout components
 import { Navbar, Footer, ScrollspyNav } from "@/shared";
@@ -14,26 +21,17 @@ const App = () => {
         </div>
       </div>
 
-      <div id="main-content" className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
+      <div
+        id="main-content"
+        className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl"
+      >
         <Navbar />
-        <section id="hero">
-          <Hero />
-        </section>
-        <section id="about">
-          <About />
-        </section>
-        <section id="technologies">
-          <Technologies />
-        </section>
-        <section id="experience">
-          <Experience />
-        </section>
-        <section id="projects">
-          <Projects />
-        </section>
-        <section id="contact">
-          <Contact />
-        </section>
+        <Hero />
+        <About />
+        <Technologies />
+        <Experience />
+        <Projects />
+        <Contact />
         <Footer />
       </div>
       <ScrollspyNav />

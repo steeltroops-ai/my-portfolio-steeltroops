@@ -1,4 +1,4 @@
-import { HERO_CONTENT, PERSONAL } from "@/constants";
+import { HERO_CONTENT, PERSONAL, HIGHLIGHT_STATS } from "@/constants";
 import profilePic from "@/assets/hodakaprofile.jpg";
 import { motion } from "framer-motion";
 
@@ -47,7 +47,7 @@ const Hero = () => {
       className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl lg:py-16">
-        <div className="flex flex-wrap items-center">
+        <div className="flex flex-wrap items-center lg:items-start">
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -65,17 +65,77 @@ const Hero = () => {
                 variants={itemVariants}
                 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-light tracking-tight leading-snug sm:leading-snug md:leading-snug lg:leading-snug text-center lg:text-left"
               >
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-200 via-slate-300 to-purple-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-slate-200 to-purple-400">
                   Full Stack, Robotics &<br className="hidden sm:block" />
                   <span className="sm:hidden"> </span>Machine Learning Engineer
                 </span>
               </motion.div>
-              <motion.p
+              <motion.div
                 variants={itemVariants}
-                className="text-sm sm:text-base lg:text-base font-light leading-relaxed sm:leading-relaxed lg:leading-relaxed max-w-lg md:max-w-xl text-neutral-200 text-justify mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
+                className="space-y-4 max-w-lg md:max-w-xl mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
               >
-                {HERO_CONTENT}
-              </motion.p>
+                {HERO_CONTENT.map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className="text-sm sm:text-base lg:text-base font-light leading-relaxed text-neutral-200 text-justify"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </motion.div>
+
+              <div className="flex flex-col items-center lg:items-start gap-6 pt-6 sm:pt-8">
+                {/* 3 Main Highlight Reels */}
+                <motion.div
+                  variants={itemVariants}
+                  className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6"
+                >
+                  {HIGHLIGHT_STATS.map((stat, i) => (
+                    <motion.div
+                      key={i}
+                      className="relative group cursor-default"
+                    >
+                      <div className="relative px-4 py-1.5 rounded-xl overflow-hidden transition-all duration-700 bg-white/[0.02] border border-white/10 ring-1 ring-white/5 flex flex-col items-center lg:items-start min-w-[95px] sm:min-w-[115px] group-hover:bg-purple-950/30 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.08)]">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                        <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-tighter text-purple-400/75 group-hover:text-white transition-colors duration-500">
+                          {stat.value}
+                        </span>
+                        <span className="relative z-10 text-[8px] sm:text-[9px] text-white font-light tracking-[0.2em] uppercase leading-none transition-colors duration-500 group-hover:text-purple-100">
+                          {stat.label}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                {/* Hire Me Button - Centered Below */}
+                <motion.div
+                  variants={itemVariants}
+                  className="flex justify-center lg:justify-start w-full"
+                >
+                  <motion.div
+                    onClick={() =>
+                      document
+                        .getElementById("contact")
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
+                    className="relative group cursor-pointer"
+                  >
+                    <div className="relative px-10 py-1 sm:px-14 sm:py-1.5 rounded-2xl overflow-hidden transition-all duration-700 bg-white/[0.03] border border-white/10 ring-1 ring-white/5 flex flex-col items-center min-w-[220px] sm:min-w-[260px] group-hover:bg-purple-900/40 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                      <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-widest text-purple-300 group-hover:text-white transition-colors duration-500">
+                        Hire Me
+                      </span>
+                      <div className="relative z-10 flex items-center gap-1.5 mt-0.5">
+                        <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                        <span className="text-[9px] sm:text-[10px] text-white/50 font-light tracking-[0.3em] uppercase transition-colors duration-500 group-hover:text-purple-200">
+                          Available
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </div>
             </div>
           </motion.div>
           <div className="w-full lg:w-1/2 lg:pl-8 mt-8 sm:mt-10 lg:mt-0">

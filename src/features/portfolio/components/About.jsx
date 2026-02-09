@@ -88,12 +88,19 @@ const About = () => {
               >
                 About <span className="text-neutral-500">Me</span>
               </motion.h2>
-              <motion.p
+              <motion.div
                 variants={contentVariants}
-                className="text-sm sm:text-base lg:text-base font-light leading-relaxed max-w-lg md:max-w-xl text-neutral-200 text-justify mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
+                className="space-y-4 max-w-lg md:max-w-xl mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
               >
-                {ABOUT_TEXT}
-              </motion.p>
+                {ABOUT_TEXT.map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className="text-sm sm:text-base lg:text-base font-light leading-relaxed text-neutral-200 text-justify"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </motion.div>
             </div>
           </motion.div>
         </motion.div>

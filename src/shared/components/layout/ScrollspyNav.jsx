@@ -138,7 +138,14 @@ const ScrollspyNav = () => {
                     }}
                   />
                 )}
-                <span className="relative z-20">{section.label}</span>
+                <span className="relative z-20">
+                  <span className="text-purple-400/60 font-mono mr-2">
+                    {String(
+                      sections.findIndex((s) => s.id === section.id) + 1
+                    ).padStart(2, "0")}
+                  </span>
+                  {section.label}
+                </span>
               </button>
             </li>
           );

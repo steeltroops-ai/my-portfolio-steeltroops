@@ -78,9 +78,24 @@ const Projects = () => {
                   </a>
                 )}
               </div>
-              <p className="mb-4 text-sm sm:text-base text-justify text-neutral-200 font-light px-6 sm:px-10 md:px-0">
-                {project.description}
-              </p>
+              <div className="mb-4 text-justify md:text-left px-6 sm:px-10 md:px-0">
+                {Array.isArray(project.description) ? (
+                  <ul className="list-disc list-outside space-y-2 ml-4">
+                    {project.description.map((point, i) => (
+                      <li
+                        key={i}
+                        className="text-sm sm:text-base text-neutral-300 font-light pl-2 marker:text-purple-500"
+                      >
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm sm:text-base text-neutral-200 font-light">
+                    {project.description}
+                  </p>
+                )}
+              </div>
               <div className="flex flex-wrap justify-center md:justify-start gap-2 px-4 md:px-0">
                 {project.technologies.map((tech, techIndex) => (
                   <span
