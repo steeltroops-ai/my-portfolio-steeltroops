@@ -72,14 +72,28 @@
 
   /* Shared Glass Card Base */
   .glass-card {
-    @apply relative overflow-hidden transition-all duration-500 rounded-2xl border;
-    background-color: var(--glass-bg);
-    border-color: var(--glass-border);
+    @apply relative overflow-hidden transition-all duration-500 rounded-2xl border backdrop-blur-[6px];
+    background-color: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   }
 
   .glass-card:hover {
-    background-color: var(--glass-bg-hover);
-    border-color: var(--glass-border-hover);
-    box-shadow: 10px 10px 30px -5px var(--glow-accent-subtle);
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  /* Liquid Glass Effect - Matching Mobile Nav exactly */
+  .liquid-glass {
+    @apply relative overflow-hidden bg-white/[0.01] backdrop-blur-[4px] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] border border-white/30;
+  }
+
+  .liquid-glass-highlight {
+    @apply absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent pointer-events-none;
+  }
+
+  .liquid-glass-top-line {
+    @apply absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none;
   }
 }

@@ -1,167 +1,175 @@
 import { EXPERIENCES } from "@/constants";
-import { motion, useInView } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+  useInView,
+} from "framer-motion";
 import { useState, useRef } from "react";
+import { FaBriefcase, FaCalendarAlt, FaCode } from "react-icons/fa";
 
 const ExperienceCard = ({ experience, index, isLast }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const cardRef = useRef(null);
 
-  // Detect if the card is in the vertical center of the screen (the "reading zone")
-  const isInCenter = useInView(cardRef, {
-    margin: "-45% 0px -45% 0px", // Only triggers when card is in the middle 10% of viewport
+  // Reading zone detection
+  const isInView = useInView(cardRef, {
+    margin: "-40% 0px -40% 0px",
     once: false,
   });
 
-  const isFocused = isInCenter || isExpanded;
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[120px_auto_1fr] gap-x-4 lg:gap-x-8 group">
-      {/* Column 1: Date (Desktop) - Right aligned */}
+    <div className="grid grid-cols-1 lg:grid-cols-[140px_auto_1fr] gap-x-4 lg:gap-x-12 group last:pb-0 pb-16">
+      {/* Column 1: Date (Desktop) */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: -20 }}
         whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: index * 0.1 }}
-        className="hidden lg:flex flex-col items-end pt-2"
+        transition={{ duration: 0.6, delay: index * 0.1 }}
+        className="hidden lg:flex flex-col items-end pt-4"
       >
-        <span className="text-xl font-bold text-white tracking-tight">
+        <span className="text-2xl font-black text-white/90 tracking-tighter title-font">
           {experience.year.includes(" - ")
             ? experience.year.split(" - ")[1]
             : "Present"}
         </span>
-        <span className="text-[10px] font-mono font-medium text-purple-300/80 uppercase tracking-wider bg-purple-500/5 px-2 py-0.5 rounded border border-purple-500/10 transition-all duration-500 group-hover:text-purple-300 group-hover:bg-purple-500/10 group-hover:border-purple-500/20 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+        <span className="text-[10px] font-black font-mono text-purple-400/60 uppercase tracking-[0.2em] mt-1">
           {experience.year.split(" - ")[0]}
         </span>
       </motion.div>
 
-      {/* Column 2: The Circuit Line (Desktop Only) */}
-      <div className="hidden lg:flex flex-col items-center relative gap-y-2">
-        {/* Continuous Vertical Line - Static, no glow */}
-        <div
-          className="absolute top-0 w-[2px] bg-neutral-800"
-          style={{ bottom: isLast ? "0" : "-3rem" }}
-        />
-
-        {/* The Connector Node - Glows on CARD hover */}
-        <div className="relative z-10 mt-3 w-4 h-4 flex items-center justify-center">
-          <div className="w-2.5 h-2.5 rounded-full bg-neutral-900 border-2 border-purple-500/30 transition-all duration-500 group-hover:border-purple-400 group-hover:shadow-[0_0_20px_rgba(168,85,247,0.6)] group-hover:scale-110"></div>
+      {/* Column 2: The Interactive Timeline */}
+      <div className="hidden lg:flex flex-col items-center relative">
+        {/* The Connector Node */}
+        <div className="relative z-10 mt-5">
+          <div
+            className={`w-4 h-4 rounded-full border-2 transition-all duration-700 
+             ${
+               isInView
+                 ? "bg-purple-500 border-white shadow-[0_0_20px_rgba(168,85,247,0.8)] scale-125"
+                 : "bg-neutral-900 border-neutral-700 scale-100"
+             }`}
+          />
+          {isInView && (
+            <motion.div
+              layoutId={`ping-${index}`}
+              className="absolute inset-0 rounded-full bg-purple-500 animate-ping opacity-20"
+            />
+          )}
         </div>
 
-        {/* Horizontal Connector to Card - Faint */}
-        <div className="absolute left-1/2 top-[1.15rem] w-8 h-[1px] bg-gradient-to-r from-purple-500/20 to-transparent -translate-y-1/2" />
+        {/* The Line Segment */}
+        {!isLast && (
+          <div className="w-[1px] h-full bg-gradient-to-b from-neutral-800 via-neutral-800 to-transparent mt-2" />
+        )}
       </div>
 
-      {/* Column 3: The Module Card */}
+      {/* Column 3: The Card Content */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: 30 }}
         whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: index * 0.1 }}
-        className="relative lg:pl-0"
+        transition={{ duration: 0.7, delay: index * 0.1 }}
+        className="relative"
       >
-        {/* Mobile Header (Date) - Scifi Capsule Style */}
-        <div className="flex items-center gap-4 lg:hidden mb-4">
-          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-neutral-800 to-purple-500/40" />
-          <span className="px-3 py-1 text-[10px] font-mono font-bold text-purple-200/90 whitespace-nowrap tracking-[0.2em] uppercase rounded-full border border-purple-500/20 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+        {/* Mobile-only Date Header */}
+        <div className="flex items-center gap-4 lg:hidden mb-6">
+          <FaCalendarAlt className="text-purple-500/60 text-xs" />
+          <span className="text-[10px] font-black text-purple-200/80 tracking-[0.3em] uppercase">
             {experience.year}
           </span>
-          <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-neutral-800 to-purple-500/40" />
+          <div className="h-px flex-1 bg-gradient-to-r from-purple-500/20 to-transparent" />
         </div>
 
-        {/* Glass Card - Ultra Compact on Mobile */}
+        {/* The Liquid Glass Card */}
         <div
           ref={cardRef}
-          className={`relative overflow-hidden p-4 sm:p-6 md:p-5 lg:p-8 rounded-2xl transition-all duration-700 border
+          className={`liquid-glass rounded-[2rem] transition-all duration-700 border
             ${
-              isFocused
-                ? "bg-white/[0.02] border-white/10 shadow-[10px_10px_30px_-5px_rgba(168,85,247,0.15)]"
-                : "bg-white/[0.01] border-white/5 shadow-none"
-            } 
-            group-hover:bg-white/[0.02] group-hover:shadow-[10px_10px_30px_-5px_rgba(168,85,247,0.15)] group-hover:border-white/10`}
+              isInView
+                ? "border-purple-500/30 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.4)] scale-[1.02]"
+                : "border-white/5 bg-white/[0.01] hover:border-white/10"
+            }`}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 md:mb-2 lg:mb-4 gap-1 relative z-10">
-            <h3
-              className="text-lg sm:text-xl title-font group-hover:text-[var(--heading-sub-accent)] transition-colors"
-              style={{ color: "var(--heading-sub-main)" }}
-            >
-              {experience.role}
-            </h3>
-            <span
-              className="text-[12px] sm:text-sm font-medium bg-purple-500/5 px-2.5 py-0.5 rounded-full border border-purple-500/10 w-fit"
-              style={{ color: "var(--text-accent-purple)" }}
-            >
-              {experience.company}
-            </span>
-          </div>
+          {/* MobileNav Highlights Reproduced */}
+          <div className="liquid-glass-highlight" />
+          <div className="liquid-glass-top-line" />
 
-          {/* Full List: Visible on Tablet and Desktop */}
-          <ul className="hidden md:block space-y-2.5 md:space-y-1.5 lg:space-y-2.5 mb-6 md:mb-4 lg:mb-6 relative z-10">
-            {experience.description.map((point, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-3 text-sm font-light leading-relaxed"
-                style={{ color: "var(--text-body-main)" }}
-              >
-                <span className="mt-2 min-w-[5px] h-[5px] rounded-full bg-purple-500/40" />
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
+          {/* Card Body */}
+          <div className="p-6 sm:p-10 relative z-20">
+            {/* Header: Role & Company */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-purple-400 mb-1">
+                  <FaBriefcase className="text-[10px]" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em]">
+                    Professional Brief
+                  </span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-white title-font tracking-tighter">
+                  {experience.role}
+                </h3>
+                <p className="text-lg font-bold text-neutral-400 tracking-tight">
+                  @{experience.company}
+                </p>
+              </div>
 
-          {/* Mobile View: Inline Read More - Highly Compact */}
-          <div className="md:hidden mb-4 relative z-10">
-            {isExpanded ? (
-              <div className="space-y-3">
-                <ul className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {experience.technologies.slice(0, 3).map((tech, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-purple-300 uppercase tracking-tighter backdrop-blur-md"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Split: Description & Insights (Bento Style on Large screens) */}
+            <div className="grid grid-cols-1 xl:grid-cols-5 gap-10">
+              {/* Main Contributions */}
+              <div className="xl:col-span-3 space-y-6">
+                <ul className="space-y-4">
                   {experience.description.map((point, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2.5 text-sm font-light leading-relaxed"
-                      style={{ color: "var(--text-body-main)" }}
-                    >
-                      <span className="mt-2 min-w-[5px] h-[5px] rounded-full bg-purple-500/40" />
-                      <span>{point}</span>
+                    <li key={i} className="flex gap-4 group/item">
+                      <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-purple-500 shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-transform group-hover/item:scale-150" />
+                      <p className="text-neutral-300 font-light leading-relaxed text-sm sm:text-base opacity-80 group-hover/item:opacity-100 transition-opacity">
+                        {point}
+                      </p>
                     </li>
                   ))}
                 </ul>
-                <button
-                  onClick={() => setIsExpanded(false)}
-                  className="text-sm font-bold text-purple-300 hover:text-white transition-colors flex items-center gap-1"
-                >
-                  Show Less <span className="text-[10px]">▲</span>
-                </button>
               </div>
-            ) : (
-              <div
-                className="flex items-start gap-2.5 text-sm font-light leading-relaxed"
-                style={{ color: "var(--text-body-main)" }}
-              >
-                <span className="mt-1.5 min-w-[5px] h-[5px] rounded-full bg-purple-400/50 shrink-0" />
-                <span>
-                  {experience.description[0].length > 160
-                    ? experience.description[0].slice(0, 160) + "..."
-                    : experience.description[0]}
-                  {(experience.description.length > 1 ||
-                    experience.description[0].length > 160) && (
-                    <button
-                      onClick={() => setIsExpanded(true)}
-                      className="ml-1 text-purple-300 font-bold hover:text-white transition-colors"
-                    >
-                      Read More
-                    </button>
-                  )}
-                </span>
-              </div>
-            )}
-          </div>
 
-          <div className="flex flex-wrap gap-1 sm:gap-1.5 pt-2 sm:pt-3 md:pt-3 lg:pt-4 border-t border-white/5 relative z-10">
-            {experience.technologies.map((tech, i) => (
-              <span
-                key={i}
-                className="px-1.5 py-0 sm:px-2 sm:py-0.5 text-[9px] sm:text-[11px] font-medium text-white/90 bg-purple-500/5 border border-purple-500/10 rounded-full transition-all duration-300"
-              >
-                {tech}
-              </span>
-            ))}
+              {/* Sidebar: Tech & Highlight */}
+              <div className="xl:col-span-2 space-y-6">
+                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-inner">
+                  <div className="flex items-center gap-2 mb-4 text-white/40">
+                    <FaCode className="text-xs" />
+                    <span className="text-[9px] font-black uppercase tracking-[0.3em]">
+                      Full Stack Utilization
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {experience.technologies.map((tech, i) => (
+                      <span
+                        key={i}
+                        className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[10px] font-bold text-neutral-400"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="pt-6 border-t border-white/5">
+                    <p className="text-xs text-neutral-500 font-light italic leading-loose">
+                      Engineering impactful solutions using{" "}
+                      {experience.technologies[0]} and{" "}
+                      {experience.technologies[1]}.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -170,18 +178,33 @@ const ExperienceCard = ({ experience, index, isLast }) => {
 };
 
 const Experience = () => {
+  const containerRef = useRef(null);
+
   return (
-    <div id="experience" className="border-b border-neutral-900 pb-24 lg:pb-32">
-      <motion.h2
-        whileInView={{ opacity: 1, y: 0 }}
-        initial={{ opacity: 0, y: -100 }}
-        transition={{ duration: 1.2 }}
-        className="my-8 sm:my-12 lg:my-20 section-title"
+    <div
+      id="experience"
+      className="border-b border-neutral-900 pb-24 lg:pb-32 overflow-hidden"
+    >
+      {/* Title */}
+      <div className="pt-24 pb-16 lg:pb-24 text-center">
+        <motion.h2
+          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.8 }}
+          className="section-title font-black uppercase tracking-tighter"
+        >
+          Work <span>Experience</span>
+        </motion.h2>
+      </div>
+
+      <div
+        className="container mx-auto px-4 max-w-6xl relative"
+        ref={containerRef}
       >
-        My <span>Experience</span>
-      </motion.h2>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="relative ml-3 lg:ml-0 space-y-12">
+        {/* Center Progress Line (Global) */}
+        <div className="absolute left-[23px] lg:left-[147px] top-0 bottom-0 w-[1px] bg-gradient-to-b from-purple-500/40 via-neutral-800 to-transparent opacity-20 hidden lg:block" />
+
+        <div className="space-y-4">
           {EXPERIENCES.map((experience, index) => (
             <ExperienceCard
               key={index}
