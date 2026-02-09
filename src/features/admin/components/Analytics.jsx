@@ -188,7 +188,7 @@ const Analytics = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <p className="text-sm font-bold text-white">
-                        {action.city || "Private Cluster"}
+                        {decodeURIComponent(action.city || "Private Cluster")}
                         <span className="mx-2 text-neutral-700 opacity-50">
                           /
                         </span>
@@ -208,7 +208,8 @@ const Analytics = () => {
                     </div>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-neutral-400 font-mono">
-                        {action.os} • {action.browser}
+                        {action.ip_address || "IP Hidden"} • {action.os} •{" "}
+                        {action.browser}
                       </span>
                       <span className="text-[10px] text-neutral-500 truncate italic">
                         {action.event_label
@@ -267,7 +268,9 @@ const Analytics = () => {
                     <div key={i} className="space-y-1">
                       <div className="flex justify-between text-xs text-neutral-400 mb-1">
                         <span className="truncate max-w-[150px]">
-                          {(ref.referrer || "").replace("https://", "")}
+                          {decodeURIComponent(
+                            (ref.referrer || "").replace("https://", "")
+                          )}
                         </span>
                         <span className="text-white font-bold">
                           {ref.count} hits
@@ -327,10 +330,10 @@ const Analytics = () => {
                   <div className="flex justify-between text-sm mb-2">
                     <div className="flex items-baseline gap-2">
                       <span className="text-white font-bold">
-                        {loc.city || "Private"}
+                        {decodeURIComponent(loc.city || "Private")}
                       </span>
                       <span className="text-neutral-500 text-[10px] uppercase font-bold">
-                        {loc.country}
+                        {decodeURIComponent(loc.country)}
                       </span>
                     </div>
                     <span className="text-white font-mono">{loc.count}</span>
@@ -412,14 +415,15 @@ const Analytics = () => {
                 >
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-xs font-bold text-white">
-                      {v.city || "Hidden"} Entity
+                      {decodeURIComponent(v.city || "Hidden")} Entity
                     </span>
                     <span className="text-[9px] font-mono text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded">
                       {v.visit_count} VISITS
                     </span>
                   </div>
                   <div className="text-[10px] text-neutral-500 font-mono">
-                    {v.os} • {v.screen_size || "Unknown Res"}
+                    {v.ip_address || "IP N/A"} • {v.os} •{" "}
+                    {v.screen_size || "Unknown Res"}
                   </div>
                 </div>
               ))}
