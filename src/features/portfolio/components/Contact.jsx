@@ -5,6 +5,7 @@ import {
   useSubmitContactMessage,
   useContactFormValidation,
 } from "@/shared/hooks/useContactQueries";
+import { useAnalytics } from "@/shared/analytics/useAnalytics";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ const Contact = () => {
 
   const { mutate: submitMessage, isLoading } = useSubmitContactMessage();
   const { validateForm } = useContactFormValidation();
+  const { trackEvent } = useAnalytics();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -79,6 +81,7 @@ const Contact = () => {
       {
         onSuccess: (result) => {
           if (result.success) {
+            trackEvent("contact", "submit_success");
             setShowSuccess(true);
             setFormData({
               name: "",

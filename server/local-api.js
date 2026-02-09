@@ -104,6 +104,15 @@ async function loadHandlers() {
     const aiEnrichHandler = (await import("../api/ai/enrich.js")).default;
     app.all("/api/ai/enrich", wrapHandler(aiEnrichHandler));
 
+    // Analytics routes
+    const analyticsTrackHandler = (await import("../api/analytics/track.js"))
+      .default;
+    app.all("/api/analytics/track", wrapHandler(analyticsTrackHandler));
+
+    const analyticsStatsHandler = (await import("../api/analytics/stats.js"))
+      .default;
+    app.all("/api/analytics/stats", wrapHandler(analyticsStatsHandler));
+
     console.log("  API handlers loaded successfully");
   } catch (error) {
     console.error("  Error loading API handlers:", error);
@@ -137,6 +146,8 @@ async function start() {
       console.log("    POST /api/ai/generate-outline");
       console.log("    POST /api/ai/generate-section");
       console.log("    POST /api/ai/enrich");
+      console.log("    POST /api/analytics/track");
+      console.log("    GET  /api/analytics/stats");
       console.log("");
       console.log("  Press Ctrl+C to stop");
       console.log("");

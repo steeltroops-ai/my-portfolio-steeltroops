@@ -76,6 +76,10 @@ const AdminLogin = () => {
         // Success
         console.log("✓ Login successful!");
         console.log("✓ Redirecting to dashboard");
+
+        // Disable analytics for admin session
+        localStorage.setItem("portfolio_admin_bypass", "true");
+
         navigate("/admin/dashboard");
       } else {
         // Handle different error types

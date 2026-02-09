@@ -10,12 +10,8 @@ import {
   FiArrowLeft,
   FiCalendar,
   FiClock,
-  FiGithub,
-  FiInstagram,
   FiChevronRight,
 } from "react-icons/fi";
-import { AiOutlineLink } from "react-icons/ai";
-import { FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
 import {
   FloatingChatButton,
   SEOHead,
@@ -23,6 +19,7 @@ import {
   BlogImage,
   BlogReadingProgress,
   InlineSocialShare,
+  SocialLinks,
 } from "@/shared";
 import Comments from "./Comments/Comments";
 

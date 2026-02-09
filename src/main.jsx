@@ -8,6 +8,7 @@ import { ReactLenis } from "lenis/react";
 import App from "@/App.jsx";
 import { ErrorBoundary } from "@/shared";
 import "@/index.css";
+import AnalyticsTracker from "@/shared/analytics/AnalyticsTracker";
 
 // Lazy load non-critical shared components
 const FloatingChatButton = lazy(
@@ -63,6 +64,7 @@ const AIBlogGenerator = lazy(
 const MessageCenter = lazy(
   () => import("@/features/admin/components/MessageCenter")
 );
+const Analytics = lazy(() => import("@/features/admin/components/Analytics"));
 
 const AdminLayout = lazy(() => import("@/features/admin/layouts/AdminLayout"));
 
@@ -102,6 +104,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Router
               future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
             >
+              <AnalyticsTracker />
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   <Route
@@ -142,6 +145,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       element={<AIBlogGenerator />}
                     />
                     <Route path="/admin/messages" element={<MessageCenter />} />
+                    <Route path="/admin/analytics" element={<Analytics />} />
                   </Route>
                   {/* 404 Not Found - Must be last */}
                   <Route path="*" element={<NotFound />} />

@@ -9,11 +9,20 @@ import {
   FaLayerGroup,
 } from "react-icons/fa";
 import { useState } from "react";
+import { useAnalytics } from "@/shared/analytics/useAnalytics";
 
 const ProjectCard = ({ project, isExpanded, onToggle }) => {
+  const { trackEvent } = useAnalytics();
+
+  const handleToggle = () => {
+    if (!isExpanded) {
+      trackEvent("projects", "expand", project.title);
+    }
+    onToggle();
+  };
   return (
     <div
-      onClick={onToggle}
+      onClick={handleToggle}
       className={`group cursor-pointer flex flex-col h-full relative overflow-hidden rounded-2xl transition-all duration-500
         bg-transparent backdrop-blur-none border-0 z-0
         ${isExpanded ? "shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
@@ -91,7 +100,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                     href={project.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      trackEvent("projects", "github_click", project.title);
+                    }}
                     className="p-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-white/20 hover:scale-110 transition-all"
                   >
                     <FaGithub className="text-white text-sm" />
@@ -102,7 +114,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                     href={project.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      trackEvent("projects", "demo_click", project.title);
+                    }}
                     className="p-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-white/20 hover:scale-110 transition-all"
                   >
                     <FaExternalLinkAlt className="text-white text-xs" />

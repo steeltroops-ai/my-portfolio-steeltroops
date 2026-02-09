@@ -5,9 +5,10 @@ import {
   FiMail,
   FiSettings,
   FiLogOut,
-  FiChevronLeft,
   FiChevronRight,
+  FiChevronLeft,
   FiFileText,
+  FiBarChart2,
 } from "react-icons/fi";
 import { signOut } from "../../services/HybridAuthService";
 import mpsLogo from "../../../../assets/mps.png";
@@ -25,6 +26,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
 
   const navItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: FiHome },
+    { name: "Analytics", path: "/admin/analytics", icon: FiBarChart2 },
     { name: "AI Blogs", path: "/admin/ai-generator", icon: FiFileText },
     { name: "Messages", path: "/admin/messages", icon: FiMail },
   ];
