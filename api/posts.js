@@ -1,7 +1,7 @@
 // Vercel API Route: /api/posts
-import { neon } from '@neondatabase/serverless';
+import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL || '');
+const sql = neon(process.env.DATABASE_URL || "");
 
 function jsonResponse(res, data, status = 200) {
   res.status(status).json(data);
@@ -13,7 +13,7 @@ function errorResponse(res, message, status = 500) {
 
 async function verifyAuth(req) {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) return null;
+  if (!authHeader?.startsWith("Bearer ")) return null;
 
   const token = authHeader.slice(7);
   const sessions = await sql`
@@ -26,11 +26,14 @@ async function verifyAuth(req) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
@@ -38,17 +41,17 @@ export default async function handler(req, res) {
 
   try {
     // GET - Fetch posts
-    if (req.method === 'GET') {
+    if (req.method == "GET") {
       // Get by ID (admin)
       if (id) {
         const session = await verifyAuth(req);
-        if (!session || session.role !== 'admin') {
-          return errorResponse(res, 'Unauthorized', 401);
+        if (!session || session.role !== "admin") {
+          return errorResponse(res, "Unauthorized", 401);
         }
 
         const posts = await sql`SELECT * FROM blog_posts WHERE id = ${id}`;
         if (posts.length === 0) {
-          return errorResponse(res, 'Post not found', 404);
+          return errorResponse(res, "Post not found", 404);
         }
         return jsonResponse(res, { success: true, data: posts[0] });
       }
@@ -56,66 +59,91 @@ export default async function handler(req, res) {
       // Get by slug
       if (slug) {
         let posts;
-        if (all === 'true') {
+        if (all === "true") {
+          const session = await verifyAuth(req);
+          if (!session || session.role !== "admin") {
+            // If requesting all (unpublished) by slug, must be admin
+            return errorResponse(res, "Unauthorized", 401);
+          }
           posts = await sql`SELECT * FROM blog_posts WHERE slug = ${slug}`;
         } else {
-          posts = await sql`SELECT * FROM blog_posts WHERE slug = ${slug} AND published = true`;
+          posts =
+            await sql`SELECT * FROM blog_posts WHERE slug = ${slug} AND published = true`;
         }
+
         if (posts.length === 0) {
-          return errorResponse(res, 'Post not found', 404);
+          return errorResponse(res, "Post not found", 404);
         }
         return jsonResponse(res, { success: true, data: posts[0] });
       }
 
-      // Get all posts
+      // Get list of posts
       let posts;
-      const limitNum = parseInt(limit);
-      const offsetNum = parseInt(offset);
+      let countResult;
+      const limitNum = parseInt(limit) || 10;
+      const offsetNum = parseInt(offset) || 0;
 
-      if (all === 'true') {
+      if (all === "true") {
+        // Admin View: All posts (Drafts + Published)
         const session = await verifyAuth(req);
-        if (!session || session.role !== 'admin') {
-          return errorResponse(res, 'Unauthorized', 401);
+        if (!session || session.role !== "admin") {
+          return errorResponse(res, "Unauthorized", 401);
         }
+
         posts = await sql`
           SELECT * FROM blog_posts 
           ORDER BY created_at DESC 
           LIMIT ${limitNum} OFFSET ${offsetNum}
         `;
+
+        countResult = await sql`SELECT COUNT(*) as count FROM blog_posts`;
       } else {
+        // Public View: Only Published
         posts = await sql`
           SELECT * FROM blog_posts 
           WHERE published = true 
           ORDER BY created_at DESC 
           LIMIT ${limitNum} OFFSET ${offsetNum}
         `;
-      }
 
-      const countResult = await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true`;
+        countResult =
+          await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true`;
+      }
 
       return jsonResponse(res, {
         success: true,
         data: posts,
-        count: parseInt(countResult[0].count),
+        count: parseInt(countResult[0]?.count || 0),
       });
     }
 
     // POST - Create post
-    if (req.method === 'POST') {
+    if (req.method === "POST") {
       const session = await verifyAuth(req);
-      if (!session || session.role !== 'admin') {
-        return errorResponse(res, 'Unauthorized', 401);
+      if (!session || session.role !== "admin") {
+        return errorResponse(res, "Unauthorized", 401);
       }
 
-      const { title, slug: postSlug, content, excerpt, tags: postTags, featured_image_url, meta_description, published, author, read_time } = req.body;
+      const {
+        title,
+        slug: postSlug,
+        content,
+        excerpt,
+        tags: postTags,
+        featured_image_url,
+        meta_description,
+        published,
+        author,
+        read_time,
+      } = req.body;
 
       if (!title || !content) {
-        return errorResponse(res, 'Title and content required', 400);
+        return errorResponse(res, "Title and content required", 400);
       }
 
       const posts = await sql`
         INSERT INTO blog_posts (title, slug, content, excerpt, tags, featured_image_url, meta_description, published, author, read_time)
-        VALUES (${title}, ${postSlug}, ${content}, ${excerpt || ''}, ${postTags || []}, ${featured_image_url || null}, ${meta_description || ''}, ${published || false}, ${author || 'Admin'}, ${read_time || 5})
+        VALUES (${title}, ${postSlug}, ${content}, ${excerpt || ""}, ${postTags || []}, ${featured_image_url || null}, ${meta_description || ""}, ${published || false}, ${author || "Admin"}, ${read_time || 5})
         RETURNING *
       `;
 
@@ -123,18 +151,18 @@ export default async function handler(req, res) {
     }
 
     // PUT - Update post
-    if (req.method === 'PUT') {
+    if (req.method === "PUT") {
       const session = await verifyAuth(req);
-      if (!session || session.role !== 'admin') {
-        return errorResponse(res, 'Unauthorized', 401);
+      if (!session || session.role !== "admin") {
+        return errorResponse(res, "Unauthorized", 401);
       }
 
       if (!id) {
-        return errorResponse(res, 'Post ID required', 400);
+        return errorResponse(res, "Post ID required", 400);
       }
 
       const updates = req.body;
-      
+
       const posts = await sql`
         UPDATE blog_posts SET
           title = COALESCE(${updates.title}, title),
@@ -152,30 +180,30 @@ export default async function handler(req, res) {
       `;
 
       if (posts.length === 0) {
-        return errorResponse(res, 'Post not found', 404);
+        return errorResponse(res, "Post not found", 404);
       }
 
       return jsonResponse(res, { success: true, data: posts[0] });
     }
 
     // DELETE - Delete post
-    if (req.method === 'DELETE') {
+    if (req.method === "DELETE") {
       const session = await verifyAuth(req);
-      if (!session || session.role !== 'admin') {
-        return errorResponse(res, 'Unauthorized', 401);
+      if (!session || session.role !== "admin") {
+        return errorResponse(res, "Unauthorized", 401);
       }
 
       if (!id) {
-        return errorResponse(res, 'Post ID required', 400);
+        return errorResponse(res, "Post ID required", 400);
       }
 
       await sql`DELETE FROM blog_posts WHERE id = ${id}`;
       return jsonResponse(res, { success: true });
     }
 
-    return errorResponse(res, 'Method not allowed', 405);
+    return errorResponse(res, "Method not allowed", 405);
   } catch (error) {
-    console.error('Posts API error:', error);
-    return errorResponse(res, error.message || 'Internal server error', 500);
+    console.error("Posts API error:", error);
+    return errorResponse(res, error.message || "Internal server error", 500);
   }
 }
