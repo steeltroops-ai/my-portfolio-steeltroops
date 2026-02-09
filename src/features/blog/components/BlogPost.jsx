@@ -190,63 +190,17 @@ const BlogPost = () => {
 
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         {/* Navigation */}
-        <nav className="flex items-center justify-between py-3 sm:py-4 lg:py-6 mb-6 sm:mb-8 lg:mb-16">
+        <nav className="flex items-center justify-between py-4 sm:py-5 lg:py-6 mb-6 sm:mb-8 lg:mb-16 px-2 sm:px-0">
           <div className="flex items-center flex-shrink-0">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-semibold text-white transition-colors duration-200 hover:text-cyan-300"
+              className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white transition-colors duration-200 hover:text-cyan-300"
             >
-              <FiArrowLeft />
-              Back
+              <FiArrowLeft className="text-xl sm:text-2xl" />
+              <span>Back</span>
             </button>
           </div>
-          <div className="flex justify-center gap-2.5 sm:gap-3 md:gap-4 -mr-2 sm:-mr-4 text-lg sm:text-xl md:text-2xl items-center">
-            <a
-              href="https://x.com/steeltroops_ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-cyan-300 transition-colors duration-200"
-              aria-label="Twitter (opens in new tab)"
-            >
-              <FaXTwitter />
-            </a>
-            <a
-              href="https://github.com/steeltroops-ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-cyan-300 transition-colors duration-200"
-              aria-label="GitHub (opens in new tab)"
-            >
-              <FiGithub />
-            </a>
-            <a
-              href="https://instagram.com/steeltroops_ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-cyan-300 transition-colors duration-200"
-              aria-label="Instagram (opens in new tab)"
-            >
-              <FiInstagram />
-            </a>
-            <a
-              href="https://linkedin.com/in/steeltroops-ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-cyan-300 transition-colors duration-200"
-              aria-label="LinkedIn (opens in new tab)"
-            >
-              <FaLinkedinIn />
-            </a>
-            <a
-              href="https://bento.me/steeltroops"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-cyan-300 transition-colors duration-200"
-              aria-label="Bento profile (opens in new tab)"
-            >
-              <AiOutlineLink />
-            </a>
-          </div>
+          <SocialLinks />
         </nav>
 
         {/* Two Column Layout */}

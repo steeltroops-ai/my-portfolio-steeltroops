@@ -3,7 +3,10 @@ import { motion } from "framer-motion";
 
 const Experience = () => {
   return (
-    <div id="experience" className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 scroll-mt-20">
+    <div
+      id="experience"
+      className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 scroll-mt-20"
+    >
       <motion.h2
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
@@ -14,17 +17,14 @@ const Experience = () => {
       </motion.h2>
       <div className="space-y-8 sm:space-y-10 lg:space-y-8">
         {EXPERIENCES.map((experience, index) => (
-          <div
-            key={index}
-            className="flex flex-wrap lg:justify-center"
-          >
+          <div key={index} className="flex flex-wrap lg:justify-center">
             <motion.div
               whileInView={{ opacity: 1, x: 0 }}
               initial={{ opacity: 0, x: -100 }}
               transition={{ duration: 1 }}
-              className="w-full lg:w-1/4"
+              className="w-full md:w-1/4"
             >
-              <p className="mb-4 lg:mb-6 text-xs sm:text-sm font-mono text-neutral-500">
+              <p className="mb-4 lg:mb-6 text-xs sm:text-sm font-mono text-neutral-500 text-center md:text-left">
                 {experience.year}
               </p>
             </motion.div>
@@ -32,14 +32,18 @@ const Experience = () => {
               whileInView={{ opacity: 1, x: 0 }}
               initial={{ opacity: 0, x: 100 }}
               transition={{ duration: 1 }}
-              className="w-full max-w-xl lg:w-3/4"
+              className="w-full max-w-xl md:w-3/4 mx-auto md:mx-0"
             >
-              <h6 className="mb-2 text-base sm:text-lg font-semibold text-neutral-100">{experience.role}</h6>
-              <p className="mb-3 sm:mb-4 text-sm sm:text-base text-purple-400">{experience.company}</p>
-              <div className="mb-4 text-sm sm:text-base text-justify lg:text-left text-neutral-200 font-light space-y-2">
-                {experience.description.split('\n').map((line, i) => (
-                  line.trim() && <p key={i}>{line}</p>
-                ))}
+              <h6 className="mb-2 text-base sm:text-lg font-semibold text-neutral-100 text-center md:text-left px-4 md:px-0">
+                {experience.role}
+              </h6>
+              <p className="mb-3 sm:mb-4 text-sm sm:text-base text-purple-400 text-center md:text-left px-4 md:px-0">
+                {experience.company}
+              </p>
+              <div className="mb-4 text-sm sm:text-base text-justify text-neutral-200 font-light space-y-2 px-6 sm:px-10 md:px-0">
+                {experience.description
+                  .split("\n")
+                  .map((line, i) => line.trim() && <p key={i}>{line}</p>)}
               </div>
             </motion.div>
           </div>

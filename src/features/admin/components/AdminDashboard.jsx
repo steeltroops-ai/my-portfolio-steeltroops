@@ -87,7 +87,7 @@ const AdminDashboard = () => {
   });
 
   return (
-    <>
+    <div className="p-8">
       <style>{`
         select.glass-select option {
           background: rgba(0, 0, 0, 0.95);
@@ -322,7 +322,7 @@ const AdminDashboard = () => {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 };
 

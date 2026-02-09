@@ -4,7 +4,10 @@ import { FaGithub } from "react-icons/fa";
 
 const Projects = () => {
   return (
-    <div id="projects" className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 scroll-mt-20">
+    <div
+      id="projects"
+      className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 scroll-mt-20"
+    >
       <motion.h2
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: -100 }}
@@ -17,13 +20,13 @@ const Projects = () => {
         {PROJECTS.map((project, index) => (
           <div
             key={`${project.title}-${index}`}
-            className="flex flex-wrap lg:justify-center"
+            className="flex flex-wrap md:justify-center mb-10 md:mb-8"
           >
             <motion.div
               whileInView={{ opacity: 1, x: 0 }}
               initial={{ opacity: 0, x: -100 }}
               transition={{ duration: 1 }}
-              className="w-full lg:w-1/4 mb-4 lg:mb-0"
+              className="w-full md:w-1/4 mb-4 md:mb-0 flex justify-center md:block"
             >
               {project.url ? (
                 <a
@@ -37,7 +40,7 @@ const Projects = () => {
                     width={150}
                     height={150}
                     alt={project.title}
-                    className="w-full max-w-[150px] sm:max-w-[180px] lg:max-w-[150px] h-auto rounded transition-transform group-hover:scale-105"
+                    className="w-full max-w-[150px] sm:max-w-[180px] md:max-w-[150px] h-auto rounded transition-transform group-hover:scale-105"
                     onError={(e) => {
                       e.target.src = project.image;
                     }}
@@ -49,7 +52,7 @@ const Projects = () => {
                   width={150}
                   height={150}
                   alt={project.title}
-                  className="w-full max-w-[150px] sm:max-w-[180px] lg:max-w-[150px] h-auto rounded"
+                  className="w-full max-w-[150px] sm:max-w-[180px] md:max-w-[150px] h-auto rounded"
                 />
               )}
             </motion.div>
@@ -57,10 +60,12 @@ const Projects = () => {
               whileInView={{ opacity: 1, x: 0 }}
               initial={{ opacity: 0, x: 100 }}
               transition={{ duration: 1 }}
-              className="w-full max-w-xl lg:w-3/4"
+              className="w-full max-w-xl md:w-3/4 mx-auto md:mx-0"
             >
-              <div className="flex items-start sm:items-center justify-between mb-2 gap-2 flex-wrap sm:flex-nowrap">
-                <h6 className="text-base sm:text-lg font-semibold text-neutral-100">{project.title}</h6>
+              <div className="flex flex-col md:flex-row items-center md:items-center justify-between mb-3 gap-2 px-4 md:px-0">
+                <h6 className="text-base sm:text-lg font-semibold text-neutral-100 text-center md:text-left">
+                  {project.title}
+                </h6>
                 {project.github && (
                   <a
                     href={project.github}
@@ -73,10 +78,10 @@ const Projects = () => {
                   </a>
                 )}
               </div>
-              <p className="mb-3 sm:mb-4 text-sm sm:text-base text-justify lg:text-left text-neutral-200 font-light">
+              <p className="mb-4 text-sm sm:text-base text-justify text-neutral-200 font-light px-6 sm:px-10 md:px-0">
                 {project.description}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap justify-center md:justify-start gap-2 px-4 md:px-0">
                 {project.technologies.map((tech, techIndex) => (
                   <span
                     key={`${tech}-${techIndex}`}

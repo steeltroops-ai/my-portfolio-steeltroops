@@ -129,3 +129,43 @@ export const useDeleteMessage = () => {
     },
   });
 };
+
+// Reply to message
+export const useReplyMessage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      toEmail,
+      subject,
+      replyMessage,
+      previousMessages,
+    }) => {
+      const token = getAuthToken();
+      if (!token) throw new Error("Not authenticated");
+
+      const response = await fetch(`${API_URL}/api/contact/reply`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          toEmail,
+          subject,
+          replyMessage,
+          previousMessages,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send reply");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contactMessages"] });
+    },
+  });
+};

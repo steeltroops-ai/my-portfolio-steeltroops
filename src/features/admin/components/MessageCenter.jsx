@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   FiMail,
   FiCheck,
@@ -6,21 +6,51 @@ import {
   FiSearch,
   FiCalendar,
   FiMessageSquare,
+  FiUser,
+  FiInbox,
+  FiCheckCircle,
+  FiPlus,
+  FiSend,
 } from "react-icons/fi";
 import { useContactMessages } from "../hooks/useContactMessages";
 import { useUpdateMessageStatus } from "../hooks/useContactMessages";
 import { useDeleteMessage } from "../hooks/useContactMessages";
+import { useReplyMessage } from "../hooks/useContactMessages";
 import { toast } from "react-hot-toast";
 
 const MessageCenter = () => {
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const chatEndRef = useRef(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const searchInputRef = useRef(null);
+  const [replyDepth, setReplyDepth] = useState(1); // 1 or 2 messages context
+
+  // Focus input when search is opened
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
 
   const { data, isLoading, error, refetch } = useContactMessages();
   const updateStatusMutation = useUpdateMessageStatus();
   const deleteMessageMutation = useDeleteMessage();
+  const replyMutation = useReplyMessage();
+  const [replyText, setReplyText] = useState("");
+  const textareaRef = useRef(null);
 
-  const messages = data?.messages || [];
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height =
+        textareaRef.current.scrollHeight + "px";
+    }
+  }, [replyText]);
+
+  const messages = data?.data || [];
 
   // Group messages by email
   const threads = useMemo(() => {
@@ -61,11 +91,18 @@ const MessageCenter = () => {
   // Filter threads
   const filteredThreads = threads.filter((thread) => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       thread.name.toLowerCase().includes(searchLower) ||
       thread.email.toLowerCase().includes(searchLower) ||
-      thread.messages.some((m) => m.message.toLowerCase().includes(searchLower))
-    );
+      thread.messages.some((m) =>
+        m.message.toLowerCase().includes(searchLower)
+      );
+
+    const matchesFilter =
+      filterType === "all" ||
+      (filterType === "unread" && thread.unreadCount > 0);
+
+    return matchesSearch && matchesFilter;
   });
 
   // Select first thread by default
@@ -84,11 +121,20 @@ const MessageCenter = () => {
       )
     : [];
 
+  // Scroll to bottom of chat when messages change
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [activeMessages]);
+
   const handleStatusUpdate = async (id, status) => {
     try {
-      await updateStatusMutation.mutateAsync({ id, status });
+      await updateStatusMutation.mutateAsync({ id, action: status });
+      toast.success(`Message marked as ${status}`);
     } catch (error) {
       console.error("Failed to update status:", error);
+      toast.error("Failed to update status");
     }
   };
 
@@ -102,6 +148,89 @@ const MessageCenter = () => {
       }
     }
   };
+
+  const handleMarkAllRead = async () => {
+    if (!activeThread) return;
+    const unreadMessages = activeThread.messages.filter(
+      (m) => m.status === "unread"
+    );
+    for (const msg of unreadMessages) {
+      await updateStatusMutation.mutateAsync({ id: msg.id, action: "read" });
+    }
+    toast.success("All messages marked as read");
+  };
+
+  const handleOpenEmailClient = async () => {
+    if (!activeThread) return;
+    if (!replyText.trim()) return;
+
+    try {
+      // Get messages context (1 or 2)
+      const contextMessages = activeThread.messages.slice(0, replyDepth);
+      const subject = activeThread.messages[0]?.subject || "Reply";
+
+      // Save reply to database first
+      await replyMutation.mutateAsync({
+        toEmail: activeThread.email,
+        subject,
+        replyMessage: replyText,
+        previousMessages: contextMessages,
+      });
+
+      // Prepare email body with context
+      let body = `${replyText}\n\n`;
+
+      if (contextMessages.length > 0) {
+        body += `-----------------------------------\n`;
+        body += `Original Conversation:\n\n`;
+
+        contextMessages.forEach((msg) => {
+          const date = new Date(msg.created_at).toLocaleString();
+          body += `On ${date}, ${msg.name || "User"} wrote:\n`;
+          body += `> ${msg.message.replace(/\n/g, "\n> ")}\n\n`;
+        });
+      }
+
+      const mailtoLink = `mailto:${activeThread.email}?subject=${encodeURIComponent(
+        "Re: " + subject
+      )}&body=${encodeURIComponent(body)}`;
+
+      window.open(mailtoLink, "_blank");
+      setReplyText("");
+      toast.success("Reply saved and email client opened!");
+    } catch (error) {
+      console.error("Failed to save reply:", error);
+      toast.error("Failed to save reply");
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!replyText.trim() || !activeThread) return;
+
+    try {
+      // Get last 2 messages for context
+      const previousMessages = activeThread.messages.slice(0, 2);
+      const subject = activeThread.messages[0]?.subject || "Reply";
+
+      await replyMutation.mutateAsync({
+        toEmail: activeThread.email,
+        subject,
+        replyMessage: replyText,
+        previousMessages,
+      });
+
+      setReplyText("");
+      toast.success("Reply sent successfully");
+    } catch (error) {
+      console.error("Failed to send reply:", error);
+      toast.error("Failed to send reply");
+    }
+  };
+
+  // Stats (removed from UI, keeping calculation if needed later or removing if unused)
+  // const totalMessages = messages.length;
+  // const unreadMessages = messages.filter((m) => m.status === "unread").length;
+  // const totalConversations = threads.length;
 
   if (isLoading) {
     return (
@@ -126,189 +255,324 @@ const MessageCenter = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-140px)] max-h-[800px] flex gap-6">
-      {/* Left Sidebar: Thread List */}
-      <div className="w-1/3 min-w-[320px] max-w-[400px] flex flex-col gap-4">
-        {/* Search Header */}
-        <div className="relative">
-          <FiSearch
-            size={18}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500"
-          />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search messages..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-[2px] text-white placeholder:text-neutral-500 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
-          />
+    <div className="flex h-screen overflow-hidden bg-transparent">
+      {/* Left Sidebar: Compact Contact List */}
+      <div className="w-[380px] flex flex-col border-r border-white/10 shrink-0 bg-white/5 backdrop-blur-[2px]">
+        {/* Header & Search */}
+        <div className="p-6 sticky top-0 z-10 bg-transparent backdrop-blur-md border-b border-white/10">
+          <div className="flex justify-between items-start mb-0">
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-tight">
+                Messages
+              </h2>
+              <p className="text-neutral-400 text-xs mt-1">
+                Recent conversations
+              </p>
+            </div>
+            <div className="flex gap-1 bg-black/20 p-1 rounded-lg backdrop-blur-md border border-white/5 mt-1">
+              <button
+                onClick={() => {
+                  setShowSearch(!showSearch);
+                  if (!showSearch) setSearchTerm("");
+                }}
+                className={`p-1.5 rounded-md transition-all ${
+                  showSearch
+                    ? "bg-white/10 text-white shadow-sm"
+                    : "text-neutral-400 hover:text-white hover:bg-white/5"
+                }`}
+                title="Search"
+              >
+                <FiSearch size={16} />
+              </button>
+              <div className="w-px bg-white/10 mx-0.5 my-1"></div>
+              <button
+                onClick={() => setFilterType("all")}
+                className={`p-1.5 rounded-md transition-all ${
+                  filterType === "all"
+                    ? "bg-white/10 text-white shadow-sm"
+                    : "text-neutral-400 hover:text-white hover:bg-white/5"
+                }`}
+                title="All Messages"
+              >
+                <FiMessageSquare size={16} />
+              </button>
+              <button
+                onClick={() => setFilterType("unread")}
+                className={`p-1.5 rounded-md transition-all ${
+                  filterType === "unread"
+                    ? "bg-white/10 text-white shadow-sm"
+                    : "text-neutral-400 hover:text-white hover:bg-white/5"
+                }`}
+                title="Unread Messages"
+              >
+                <FiInbox size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              showSearch
+                ? "max-h-16 opacity-100 mt-4"
+                : "max-h-0 opacity-0 mt-0"
+            }`}
+          >
+            <div className="relative">
+              <FiSearch
+                size={16}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-500"
+              />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search conversations..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-white/10 bg-black/20 focus:bg-black/40 focus:border-purple-500/50 text-white placeholder:text-neutral-500 text-sm focus:outline-none transition-all"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Thread List */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
-          {filteredThreads.map((thread) => (
-            <button
-              key={thread.email}
-              onClick={() => setSelectedEmail(thread.email)}
-              className={`w-full text-left p-4 rounded-xl border transition-all group ${
-                selectedEmail === thread.email
-                  ? "bg-white/10 border-white/20 shadow-lg shadow-purple-500/5"
-                  : "bg-white/5 border-white/5 hover:bg-white/[0.07] hover:border-white/10"
-              }`}
-            >
-              <div className="flex justify-between items-start mb-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center border border-white/10 shrink-0">
-                    <span className="text-xs font-bold text-white">
-                      {thread.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span
-                    className={`font-semibold truncate ${
-                      selectedEmail === thread.email
-                        ? "text-white"
-                        : "text-neutral-300 group-hover:text-white"
-                    }`}
-                  >
-                    {thread.name}
-                  </span>
-                </div>
-                {thread.unreadCount > 0 && (
-                  <span className="bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg shadow-purple-500/20 shrink-0">
-                    {thread.unreadCount}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-neutral-400 truncate pl-10">
-                {thread.lastMessage.message}
-              </p>
-              <div className="mt-2 pl-10 flex items-center gap-2 text-[10px] text-neutral-500">
-                <FiCalendar size={10} />
-                <span>
-                  {new Date(thread.lastMessage.created_at).toLocaleDateString()}
-                </span>
-                <span className="w-1 h-1 rounded-full bg-neutral-600"></span>
-                <span>
-                  {new Date(thread.lastMessage.created_at).toLocaleTimeString(
-                    [],
-                    { hour: "2-digit", minute: "2-digit" }
-                  )}
-                </span>
-              </div>
-            </button>
-          ))}
-          {filteredThreads.length === 0 && (
-            <div className="text-center py-10 text-neutral-500">
-              No conversations found.
+        {/* Contact List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {filteredThreads.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-neutral-500">
+              <p className="text-sm">No conversations found</p>
             </div>
+          ) : (
+            filteredThreads.map((thread) => {
+              const isActive = selectedEmail === thread.email;
+              const lastMsgDate = new Date(thread.lastMessage.created_at);
+              // Format date: "Oct 24" or "2d" style
+              const dateStr = lastMsgDate.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              });
+
+              return (
+                <button
+                  key={thread.email}
+                  onClick={() => setSelectedEmail(thread.email)}
+                  className={`w-full text-left px-4 py-3 hover:bg-white/10 transition-colors border-r-2 ${
+                    isActive
+                      ? "bg-white/10 border-purple-500"
+                      : "border-transparent"
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                      {/* Placeholder for real avatar, using initials */}
+                      <span className="text-sm font-medium text-white/80">
+                        {thread.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-0.5">
+                        <span className="font-bold text-white text-[15px] truncate mr-2">
+                          {thread.name}
+                        </span>
+                        <span className="text-xs text-neutral-500 whitespace-nowrap">
+                          {dateStr}
+                        </span>
+                      </div>
+                      <p
+                        className={`text-[13px] truncate leading-tight ${
+                          thread.unreadCount > 0
+                            ? "text-white font-medium"
+                            : "text-neutral-500"
+                        }`}
+                      >
+                        {thread.lastMessage.message}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
           )}
         </div>
       </div>
 
-      {/* Right Area: Chat View */}
-      <div className="flex-1 flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur-[2px] overflow-hidden shadow-2xl">
+      {/* Right Chat Window */}
+      <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         {activeThread ? (
           <>
-            {/* Active Header */}
-            <div className="p-4 border-b border-white/10 bg-white/5 backdrop-blur-md flex justify-between items-center z-10">
+            {/* Chat Header */}
+            <div className="h-[60px] px-6 border-b border-white/10 flex items-center justify-between backdrop-blur-[2px] bg-white/[0.02] z-10 sticky top-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                  {activeThread.name.charAt(0).toUpperCase()}
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center border border-white/10 shrink-0">
+                  <span className="text-sm font-medium text-white/80">
+                    {activeThread.name.charAt(0).toUpperCase()}
+                  </span>
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">
-                    {activeThread.name}
-                  </h2>
-                  <div className="flex items-center gap-2 text-sm text-neutral-400">
-                    <FiMail size={12} />
-                    {activeThread.email}
-                  </div>
+                <span className="font-bold text-white text-lg">
+                  {activeThread.name}
+                </span>
+              </div>
+              <div className="text-neutral-400">
+                {/* Info icon wrapper */}
+                <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer transition-colors">
+                  <span className="font-bold text-lg">i</span>
                 </div>
               </div>
             </div>
 
-            {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-              {activeMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className="group flex flex-col gap-2 max-w-3xl"
-                >
-                  <div className="flex items-end gap-3">
-                    {/* Message Bubble */}
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col bg-transparent">
+              {/* Profile Hero Section */}
+              <div className="flex flex-col items-center py-8 border-b border-white/5 mb-6 hover:bg-white/[0.02] transition-colors cursor-pointer rounded-xl">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center text-2xl font-medium text-white/80 mb-2 border border-white/10">
+                  {activeThread.name.charAt(0).toUpperCase()}
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  {activeThread.name}
+                </h3>
+                <p className="text-neutral-500 text-sm mb-1">
+                  {activeThread.email}
+                </p>
+                <p className="text-neutral-600 text-xs mb-4">
+                  Joined{" "}
+                  {new Date(
+                    activeThread.messages[0].created_at
+                  ).toLocaleDateString()}
+                </p>
+
+                <button className="px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors backdrop-blur-sm">
+                  View Profile
+                </button>
+              </div>
+
+              {/* Message Bubbles */}
+              <div className="flex-1 space-y-1">
+                {" "}
+                {/* Reduced generic spacing, grouped visually */}
+                {activeMessages.map((msg, idx) => {
+                  // Determine if this is "my" message (for now assumes all are received, so left aligned)
+                  // In a real app we'd check msg.sender === 'me'
+                  const isMe = false; // Placeholder
+
+                  return (
                     <div
-                      className={`p-4 rounded-2xl rounded-tl-none border backdrop-blur-sm transition-all ${
-                        msg.status === "unread"
-                          ? "bg-purple-500/10 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
-                          : "bg-white/10 border-white/10"
-                      }`}
+                      key={msg.id}
+                      className={`flex flex-col ${isMe ? "items-end" : "items-start"} mb-4`}
                     >
-                      <div className="flex justify-between items-start gap-4 mb-1">
-                        <span className="text-xs font-semibold text-white/50">
-                          {msg.subject || "No Subject"}
+                      {/* Message Bubble */}
+                      <div
+                        className={`
+                         max-w-[70%] px-4 py-3 text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm backdrop-blur-sm
+                         ${
+                           isMe
+                             ? "bg-purple-600/80 text-white rounded-2xl rounded-tr-sm border border-purple-500/30"
+                             : "bg-white/10 text-white rounded-2xl rounded-tl-sm border border-white/5"
+                         }
+                      `}
+                      >
+                        {msg.message}
+                      </div>
+
+                      {/* Timestamp & Meta */}
+                      <div className="px-2 mt-1 flex gap-2 items-center">
+                        <span className="text-[11px] text-neutral-500">
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                          {msg.status !== "read" && (
+                            <span className="text-purple-400 ml-1">• New</span>
+                          )}
                         </span>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Action Buttons (Hover only) */}
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleDelete(msg.id)}
+                            className="text-neutral-600 hover:text-red-400 p-1"
+                          >
+                            <FiTrash2 size={12} />
+                          </button>
                           {msg.status !== "read" && (
                             <button
                               onClick={() => handleStatusUpdate(msg.id, "read")}
-                              className="p-1 hover:bg-white/10 rounded text-neutral-400 hover:text-white"
-                              title="Mark as Read"
+                              className="text-neutral-600 hover:text-green-400 p-1"
                             >
-                              <FiCheck size={14} />
+                              <FiCheck size={12} />
                             </button>
                           )}
-                          <button
-                            onClick={() => handleDelete(msg.id)}
-                            className="p-1 hover:bg-red-500/20 rounded text-neutral-400 hover:text-red-400"
-                            title="Delete Message"
-                          >
-                            <FiTrash2 size={14} />
-                          </button>
                         </div>
                       </div>
-                      <p className="text-neutral-200 leading-relaxed whitespace-pre-wrap">
-                        {msg.message}
-                      </p>
-                      <div className="mt-2 flex items-center justify-end gap-2 text-[10px] text-neutral-500">
-                        <span>
-                          {new Date(msg.created_at).toLocaleDateString()}{" "}
-                          {new Date(msg.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        {msg.status === "read" && (
-                          <FiCheck size={12} className="text-green-500/50" />
-                        )}
-                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
+              <div ref={chatEndRef} />
             </div>
 
-            {/* Input Area (Visual only for now, or for Notes) */}
-            <div className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-md">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Reply via email (coming soon)..."
-                  disabled
-                  className="w-full p-4 pr-12 rounded-xl bg-black/20 border border-white/10 text-neutral-500 cursor-not-allowed"
+            {/* Input Area */}
+            <div className="p-4 border-t border-white/10 bg-white/[0.02] backdrop-blur-[2px]">
+              <div className="flex items-center gap-3 bg-white/5 backdrop-blur-[2px] p-2 rounded-[24px] border border-white/5 focus-within:border-purple-500/30 transition-all duration-200">
+                {/* Media Icons */}
+                <div className="flex items-center gap-1 pl-1">
+                  <button
+                    onClick={() => setReplyDepth((d) => (d === 1 ? 2 : 1))}
+                    className={`p-2 rounded-full transition-all duration-200 flex items-center justify-center ${
+                      replyDepth === 2
+                        ? "bg-purple-500/20 text-purple-400"
+                        : "text-neutral-400 hover:text-white hover:bg-white/5"
+                    }`}
+                    title={`Include last ${replyDepth} message(s) in reply context`}
+                  >
+                    <FiPlus size={20} />
+                  </button>
+                </div>
+
+                {/* Input Field */}
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleOpenEmailClient();
+                    }
+                  }}
+                  placeholder={`Type your reply... (Including ${replyDepth === 1 ? "last message" : "last 2 messages"} as context)`}
+                  className="flex-1 bg-transparent border-none focus:ring-0 outline-none focus:outline-none text-white placeholder:text-neutral-500 px-2 py-1.5 text-sm resize-none max-h-32 overflow-y-auto custom-scrollbar"
+                  style={{ minHeight: "24px" }}
                 />
-                <button
-                  disabled
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/5 text-neutral-600"
-                >
-                  <FiMessageSquare size={18} />
-                </button>
+
+                {/* Emoji / Send */}
+                <div className="flex items-center gap-1 pr-2">
+                  <button
+                    onClick={handleOpenEmailClient}
+                    className="p-2 rounded-full text-purple-400 hover:bg-purple-500/10 transition-colors disabled:opacity-50"
+                    disabled={!replyText.trim()}
+                    title="Open Email Client"
+                  >
+                    <FiSend size={18} />
+                  </button>
+                </div>
               </div>
             </div>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-neutral-500">
-            <FiMessageSquare size={48} className="mb-4 text-white/10" />
-            <p>Select a conversation to view details</p>
+            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+              <FiMail size={40} className="text-neutral-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Select a message
+            </h2>
+            <p className="text-neutral-400 max-w-sm text-center">
+              Choose from your existing conversations, start a new one, or just
+              keep swimming.
+            </p>
+            <button className="mt-8 px-6 py-3 rounded-full bg-purple-600 text-white font-bold hover:bg-purple-700 transition-colors shadow-lg shadow-purple-600/20">
+              New Message
+            </button>
           </div>
         )}
       </div>

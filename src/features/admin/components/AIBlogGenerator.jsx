@@ -12,7 +12,7 @@ import {
   FiClock,
   FiChevronUp,
   FiChevronDown,
-  FiZap, // Added FiZap
+  FiFileText, // Replaced FiZap with FiFileText
 } from "react-icons/fi";
 import { useAIGenerator, GENERATION_STATUS } from "../hooks/useAIGenerator";
 import { useCreatePost } from "@/features/blog/hooks/useBlogQueries";
@@ -83,74 +83,74 @@ const AIBlogGenerator = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-0 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3 text-white tracking-tight">
-            <FiZap size={24} className="text-white" />{" "}
-            {/* Updated icon and size */}
-            AI Generator
-          </h1>
-          <p className="text-neutral-400 text-sm mt-1">
-            Create high-quality technical content powered by Llama 3.3.
-          </p>
+    <div className="h-screen flex flex-col overflow-hidden">
+      {/* Header - Matching Dashboard Style */}
+      <div className="flex-none p-8 pb-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">
+              AI Blogs
+            </h1>
+            <p className="text-neutral-400 text-sm mt-1">
+              Create high-quality technical content powered by Llama 3.3.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Main Scrollable Content Area */}
-      <div className="flex-1 w-full pb-8 flex flex-col items-center justify-start">
-        {/* Empty State / Welcome Screen */}
-        {!isGenerating && !result && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center mt-20 mb-12 max-w-2xl px-4"
-          >
-            <div className="inline-flex items-center justify-center p-4 mb-6 bg-white/5 rounded-2xl border border-white/10 shadow-lg backdrop-blur-[2px]">
-              {" "}
-              {/* Updated backdrop-blur */}
-              <FiZap size={32} className="text-white" /> {/* Updated icon */}
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-              What shall we create today?
-            </h2>
-            <p className="text-lg text-neutral-400 max-w-lg mx-auto leading-relaxed">
-              Describe your topic, choose a style, and let the AI draft a
-              masterpiece for you.
-            </p>
-          </motion.div>
-        )}
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="max-w-4xl mx-auto px-8 py-8">
+          {/* Empty State / Welcome Screen */}
+          {!isGenerating && !result && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center mt-20 mb-12 max-w-2xl mx-auto px-4"
+            >
+              <div className="inline-flex items-center justify-center p-4 mb-6 bg-white/5 rounded-2xl border border-white/10 shadow-lg backdrop-blur-[2px]">
+                <FiFileText size={32} className="text-white" />
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                What shall we create today?
+              </h2>
+              <p className="text-lg text-neutral-400 max-w-lg mx-auto leading-relaxed">
+                Describe your topic, choose a style, and let the AI draft a
+                masterpiece for you.
+              </p>
+            </motion.div>
+          )}
 
-        {/* Progress View */}
-        {(isGenerating || status !== GENERATION_STATUS.IDLE) && !result && (
-          <ProgressIndicator
-            status={status}
-            progress={progress}
-            currentStep={currentStep}
-          />
-        )}
+          {/* Progress View */}
+          {(isGenerating || status !== GENERATION_STATUS.IDLE) && !result && (
+            <ProgressIndicator
+              status={status}
+              progress={progress}
+              currentStep={currentStep}
+            />
+          )}
 
-        {/* Result View */}
-        {result && (
-          <BlogPreviewCard
-            result={result}
-            onSave={handleSavePost}
-            onEdit={handleEdit}
-            onCopy={() => {
-              navigator.clipboard.writeText(result.content);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-            copied={copied}
-            isSaving={isSaving}
-          />
-        )}
+          {/* Result View */}
+          {result && (
+            <BlogPreviewCard
+              result={result}
+              onSave={handleSavePost}
+              onEdit={handleEdit}
+              onCopy={() => {
+                navigator.clipboard.writeText(result.content);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              copied={copied}
+              isSaving={isSaving}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Sticky Bottom Input Area */}
-      <div className="sticky bottom-0 z-40 px-6 pb-6 pt-12 -mx-8 -mb-8 bg-gradient-to-t from-black via-black/95 to-transparent pointer-events-none">
-        <div className="max-w-4xl mx-auto w-full pointer-events-auto">
+      {/* ChatGPT-Style Floating Input Area */}
+      <div className="flex-none p-8 pt-4">
+        <div className="max-w-4xl mx-auto">
           <AICreatorInput
             onGenerate={handleAIInputSubmit}
             isGenerating={isGenerating}

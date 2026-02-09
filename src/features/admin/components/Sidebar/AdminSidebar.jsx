@@ -7,7 +7,7 @@ import {
   FiLogOut,
   FiChevronLeft,
   FiChevronRight,
-  FiZap,
+  FiFileText,
 } from "react-icons/fi";
 import { signOut } from "../../services/HybridAuthService";
 import mpsLogo from "../../../../assets/mps.png";
@@ -25,6 +25,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
 
   const navItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: FiHome },
+    { name: "AI Blogs", path: "/admin/ai-generator", icon: FiFileText },
     { name: "Messages", path: "/admin/messages", icon: FiMail },
   ];
 
@@ -105,26 +106,6 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
             </Link>
           );
         })}
-
-        {/* AI Generate Button - Simple Glossy style */}
-        <Link
-          to="/admin/ai-generator"
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative
-             text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent
-            ${collapsed ? "justify-center px-2" : ""}
-          `}
-          title={collapsed ? "AI Generator" : ""}
-        >
-          <FiZap
-            size={20}
-            className="group-hover:text-white shrink-0 min-w-[20px] transition-colors"
-          />
-          {!collapsed && (
-            <span className="font-medium group-hover:text-white whitespace-nowrap text-sm">
-              AI Generator
-            </span>
-          )}
-        </Link>
       </div>
 
       {/* Footer Section */}

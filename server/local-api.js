@@ -27,18 +27,25 @@ app.use(cors());
 app.use(express.json());
 
 // Mock Vercel request/response wrapper
+// Express 5 makes req.query a getter-only property, so we create a proxy object
 function wrapHandler(handler) {
-  return async (req, res) => {
+  return async (expressReq, res) => {
     try {
-      // Convert Express req to Vercel-like format
-      req.query = req.query || {};
-      req.body = req.body || {};
+      // Parse query params from URL
+      const url = new URL(expressReq.url, `http://localhost:${PORT}`);
+      const queryParams = Object.fromEntries(url.searchParams);
 
-      // Parse query params from URL for consistency
-      const url = new URL(req.url, `http://localhost:${PORT}`);
-      for (const [key, value] of url.searchParams) {
-        req.query[key] = value;
-      }
+      // Create a Vercel-compatible request object
+      // We proxy most properties but provide our own query and body
+      const req = {
+        ...expressReq,
+        method: expressReq.method,
+        url: expressReq.url,
+        headers: expressReq.headers,
+        query: { ...expressReq.query, ...queryParams },
+        body: expressReq.body || {},
+        cookies: expressReq.cookies,
+      };
 
       await handler(req, res);
     } catch (error) {
@@ -62,6 +69,11 @@ async function loadHandlers() {
     // Contact routes
     const contactHandler = (await import("../api/contact.js")).default;
     app.all("/api/contact", wrapHandler(contactHandler));
+
+    // Contact Reply route (New)
+    const replyContactHandler = (await import("../api/contact_reply.js"))
+      .default;
+    app.all("/api/contact/reply", wrapHandler(replyContactHandler));
 
     // Comments routes
     const commentsHandler = (await import("../api/comments.js")).default;

@@ -33,7 +33,6 @@ export default defineConfig({
     cors: true,
     hmr: {
       overlay: true,
-      clientPort: 5173,
     },
     watch: {
       usePolling: false,

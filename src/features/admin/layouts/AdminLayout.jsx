@@ -24,8 +24,8 @@ const AdminLayout = () => {
       {/* Main Content Area */}
       <main
         className={`relative z-10 transition-all duration-300 ease-in-out
-          ${isSidebarCollapsed ? "ml-20" : "ml-64"}
-          p-8 min-h-screen
+          ${isSidebarCollapsed ? "ml-16" : "ml-64"}
+          min-h-screen
         `}
       >
         <Outlet />

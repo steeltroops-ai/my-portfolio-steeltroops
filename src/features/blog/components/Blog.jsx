@@ -73,17 +73,17 @@ const Blog = () => {
       </div>
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         {/* Navigation */}
-        <nav className="flex items-center justify-between py-3 sm:py-4 lg:py-6 mb-4 sm:mb-6 lg:mb-8">
+        <nav className="flex items-center justify-between py-4 sm:py-5 lg:py-6 mb-4 sm:mb-6 lg:mb-8 px-2 sm:px-0">
           <div className="flex items-center flex-shrink-0">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-semibold text-white transition-colors duration-200 hover:text-cyan-300"
+              className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white transition-colors duration-200 hover:text-cyan-300"
             >
-              <FiArrowLeft />
-              Back
+              <FiArrowLeft className="text-xl sm:text-2xl" />
+              <span>Back</span>
             </button>
           </div>
-          <SocialLinks className="-mr-2 sm:-mr-4" />
+          <SocialLinks />
         </nav>
 
         {/* Header */}
