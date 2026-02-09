@@ -92,18 +92,6 @@ async function loadHandlers() {
       .default;
     app.all("/api/ai/generate-blog", wrapHandler(aiGenerateHandler));
 
-    // AI routes - New client-orchestrated pipeline
-    const aiOutlineHandler = (await import("../api/ai/generate-outline.js"))
-      .default;
-    app.all("/api/ai/generate-outline", wrapHandler(aiOutlineHandler));
-
-    const aiSectionHandler = (await import("../api/ai/generate-section.js"))
-      .default;
-    app.all("/api/ai/generate-section", wrapHandler(aiSectionHandler));
-
-    const aiEnrichHandler = (await import("../api/ai/enrich.js")).default;
-    app.all("/api/ai/enrich", wrapHandler(aiEnrichHandler));
-
     // Analytics routes
     const analyticsTrackHandler = (await import("../api/analytics/track.js"))
       .default;
@@ -143,9 +131,6 @@ async function start() {
       console.log("    GET  /api/posts");
       console.log("    GET  /api/contact");
       console.log("    POST /api/ai/generate-blog");
-      console.log("    POST /api/ai/generate-outline");
-      console.log("    POST /api/ai/generate-section");
-      console.log("    POST /api/ai/enrich");
       console.log("    POST /api/analytics/track");
       console.log("    GET  /api/analytics/stats");
       console.log("");

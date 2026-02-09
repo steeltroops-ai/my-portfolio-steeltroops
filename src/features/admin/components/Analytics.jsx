@@ -193,15 +193,17 @@ const Analytics = () => {
                           /
                         </span>
                         <span className={getActionColor(action.event_type)}>
-                          {action.event_type.replace(/_/g, " ")}
+                          {(action.event_type || "").replace(/_/g, " ")}
                         </span>
                       </p>
                       <span className="text-[10px] text-neutral-500 font-mono">
-                        {new Date(action.timestamp).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
+                        {action.timestamp
+                          ? new Date(action.timestamp).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })
+                          : "--:--:--"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
@@ -265,7 +267,7 @@ const Analytics = () => {
                     <div key={i} className="space-y-1">
                       <div className="flex justify-between text-xs text-neutral-400 mb-1">
                         <span className="truncate max-w-[150px]">
-                          {ref.referrer.replace("https://", "")}
+                          {(ref.referrer || "").replace("https://", "")}
                         </span>
                         <span className="text-white font-bold">
                           {ref.count} hits
