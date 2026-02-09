@@ -1,66 +1,98 @@
-# Portfolio & AI Blog Platform
+# Mayank's Portfolio
 
-High-performance portfolio engine with a custom Llama 3.3 powered technical blog generation pipeline.
+A modern, dynamic personal portfolio website featuring a blog, admin dashboard, and AI integration.
 
-## Backend Architecture
+## Features
 
-Built on **Vercel Serverless Functions** (Node.js) for zero-cold-start edge compatibility.
+- **Responsive Design**: Glassmorphism UI with Framer Motion.
+- **Admin Dashboard**: Secure content management.
+- **AI Blog Generator**: Powered by Cerebras Cloud SDK.
+- **Content Management**: Rich text editor (Quill).
+- **Serverless Backend**: Vercel functions with Neon (PostgreSQL).
 
-- **API Layer**: RESTful endpoints with strict method validation.
-- **Database**: Neon (Serverless PostgreSQL) using `@neondatabase/serverless`.
-- **Optimization**: raw SQL queries for minimal overhead and maximum throughput.
+## Tech Stack
 
-## Security Implementation
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
+![NodeJS](https://img.shields.io/badge/Node.js-5FA04E.svg?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
 
-Custom authentication system designed for minimal dependency surface area.
+## Getting Started
 
-- **Authentication**: Bearer token session management.
-- **Hashing**: PBKDF2 (SHA-512) password hashing with unique per-user salts.
-- **Session Control**: Database-backed sessions with explicit expiration policies.
-- **Access Control**: Role-based middleware (`verifyAuth`) protecting administrative routes.
+### Prerequisites
 
-## AI Generation Pipeline
+- [Bun](https://bun.sh/) (latest)
+- Node.js (v18+)
 
-Integrated autonomous content engine using **Cerebras Llama 3.3 70B**.
+### Installation
 
-1.  **Phase 1: Architecting**
-    - Analyzes topic and requested persona (Professional Engineer vs. Tech Writer).
-    - Generates a structural master plan with distinct functional sections.
-2.  **Phase 2: Drafting**
-    - Iteratively generates content section-by-section.
-    - Maintains context awareness using the master plan anchor.
-    - Enforces strict constraints on code block inclusion and technical depth.
+1. **Clone repository**
+
+    ```bash
+    git clone https://github.com/steeltroops/my-portfolio-steeltroops.git
+    cd my-portfolio-steeltroops
+    ```
+
+2. **Install dependencies**
+
+    ```bash
+    bun install
+    ```
+
+3. **Environment Setup**
+
+    Create `.env` using `.env.example`.
+
+    ```bash
+    cp .env.example .env
+    ```
+
+4. **Initialize Admin**
+
+    ```bash
+    bun run init-admin
+    ```
+
+### Running
+
+Start frontend and local API:
+
+```bash
+bun run dev
+```
+
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:3000`
+
+## Scripts
+
+- `bun run dev`: Start dev servers.
+- `bun run build`: Build production.
+- `bun run lint`: Lint code.
+- `bun run init-admin`: Init database admin.
 
 ## Project Structure
 
-```
-├── api/                  # Serverless Functions
-│   ├── ai/               # AI Generation Logic
-│   │   ├── generate-blog.js
-│   │   └── ...
-│   ├── auth.js           # Authentication & Session Management
-│   ├── posts.js          # Blog CRUD Operations
-│   └── ...
+```text
+my-portfolio-steeltroops/
+├── api/                # Serverless functions
+├── docs/               # Documentation
+├── public/             # Static assets
+├── scripts/            # DB utilities
+├── server/             # Local Express server
 ├── src/
-│   ├── features/
-│   │   ├── admin/        # Protected Admin Dashboard
-│   │   └── blog/         # Public Blog Components
-│   └── lib/
-│       └── neon.js       # Database Connection Utility
-└── ...
+│   ├── components/     # React components
+│   ├── hooks/          # Custom hooks
+│   ├── pages/          # Application routes
+│   └── styles/         # Global styles
+├── .env.example        # Env template
+├── package.json        # Manifest
+└── vite.config.js      # Vite config
 ```
 
-## Local Development
+---
 
-```bash
-# Install dependencies
-bun install
-
-# Configure Environment
-# DATABASE_URL=postgres://...
-# CEREBRAS_API_KEY=...
-# VITE_ADMIN_PASSWORD_HASH=...
-
-# Start Development Server
-bun run dev
-```
+Designed and developed by Mayank...
