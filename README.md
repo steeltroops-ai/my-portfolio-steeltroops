@@ -1,84 +1,102 @@
-# Personal Portfolio with AI Blog
+# Portfolio & AI Blog Platform
 
-A modern, dark-themed portfolio website with an AI-powered blog system.
+A high-performance personal portfolio and blog platform engineering with a custom AI generation engine. Built for speed, seo, and deep technical content creation.
 
-## Tech Stack
+## System Architecture
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18, Framer Motion, TailwindCSS |
-| Backend | Vercel Serverless Functions |
-| Database | Neon PostgreSQL |
-| AI | Cerebras (Llama 3.3 70B) |
+### Frontend
 
-## Features
+- **Framework**: React 18 (Vite)
+- **Styling**: TailwindCSS
+- **Animation**: Framer Motion
+- **State Granularity**: Local component state + React Query for server state
 
-- Responsive dark theme portfolio
-- Blog with Markdown support
-- AI-powered blog generation
-- Admin dashboard with authentication
-- Contact form with database storage
+### Backend & Database
 
-## Quick Start
+- **Runtime**: Vercel Serverless Functions (Node.js)
+- **Database**: Neon (Serverless PostgreSQL)
+- **ORM**: Raw SQL via `@neondatabase/serverless` for maximum performance
 
-```bash
-# Install dependencies
-bun install
+### AI Engine (Mayank OS)
 
-# Start development server
-bun run dev
-```
+The platform features a custom AI blog generation pipeline powered by **Cerebras Llama 3.3 70B**.
 
-## Environment Variables
+**Core Capabilities:**
 
-Copy `.env.example` to `.env` and fill in:
+- **Two-Phase Generation**:
+  1.  **Architecting**: Creates a detailed content strategy and outline.
+  2.  **Drafting**: Writes section-by-section using context-aware prompts.
+- **Dynamic Personas**:
+  - **Professional Mode**: Acts as a Senior Systems Engineer. Focuses on architecture, constraints, and high-signal technical depth.
+  - **Casual Mode**: Acts as a Thoughtful Tech Writer. Focuses on narrative, accessibility, and human-centric storytelling.
+- **Strict Code Control**: Enforces code inclusion/exclusion based on user intent.
+- **Automatic Tagging**: Generates taxonomy-aligned tags.
 
-```env
-DATABASE_URL=your-neon-connection-string
-CEREBRAS_API_KEY=your-cerebras-api-key
-```
+## Key Features
+
+- **Admin Dashboard**: Secure interface for managing content and AI generation.
+- **Markdown Support**: Full GFM support with syntax highlighting.
+- **Responsive Design**: Fluid layouts optimized for all devices.
+- **SEO Optimized**: Dynamic meta tags and semantic HTML structure.
+- **Performance**: Sub-second page loads via static generation and efficient caching.
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 18+
+- Bun (Package Manager)
+
+### Setup
+
+1.  **Clone Repository**
+
+    ```bash
+    git clone <repository-url>
+    cd my-portfolio-steeltroops
+    ```
+
+2.  **Install Dependencies**
+
+    ```bash
+    bun install
+    ```
+
+3.  **Environment Configuration**
+    Create a `.env` file in the root directory:
+
+    ```env
+    DATABASE_URL="postgres://user:pass@host/db?sslmode=require"
+    CEREBRAS_API_KEY="your-cerebras-key"
+    VITE_ADMIN_PASSWORD_HASH="your-password-hash"
+    ```
+
+4.  **Start Development Server**
+    ```bash
+    bun run dev
+    ```
 
 ## Deployment
 
-### Vercel (Recommended)
+This project is optimized for **Vercel**.
 
-1. Push to GitHub
-2. Connect to Vercel
-3. Add environment variables:
-   - `DATABASE_URL`
-   - `CEREBRAS_API_KEY`
-4. Deploy
+1.  Connect your GitHub repository to Vercel.
+2.  Configure the Environment Variables in the Vercel dashboard.
+3.  Deploy.
 
-## Project Structure
+## API Reference
 
-```
-.
-├── api/                 # Serverless API functions
-│   ├── ai/              # AI blog generation
-│   ├── posts.js         # Blog CRUD
-│   ├── auth.js          # Authentication
-│   └── ...
-├── src/
-│   ├── features/        # Feature modules
-│   │   ├── admin/       # Admin dashboard
-│   │   └── blog/        # Blog components
-│   ├── shared/          # Shared components
-│   └── constants/       # App constants
-├── docs/                # Documentation
-└── scripts/             # Utility scripts
-```
+**Content**
 
-## API Endpoints
+- `GET /api/posts`: Retrieve published posts.
+- `GET /api/posts?slug=xyz`: Retrieve single post.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/posts` | GET | List all posts |
-| `/api/posts` | POST | Create post |
-| `/api/ai/generate-blog` | POST | Generate with AI |
-| `/api/auth` | POST | Login/logout |
-| `/api/comments` | GET/POST | Comments |
-| `/api/contact` | POST | Contact form |
+**AI Generation (Protected)**
 
-## Admin Access
+- `POST /api/ai/generate-blog`: Triggers the Mayank OS generation pipeline.
+  - Payload: `{ topic, style, length, tags }`
 
-Navigate to `/admin/login` after deployment.
+**Administration**
+
+- `POST /api/auth`: Session management.
+- `POST /api/posts`: Create/Update posts.

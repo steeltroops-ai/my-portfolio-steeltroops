@@ -35,3 +35,4 @@ docs/
 .env.local
 .env.*.local
 .vercel
+vite.config.js.timestamp-*.mjs
