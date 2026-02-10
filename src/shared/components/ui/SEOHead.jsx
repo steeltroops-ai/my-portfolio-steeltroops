@@ -29,7 +29,7 @@ const SEOHead = ({
       <meta name="author" content={author} />
       <meta
         name="google-site-verification"
-        content="vycsFH0oxZh3hYxinQ1JGOghyPymDAt4tkDFdKk-V7M"
+        content="WtqIeJ3OPzTXWudVsHyl_IAlSC7EwGhyw1Arv3Fx-8o"
       />
       <link rel="canonical" href={canonicalUrl} />
 
@@ -90,14 +90,111 @@ const SEOHead = ({
             image: "https://steeltroops.vercel.app/profiletop.png",
             jobTitle: "Full Stack & Machine Learning Engineer",
             url: "https://steeltroops.vercel.app",
+            knowsAbout: [
+              "React",
+              "Node.js",
+              "Next.js",
+              "TypeScript",
+              "Python",
+              "Machine Learning",
+              "Robotics",
+              "ROS2",
+              "SLAM",
+              "C++",
+              "Computer Vision",
+              "Unreal Engine 5",
+              "WebGL",
+            ],
             sameAs: [
               "https://github.com/steeltroops-ai",
               "https://linkedin.com/in/steeltroops-ai",
               "https://x.com/steeltroops_ai",
             ],
+            hasOfferCatalog: {
+              "@type": "OfferCatalog",
+              name: "Software Engineering Services",
+              itemListElement: [
+                {
+                  "@type": "Offer",
+                  itemOffered: {
+                    "@type": "Service",
+                    name: "Full Stack Web Development",
+                  },
+                },
+                {
+                  "@type": "Offer",
+                  itemOffered: {
+                    "@type": "Service",
+                    name: "Robotics & ROS2 Integration",
+                  },
+                },
+                {
+                  "@type": "Offer",
+                  itemOffered: {
+                    "@type": "Service",
+                    name: "Machine Learning Solutions",
+                  },
+                },
+              ],
+            },
           },
         })}
       </script>
+
+      {/* Project Catalog Schema (Rich Snippets for Projects) */}
+      {type === "website" && !title && (
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "Mayank Pratap Singh's Portfolio Projects",
+            description:
+              "A collection of software engineering, robotics, and machine learning projects.",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                item: {
+                  "@type": "CreativeWork",
+                  name: "MediLens Clinical Intelligence Platform",
+                  description:
+                    "Distributed clinical research platform integrating medical imaging and speech biomarkers.",
+                },
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                item: {
+                  "@type": "CreativeWork",
+                  name: "RAG LLM Fact Checker",
+                  description:
+                    "Production retrieval-augmented generation system indexing research papers with semantic search.",
+                },
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                item: {
+                  "@type": "CreativeWork",
+                  name: "Black Hole Simulation",
+                  description:
+                    "Real-time, interactive WebGL simulation of Schwarzschild/Kerr black holes.",
+                },
+              },
+              {
+                "@type": "ListItem",
+                position: 4,
+                item: {
+                  "@type": "CreativeWork",
+                  name: "Robotics Telemetry Intelligence",
+                  description:
+                    "Scalable services to analyze real-time surgical robotics telemetry.",
+                },
+              },
+            ],
+          })}
+        </script>
+      )}
 
       {/* Structured Data for Blog Posts */}
       {type === "article" && (
