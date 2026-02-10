@@ -1,7 +1,10 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|sitemap\\.xml|robots\\.txt|google.*\\.html|.*\\.png|.*\\.ico).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
