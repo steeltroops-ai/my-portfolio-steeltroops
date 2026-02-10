@@ -1,15 +1,28 @@
-// Portfolio components
-import {
-  Hero,
-  About,
-  Technologies,
-  Experience,
-  Projects,
-  Contact,
-} from "@/features/portfolio";
+// Portfolio components (Critical)
+import { Hero } from "@/features/portfolio";
 
-// Shared layout components
-import { Navbar, Footer, ScrollspyNav, SEOHead } from "@/shared";
+// Shared layout components (Critical)
+import { Navbar, ScrollspyNav, SEOHead } from "@/shared";
+import { lazy, Suspense } from "react";
+
+// Lazy load non-critical sections below the fold
+const About = lazy(() => import("@/features/portfolio/components/About"));
+const Technologies = lazy(
+  () => import("@/features/portfolio/components/Technologies")
+);
+const Experience = lazy(
+  () => import("@/features/portfolio/components/Experience")
+);
+const Projects = lazy(() => import("@/features/portfolio/components/Projects"));
+const Contact = lazy(() => import("@/features/portfolio/components/Contact"));
+const Footer = lazy(() => import("@/shared/components/layout/Footer"));
+
+// Minimal loading placeholder for sections
+const SectionLoader = () => (
+  <div className="py-20 flex justify-center items-center">
+    <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => {
   return (
@@ -31,12 +44,14 @@ const App = () => {
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         <Navbar />
         <Hero />
-        <About />
-        <Technologies />
-        <Experience />
-        <Projects />
-        <Contact />
-        <Footer />
+        <Suspense fallback={<SectionLoader />}>
+          <About />
+          <Technologies />
+          <Experience />
+          <Projects />
+          <Contact />
+          <Footer />
+        </Suspense>
       </div>
       <ScrollspyNav />
     </div>

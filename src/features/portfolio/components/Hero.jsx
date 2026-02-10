@@ -1,5 +1,4 @@
 import { HERO_CONTENT, PERSONAL, HIGHLIGHT_STATS } from "@/constants";
-import profilePic from "@/assets/hodakaprofile.jpg";
 import { motion } from "framer-motion";
 
 const containerVariants = {
@@ -145,9 +144,11 @@ const Hero = () => {
                 variants={imageVariants}
                 initial="hidden"
                 animate="visible"
-                src={profilePic}
+                src="/profiletop.png"
                 className="rounded-3xl w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-full h-auto"
                 alt="Mayank Pratap Singh"
+                width={600}
+                height={600}
                 loading="eager"
                 fetchPriority="high"
               />

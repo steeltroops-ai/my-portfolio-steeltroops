@@ -101,25 +101,25 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 isExternalUrl &&
                 /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(currentImg);
 
-              // If no image is provided at all, return null to show placeholder
               if (!currentImg && !project.image) return null;
 
               if (project.url && !hasMultipleImages) {
                 const cleanProjectUrl = project.url.replace(/\/$/, "");
-                // Use Microlink High-Res as primary (Best Quality)
-                return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=800`;
+                // Reduced resolution for faster loading
+                return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=800&viewport.height=500`;
               }
 
               if (isExternalUrl && !isDirectImage) {
                 const cleanUrl = currentImg.replace(/\/$/, "");
-                // Primary: Microlink High-Res
-                return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=800`;
+                return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=800&viewport.height=500`;
               }
 
               return currentImg || project.image || null;
             })()}
-            fetchPriority="high"
-            loading="eager"
+            fetchPriority={isExpanded ? "high" : "low"}
+            loading="lazy"
+            width={800}
+            height={500}
             alt={
               project.imageAlt ||
               `${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`
@@ -138,13 +138,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               const cleanUrl = originalUrl.replace(/\/$/, "");
 
               if (currentSrc.includes("microlink.io")) {
-                // Microlink failed/timeout, fallback to Thum.io (Reliable, fast)
-                e.target.src = `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanUrl}`;
+                e.target.src = `https://image.thum.io/get/width/800/crop/500/noanimate/${cleanUrl}`;
               } else {
-                // Final fallback to project default image
                 e.target.src =
                   project.image ||
-                  "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=1200";
+                  "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=800";
               }
             }}
           />

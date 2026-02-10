@@ -73,6 +73,8 @@ const About = () => {
                 className="rounded-3xl w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-full h-auto"
                 src={aboutImg}
                 alt="About Mayank Pratap Singh"
+                width={500}
+                height={600}
                 loading="lazy"
               />
             </div>
