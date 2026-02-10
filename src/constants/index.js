@@ -161,7 +161,7 @@ export const EXPERIENCES = [
 export const PROJECTS = [
   {
     title: "MediLens Clinical Intelligence Platform",
-    image: project1,
+    image: "",
     images: [
       "https://medilenss.vercel.app/",
       "https://medilenss.vercel.app/dashboard",
@@ -176,11 +176,11 @@ export const PROJECTS = [
     technologies: ["Next.js", "TypeScript", "FastAPI", "PostgreSQL", "PyTorch"],
   },
   {
-    title: "Research Discovery Engine (RAG Pipeline)",
-    image: project2,
-    images: [project2],
-    url: "",
-    github: "",
+    title: "RAG LLM Fact Checker",
+    image: "",
+    images: ["https://llm-fact-checker.vercel.app/"],
+    url: "https://llm-fact-checker.vercel.app/",
+    github: "https://github.com/steeltroops-ai/llm-fact-checker",
     description: [
       "Built production retrieval-augmented generation system indexing research papers with semantic search, achieving <200ms query latency through optimized embedding strategies and caching.",
       "Designed scalable chunking strategies (512-token overlapping windows), pgvector indexing, and context-aware LLM summarization with hallucination detection and source attribution.",
@@ -358,10 +358,10 @@ export const PROJECTS = [
   },
   {
     title: "Hiregeist Job Platform",
-    image: project2,
-    images: [project2],
-    url: "",
-    github: "",
+    image: "",
+    images: ["https://hiregeist.vercel.app/"],
+    url: "https://hiregeist.vercel.app/",
+    github: "https://github.com/steeltroops-ai/Hiregeist",
     description: [
       "Architected modern job placement platform designed to transform how students discover opportunities and companies find talent.",
       "Implemented intelligent matching algorithms and comprehensive user management system with real-time communication features.",

@@ -79,11 +79,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       {/* Project Image Area with Progressive Mask */}
       <div
         className={`relative overflow-hidden transition-all duration-700 ease-in-out z-10
-          ${isExpanded ? "h-[450px] sm:h-[550px]" : "h-[320px]"}`}
+          ${isExpanded ? "h-[450px] sm:h-[550px]" : "h-[240px]"}`}
         style={{
-          maskImage: "linear-gradient(to bottom, black 92%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, black 90%, transparent 100%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, black 92%, transparent 100%)",
+            "linear-gradient(to bottom, black 90%, transparent 100%)",
         }}
       >
         <AnimatePresence mode="wait">
@@ -101,24 +101,25 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 isExternalUrl &&
                 /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(currentImg);
 
+              // If no image is provided at all, return null to show placeholder
+              if (!currentImg && !project.image) return null;
+
               if (project.url && !hasMultipleImages) {
                 const cleanProjectUrl = project.url.replace(/\/$/, "");
-                return project.url.includes("vercel.app")
-                  ? `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&embed=screenshot.url`
-                  : `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanProjectUrl}`;
+                // Use Microlink High-Res as primary (Best Quality)
+                return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=800`;
               }
 
               if (isExternalUrl && !isDirectImage) {
                 const cleanUrl = currentImg.replace(/\/$/, "");
-                // Vercel links often block thum.io, so we use microlink as primary for them
-                if (cleanUrl.includes("vercel.app")) {
-                  return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&embed=screenshot.url`;
-                }
-                return `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanUrl}`;
+                // Primary: Microlink High-Res
+                return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=800`;
               }
 
-              return currentImg;
+              return currentImg || project.image || null;
             })()}
+            fetchpriority="high"
+            loading="eager"
             alt={`${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`}
             className={`w-full h-full object-cover object-top transition-transform duration-700 ${!isExpanded ? "group-hover:scale-110" : ""}`}
             data-original-url={images[isExpanded ? currentImageIndex : 0]}
@@ -134,25 +135,24 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               const cleanUrl = originalUrl.replace(/\/$/, "");
 
               if (currentSrc.includes("microlink.io")) {
-                // Microlink failed, try WordPress
-                e.target.src = `https://s0.wp.com/mshots/v1/${encodeURIComponent(cleanUrl)}?w=1200`;
-              } else if (currentSrc.includes("thum.io")) {
-                // Thum.io failed, try WordPress
-                e.target.src = `https://s0.wp.com/mshots/v1/${encodeURIComponent(cleanUrl)}?w=1200`;
-              } else if (currentSrc.includes("s0.wp.com")) {
-                // WordPress failed, try Microlink (if we didn't start with it) or Thum.io
-                if (originalUrl.includes("vercel.app")) {
-                  // If vercel, we likely already tried microlink, so try thum.io just in case
-                  e.target.src = `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanUrl}`;
-                } else {
-                  e.target.src = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&embed=screenshot.url`;
-                }
+                // Microlink failed/timeout, fallback to Thum.io (Reliable, fast)
+                e.target.src = `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanUrl}`;
               } else {
-                e.target.src = project.image;
+                // Final fallback to project default image
+                e.target.src =
+                  project.image ||
+                  "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=1200";
               }
             }}
           />
         </AnimatePresence>
+
+        {/* Fallback Placeholder (if no image at all) */}
+        {!images[isExpanded ? currentImageIndex : 0] && !project.image && (
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-blue-500/10 flex items-center justify-center">
+            <FaLayerGroup className="text-white/10 text-6xl" />
+          </div>
+        )}
 
         {/* Carousel Controls - Only visible when expanded */}
         {hasMultipleImages && isExpanded && (
