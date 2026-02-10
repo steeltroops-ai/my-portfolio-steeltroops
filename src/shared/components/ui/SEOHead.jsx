@@ -29,7 +29,7 @@ const SEOHead = ({
       <meta name="author" content={author} />
       <meta
         name="google-site-verification"
-        content="WtqIeJ3OPzTXWudVsHyl_IAlSC7EwGhyw1Arv3Fx-8o"
+        content="vycsFH0oxZh3hYxinQ1JGOghyPymDAt4tkDFdKk-V7M"
       />
       <link rel="canonical" href={canonicalUrl} />
 

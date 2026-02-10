@@ -1,0 +1,23 @@
+{
+  "name": "Mayank Pratap Singh | Full Stack & ML Engineer",
+  "short_name": "Mayank Portfolio",
+  "description": "Portfolio of Mayank Pratap Singh, a Full Stack Developer, Robotics enthusiast, and Machine Learning Engineer.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#8b5cf6",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

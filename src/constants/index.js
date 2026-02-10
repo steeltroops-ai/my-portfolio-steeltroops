@@ -164,6 +164,8 @@ export const PROJECTS = [
   {
     title: "MediLens Clinical Intelligence Platform",
     image: "",
+    imageAlt:
+      "MediLens Clinical Intelligence Dashboard showing medical imaging and speech biomarker data",
     images: [
       "https://medilenss.vercel.app/",
       "https://medilenss.vercel.app/dashboard",
@@ -180,6 +182,8 @@ export const PROJECTS = [
   {
     title: "RAG LLM Fact Checker",
     image: "",
+    imageAlt:
+      "RAG LLM Fact Checker interface for research paper semantic search and hallucination detection",
     images: ["https://llm-fact-checker.vercel.app/"],
     url: "https://llm-fact-checker.vercel.app/",
     github: "https://github.com/steeltroops-ai/llm-fact-checker",
@@ -198,6 +202,8 @@ export const PROJECTS = [
   {
     title: "AI-Powered Drug Research Platform",
     image: project3,
+    imageAlt:
+      "AI-Powered Drug Research Platform for molecule generation and protein interaction visualization",
     images: ["https://drug-research.vercel.app/molecule-bank"],
     url: "https://drug-research.vercel.app/",
     github: "",
@@ -234,7 +240,9 @@ export const PROJECTS = [
   {
     title: "Robotics Telemetry Intelligence System",
     image: project4,
-    images: ["https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,c_fill,w_1600/https%3A%2F%2Fubuntu.com%2Fwp-content%2Fuploads%2F587d%2Fimage-1.png"],
+    images: [
+      "https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,c_fill,w_1600/https%3A%2F%2Fubuntu.com%2Fwp-content%2Fuploads%2F587d%2Fimage-1.png",
+    ],
     url: "",
     github: "",
     description: [
@@ -277,7 +285,9 @@ export const PROJECTS = [
   {
     title: "MDC Dataset Citation Classification",
     image: project2,
-    images: ["https://t3.ftcdn.net/jpg/13/75/28/26/360_F_1375282680_4evcXpRfIBSe5Wi4ISRIPHwFuSiEqY40.jpg"],
+    images: [
+      "https://t3.ftcdn.net/jpg/13/75/28/26/360_F_1375282680_4evcXpRfIBSe5Wi4ISRIPHwFuSiEqY40.jpg",
+    ],
     url: "",
     github: "",
     description: [
@@ -327,7 +337,9 @@ export const PROJECTS = [
   {
     title: "Niryo LLM Robotic Arm Integration",
     image: project3,
-    images: ["https://www.tegakari.net/wp-content/uploads/2020/05/niryo_ecosystem_img.jpg"],
+    images: [
+      "https://www.tegakari.net/wp-content/uploads/2020/05/niryo_ecosystem_img.jpg",
+    ],
     url: "",
     github: "https://github.com/steeltroops-ai/Niryo-llm-robo",
     description: [
@@ -351,7 +363,9 @@ export const PROJECTS = [
   {
     title: "Maze-Bot ROS2 Navigation Platform",
     image: project5,
-    images: ["https://repository-images.githubusercontent.com/399864768/481a8c17-7750-4025-9b0d-a15ede469cf0"],
+    images: [
+      "https://repository-images.githubusercontent.com/399864768/481a8c17-7750-4025-9b0d-a15ede469cf0",
+    ],
     url: "",
     github: "",
     description: [
@@ -363,7 +377,10 @@ export const PROJECTS = [
   {
     title: "House Price Prediction Model with MLOps",
     image: project1,
-    images: ["https://miro.medium.com/v2/resize:fit:1400/1*CfdC88fMxquhEFfWXlbtTA.jpeg", "https://miro.medium.com/1*NiK9cocmfSWmGYLmOGRwyg.png"],
+    images: [
+      "https://miro.medium.com/v2/resize:fit:1400/1*CfdC88fMxquhEFfWXlbtTA.jpeg",
+      "https://miro.medium.com/1*NiK9cocmfSWmGYLmOGRwyg.png",
+    ],
     url: "",
     github:
       "https://github.com/steeltroops-ai/House-Price-Prediction-with-MLOps",

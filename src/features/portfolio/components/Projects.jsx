@@ -120,7 +120,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
             })()}
             fetchPriority="high"
             loading="eager"
-            alt={`${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`}
+            alt={
+              project.imageAlt ||
+              `${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`
+            }
             className={`w-full h-full object-cover object-top transition-transform duration-700 ${!isExpanded ? "group-hover:scale-110" : ""}`}
             data-original-url={images[isExpanded ? currentImageIndex : 0]}
             onError={(e) => {
