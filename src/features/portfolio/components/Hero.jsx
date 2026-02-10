@@ -149,7 +149,7 @@ const Hero = () => {
                 className="rounded-3xl w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-full h-auto"
                 alt="Mayank Pratap Singh"
                 loading="eager"
-                fetchpriority="high"
+                fetchPriority="high"
               />
             </div>
           </div>

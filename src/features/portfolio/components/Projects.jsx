@@ -118,7 +118,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
 
               return currentImg || project.image || null;
             })()}
-            fetchpriority="high"
+            fetchPriority="high"
             loading="eager"
             alt={`${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`}
             className={`w-full h-full object-cover object-top transition-transform duration-700 ${!isExpanded ? "group-hover:scale-110" : ""}`}
