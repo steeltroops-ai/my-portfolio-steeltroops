@@ -3,6 +3,8 @@ import project2 from "@/assets/projects/project-2.jpg";
 import project3 from "@/assets/projects/project-3.jpg";
 import project4 from "@/assets/projects/project-4.jpg";
 import project5 from "@/assets/projects/project-5.jpg";
+import blackhole from "@/assets/projects/blackhole.jpg";
+import blackhole1 from "@/assets/projects/blackhole1.jpg";
 
 // =====================================================
 // PERSONAL INFO - Easy to change
@@ -196,8 +198,8 @@ export const PROJECTS = [
   {
     title: "AI-Powered Drug Research Platform",
     image: project3,
-    images: [project3],
-    url: "",
+    images: ["https://drug-research.vercel.app/molecule-bank"],
+    url: "https://drug-research.vercel.app/",
     github: "",
     description: [
       "Architected a collaborative research platform for molecule generation and protein interaction visualization using LLM-driven prompt pipelines.",
@@ -206,9 +208,33 @@ export const PROJECTS = [
     technologies: ["Next.js", "TypeScript", "MongoDB", "Nvidia NeMo", "RDKit"],
   },
   {
+    title: "Hiregeist Job Platform",
+    image: "",
+    images: ["https://hiregeist.vercel.app/"],
+    url: "https://hiregeist.vercel.app/",
+    github: "https://github.com/steeltroops-ai/Hiregeist",
+    description: [
+      "Architected modern job placement platform designed to transform how students discover opportunities and companies find talent.",
+      "Implemented intelligent matching algorithms and comprehensive user management system with real-time communication features.",
+    ],
+    technologies: ["Next.js 15", "React 19", "TypeScript"],
+  },
+  {
+    title: "Black Hole Simulation",
+    image: "",
+    images: [blackhole, blackhole1],
+    url: "https://blackhole-simulation.vercel.app/",
+    github: "https://github.com/steeltroops-ai/blackhole-simulation",
+    description: [
+      "Developed a real-time, interactive WebGL simulation of Schwarzschild/Kerr black holes using General Relativistic Ray Marching and GLSL.",
+      "Implemented physically accurate gravitational lensing, volumetric accretion disks with Doppler beaming, and optimized adaptive step sizing for high-performance rendering.",
+    ],
+    technologies: ["Next.js", "WebGL", "GLSL", "TypeScript", "React"],
+  },
+  {
     title: "Robotics Telemetry Intelligence System",
     image: project4,
-    images: [project4],
+    images: ["https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,c_fill,w_1600/https%3A%2F%2Fubuntu.com%2Fwp-content%2Fuploads%2F587d%2Fimage-1.png"],
     url: "",
     github: "",
     description: [
@@ -234,7 +260,7 @@ export const PROJECTS = [
     image: project1,
     images: [project1],
     url: "",
-    github: "",
+    github: "https://github.com/steeltroops-ai/Neza",
     description: [
       "Developed a digital service marketplace connecting households and businesses with local service providers.",
       "Implemented multi-user architecture, secure authentication, real-time service listing, and provider management.",
@@ -251,7 +277,7 @@ export const PROJECTS = [
   {
     title: "MDC Dataset Citation Classification",
     image: project2,
-    images: [project2],
+    images: ["https://t3.ftcdn.net/jpg/13/75/28/26/360_F_1375282680_4evcXpRfIBSe5Wi4ISRIPHwFuSiEqY40.jpg"],
     url: "",
     github: "",
     description: [
@@ -261,23 +287,13 @@ export const PROJECTS = [
     technologies: ["Python", "SciBERT", "Ensemble Methods", "NLP"],
   },
   {
-    title: "NeuraLens Neurological Assessment",
-    image: project4,
-    images: [project4],
-    url: "",
-    github: "",
-    description: [
-      "Built a multimodal neurological assessment platform integrating speech analysis, retinal imaging, motor evaluation, and cognitive testing into a unified dashboard.",
-      "Implemented real-time data analysis, secure data management, and responsive visualization for clinical use.",
-    ],
-    technologies: ["Next.js", "TypeScript", "Python", "ML Frameworks"],
-  },
-  {
-    title: "Transformer Model Implementation",
+    title: "Pytorch Transformer Implementation",
     image: project5,
-    images: [project5],
-    url: "https://transformer-viz.vercel.app/",
-    github: "https://github.com/steeltroops-ai/transformer-implementation",
+    images: [
+      "https://image.slidesharecdn.com/paperpresentationmaroua-200416144727/75/Attention-Is-All-You-Need-presented-by-Maroua-Maachou-Veepee-1-2048.jpg",
+    ],
+    url: "",
+    github: "https://github.com/steeltroops-ai/Pytorch-Transformer",
     description: [
       "Built the 'Attention is All You Need' transformer architecture from scratch, including self-attention, positional encodings, and beam search for sequence-to-sequence modeling.",
       "Created reproducible training pipelines with configuration management and attention map visualizations to improve interpretability of transformer layers.",
@@ -287,9 +303,9 @@ export const PROJECTS = [
   {
     title: "Finance Management App",
     image: project1,
-    images: [project1],
-    url: "https://finance-manage.vercel.app/",
-    github: "https://github.com/steeltroops-ai/finance-app",
+    images: ["https://banking-jet.vercel.app/sign-in"],
+    url: "https://banking-jet.vercel.app/sign-in",
+    github: "https://github.com/steeltroops-ai/finanace-management-banking-app",
     description: [
       "Built a finance management platform enabling secure multi-bank linking, real-time fund tracking, and seamless transfers.",
       "Implemented server-side rendering (SSR) authentication, responsive dashboards, and categorized spending insights for a smooth, dynamic user experience.",
@@ -300,8 +316,8 @@ export const PROJECTS = [
     title: "Robot Bionic Arm",
     image: project2,
     images: [project2],
-    url: "https://bionic-arm-sim.vercel.app/",
-    github: "https://github.com/steeltroops-ai/robot-bionic-arm",
+    url: "",
+    github: "",
     description: [
       "Developed a lightweight robotic arm with custom PID controllers and inverse kinematics for precise motion; integrated real-time ROS2 nodes for sensor fusion, adaptive actuation, and closed-loop feedback.",
       "Designed and 3D-printed modular mechanical components optimized for joint torque, response latency, and high precision manipulation tasks.",
@@ -311,9 +327,9 @@ export const PROJECTS = [
   {
     title: "Niryo LLM Robotic Arm Integration",
     image: project3,
-    images: [project3],
+    images: ["https://www.tegakari.net/wp-content/uploads/2020/05/niryo_ecosystem_img.jpg"],
     url: "",
-    github: "",
+    github: "https://github.com/steeltroops-ai/Niryo-llm-robo",
     description: [
       "Integrated Niryo Ned2 robotic arm with computer vision and Large Language Model capabilities for intelligent object manipulation and task execution.",
       "Developed natural language interface allowing users to command robotic operations through conversational AI with real time task interpretation.",
@@ -335,7 +351,7 @@ export const PROJECTS = [
   {
     title: "Maze-Bot ROS2 Navigation Platform",
     image: project5,
-    images: [project5],
+    images: ["https://repository-images.githubusercontent.com/399864768/481a8c17-7750-4025-9b0d-a15ede469cf0"],
     url: "",
     github: "",
     description: [
@@ -347,25 +363,14 @@ export const PROJECTS = [
   {
     title: "House Price Prediction Model with MLOps",
     image: project1,
-    images: [project1],
+    images: ["https://miro.medium.com/v2/resize:fit:1400/1*CfdC88fMxquhEFfWXlbtTA.jpeg", "https://miro.medium.com/1*NiK9cocmfSWmGYLmOGRwyg.png"],
     url: "",
-    github: "",
+    github:
+      "https://github.com/steeltroops-ai/House-Price-Prediction-with-MLOps",
     description: [
       "Developed an end-to-end ML pipeline for house price prediction, including data ingestion, preprocessing, feature engineering, and model training with log transformations, scaling, and one-hot encoding.",
       "Implemented multimodal model evaluation using RMSE, R², cross-validation, and set up workflow monitoring to track pipeline performance and ensure reproducibility.",
     ],
     technologies: ["Python", "Scikit-learn", "ZenML", "MLflow"],
-  },
-  {
-    title: "Hiregeist Job Platform",
-    image: "",
-    images: ["https://hiregeist.vercel.app/"],
-    url: "https://hiregeist.vercel.app/",
-    github: "https://github.com/steeltroops-ai/Hiregeist",
-    description: [
-      "Architected modern job placement platform designed to transform how students discover opportunities and companies find talent.",
-      "Implemented intelligent matching algorithms and comprehensive user management system with real-time communication features.",
-    ],
-    technologies: ["Next.js 15", "React 19", "TypeScript"],
   },
 ];
