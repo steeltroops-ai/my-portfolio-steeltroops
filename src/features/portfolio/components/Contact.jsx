@@ -77,7 +77,11 @@ const Contact = () => {
 
     // Submit the message
     submitMessage(
-      { ...formData, submissionDurationMs },
+      {
+        ...formData,
+        submissionDurationMs,
+        visitorId: localStorage.getItem("portfolio_visitor_id"),
+      },
       {
         onSuccess: (result) => {
           if (result.success) {

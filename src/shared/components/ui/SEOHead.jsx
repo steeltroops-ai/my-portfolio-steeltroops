@@ -2,19 +2,23 @@ import { Helmet } from "react-helmet-async";
 import PropTypes from "prop-types";
 
 const SEOHead = ({
-  title = "Mayank's Portfolio",
+  title,
   description = "Full-stack developer specializing in modern web technologies",
   image = "/profiletop.png",
   url = window.location.href,
   type = "website",
-  author = "Mayank",
+  author = "Mayank Pratap Singh",
   publishedTime,
   modifiedTime,
   tags = [],
   canonical,
+  noindex = false,
 }) => {
-  const siteTitle = "Mayank's Portfolio";
-  const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
+  const siteTitle = "Mayank Pratap Singh";
+  const tagline = "Full Stack & ML Engineer";
+  const fullTitle = title
+    ? `${title} | ${siteTitle}`
+    : `${siteTitle} | ${tagline}`;
   const canonicalUrl = canonical || url;
 
   return (
@@ -23,6 +27,10 @@ const SEOHead = ({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="author" content={author} />
+      <meta
+        name="google-site-verification"
+        content="vycsFH0oxZh3hYxinQ1JGOghyPymDAt4tkDFdKk-V7M"
+      />
       <link rel="canonical" href={canonicalUrl} />
 
       {/* Open Graph Meta Tags */}
@@ -58,10 +66,38 @@ const SEOHead = ({
       )}
 
       {/* Additional SEO Meta Tags */}
-      <meta name="robots" content="index, follow" />
-      <meta name="googlebot" content="index, follow" />
+      {noindex ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : (
+        <>
+          <meta name="robots" content="index, follow" />
+          <meta name="googlebot" content="index, follow" />
+        </>
+      )}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta httpEquiv="Content-Language" content="en" />
+
+      {/* Profile Page Schema (Excellent for "Search by Name") */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          mainEntity: {
+            "@type": "Person",
+            name: "Mayank Pratap Singh",
+            alternateName: "steeltroops",
+            description: description,
+            image: "https://steeltroops.vercel.app/profiletop.png",
+            jobTitle: "Full Stack & Machine Learning Engineer",
+            url: "https://steeltroops.vercel.app",
+            sameAs: [
+              "https://github.com/steeltroops-ai",
+              "https://linkedin.com/in/steeltroops-ai",
+              "https://x.com/steeltroops_ai",
+            ],
+          },
+        })}
+      </script>
 
       {/* Structured Data for Blog Posts */}
       {type === "article" && (
@@ -94,7 +130,7 @@ const SEOHead = ({
       )}
 
       {/* Structured Data for Website */}
-      {type === "website" && (
+      {type === "website" && !title && (
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -125,6 +161,7 @@ SEOHead.propTypes = {
   modifiedTime: PropTypes.string,
   tags: PropTypes.arrayOf(PropTypes.string),
   canonical: PropTypes.string,
+  noindex: PropTypes.bool,
 };
 
 export default SEOHead;

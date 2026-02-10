@@ -43,7 +43,7 @@ const SocialLinks = ({ className = "", iconClassName = "" }) => {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className={`cursor-pointer hover:text-cyan-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black rounded-sm ${iconClassName}`}
+          className={`cursor-pointer hover:text-cyan-300 transition-colors duration-200 focus:outline-none rounded-sm ${iconClassName}`}
           aria-label={label}
         >
           <Icon />

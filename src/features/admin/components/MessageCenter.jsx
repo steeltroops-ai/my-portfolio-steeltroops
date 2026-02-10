@@ -234,8 +234,25 @@ const MessageCenter = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-140px)]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      <div className="flex h-screen bg-transparent animate-in fade-in duration-500">
+        <div className="w-[380px] border-r border-white/10 bg-white/5 space-y-4 p-6">
+          <div className="h-8 w-32 bg-white/5 rounded animate-pulse" />
+          <div className="h-10 w-full bg-white/5 rounded-lg animate-pulse" />
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex gap-3 py-3">
+              <div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-24 bg-white/5 rounded" />
+                <div className="h-3 w-full bg-white/5 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex-1 flex flex-col p-8 space-y-6">
+          <div className="h-[60px] w-full bg-white/5 rounded-xl animate-pulse" />
+          <div className="flex-1 bg-white/[0.02] rounded-2xl animate-pulse" />
+          <div className="h-[80px] w-full bg-white/5 rounded-xl animate-pulse" />
+        </div>
       </div>
     );
   }

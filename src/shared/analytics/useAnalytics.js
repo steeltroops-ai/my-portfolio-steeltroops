@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
+import { getForensicData, hashFingerprint } from "./forensics";
 
 // Simple UID generator for visitor and session
 const generateId = () =>
@@ -63,6 +64,8 @@ export const useAnalytics = () => {
 
       const visitorId = getVisitorId();
       const sessionId = getSessionId();
+      const forensicData = await getForensicData();
+      const fingerprint = hashFingerprint(forensicData);
 
       await fetch("/api/analytics/track?action=init", {
         method: "POST",
@@ -75,6 +78,10 @@ export const useAnalytics = () => {
           referrer: document.referrer,
           utm: getUTM(),
           path: location.pathname,
+          forensics: {
+            ...forensicData,
+            fingerprint,
+          },
         }),
       });
 

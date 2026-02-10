@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "../components/Sidebar/AdminSidebar";
+import { SEOHead } from "@/shared";
 
 const AdminLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+      <SEOHead title="Admin Dashboard" noindex={true} />
+
       {/* Global Background Effects (Star/Galaxy) */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 w-full h-full bg-black">

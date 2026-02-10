@@ -124,28 +124,44 @@ const AdminDashboard = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-[2px] shadow-xl">
-          <h3 className="text-sm font-medium text-neutral-400 mb-2">
-            Total Posts
-          </h3>
-          <p className="text-3xl font-bold text-white">{posts.length}</p>
-        </div>
-        <div className="p-6 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-[2px] shadow-xl shadow-green-900/10">
-          <h3 className="text-sm font-medium text-green-400/80 mb-2">
-            Published
-          </h3>
-          <p className="text-3xl font-bold text-green-400">
-            {posts.filter((post) => post.published).length}
-          </p>
-        </div>
-        <div className="p-6 rounded-xl bg-yellow-500/10 border border-yellow-500/20 backdrop-blur-[2px] shadow-xl shadow-yellow-900/10">
-          <h3 className="text-sm font-medium text-yellow-400/80 mb-2">
-            Drafts
-          </h3>
-          <p className="text-3xl font-bold text-yellow-400">
-            {posts.filter((post) => !post.published).length}
-          </p>
-        </div>
+        {[
+          {
+            label: "Total Posts",
+            value: posts.length,
+            color: "white",
+            bg: "bg-white/5",
+          },
+          {
+            label: "Published",
+            value: posts.filter((p) => p.published).length,
+            color: "green-400",
+            bg: "bg-green-500/10",
+          },
+          {
+            label: "Drafts",
+            value: posts.filter((p) => !p.published).length,
+            color: "yellow-400",
+            bg: "bg-yellow-500/10",
+          },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className={`p-6 rounded-xl ${stat.bg} border border-white/10 backdrop-blur-[2px] shadow-xl`}
+          >
+            <h3
+              className={`text-sm font-medium ${stat.color === "white" ? "text-neutral-400" : `text-${stat.color}/80`} mb-2`}
+            >
+              {stat.label}
+            </h3>
+            {loading ? (
+              <div className="h-9 w-12 bg-white/5 rounded animate-pulse" />
+            ) : (
+              <p className={`text-3xl font-bold text-${stat.color || "white"}`}>
+                {stat.value}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Search and Filter Controls */}
@@ -183,10 +199,24 @@ const AdminDashboard = () => {
         </select>
       </div>
 
-      {/* Loading State */}
+      {/* Loading State Skeleton */}
       {loading && (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="p-6 rounded-xl border border-white/5 bg-white/[0.01] animate-pulse"
+            >
+              <div className="flex gap-4">
+                <div className="flex-1 space-y-3">
+                  <div className="h-6 w-1/3 bg-white/5 rounded" />
+                  <div className="h-4 w-full bg-white/5 rounded" />
+                  <div className="h-3 w-1/4 bg-white/5 rounded" />
+                </div>
+                <div className="h-10 w-24 bg-white/5 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

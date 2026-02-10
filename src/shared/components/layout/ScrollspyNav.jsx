@@ -114,8 +114,12 @@ const ScrollspyNav = () => {
 
           return (
             <li key={section.id} className="relative w-auto group">
-              <button
-                onClick={() => handleNavClick(section.id)}
+              <a
+                href={`#${section.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(section.id);
+                }}
                 className={`
                   relative z-10 block text-[10px] md:text-xs xl:text-sm whitespace-nowrap transition-colors duration-300 cursor-pointer
                   focus:outline-none px-2 md:px-3 py-1 md:py-1.5
@@ -146,7 +150,7 @@ const ScrollspyNav = () => {
                   </span>
                   {section.label}
                 </span>
-              </button>
+              </a>
             </li>
           );
         })}

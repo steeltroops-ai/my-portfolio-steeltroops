@@ -9,11 +9,18 @@ import {
 } from "@/features/portfolio";
 
 // Shared layout components
-import { Navbar, Footer, ScrollspyNav } from "@/shared";
+import { Navbar, Footer, ScrollspyNav, SEOHead } from "@/shared";
 
 const App = () => {
   return (
     <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
+      {/* SEO Optimization */}
+      <SEOHead
+        title="Mayank Pratap Singh | Full Stack & ML Engineer"
+        description="Full Stack Developer specializing in React, Node.js, Next.js, and AI/ML solutions. Building modern web applications, robotics systems, and machine learning solutions."
+        type="website"
+      />
+
       <div className="fixed top-0 w-full h-full -z-10">
         <div className="relative w-full h-full bg-black">
           <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>

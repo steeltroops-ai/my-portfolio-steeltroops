@@ -15,6 +15,24 @@ export const useAnalyticsStats = () => {
   return useQuery({
     queryKey: ["analytics-stats"],
     queryFn: fetchStats,
-    refetchInterval: 30000, // Refresh every 30s for live data
+    refetchInterval: 10000, // Refresh every 10s for live data
+  });
+};
+
+export const useVisitorDetail = (visitorId) => {
+  return useQuery({
+    queryKey: ["visitor-detail", visitorId],
+    queryFn: async () => {
+      const token = localStorage.getItem("neon_auth_token");
+      const res = await fetch(
+        `/api/analytics/stats?action=visitor_detail&visitorId=${visitorId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch visitor detail");
+      return res.json();
+    },
+    enabled: !!visitorId,
   });
 };

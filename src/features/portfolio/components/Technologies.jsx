@@ -204,7 +204,7 @@ const TechnologyIcon = ({ tech, index }) => {
       onKeyDown={handleKeyDown}
       aria-label={`${tech.name} - ${tech.description}`}
     >
-      <div className="relative p-3 sm:p-4 rounded-xl sm:rounded-2xl min-w-[70px] min-h-[70px] sm:min-w-[88px] sm:min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black bg-gradient-to-br from-white/5 via-white/3 to-transparent border border-white/10 shadow-2xl hover:from-white/10 hover:via-white/5 hover:border-white/20 hover:shadow-cyan-500/20">
+      <div className="relative p-3 sm:p-4 rounded-xl sm:rounded-2xl min-w-[70px] min-h-[70px] sm:min-w-[88px] sm:min-h-[88px] flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out focus:outline-none bg-gradient-to-br from-white/5 via-white/3 to-transparent border border-white/10 shadow-2xl hover:from-white/10 hover:via-white/5 hover:border-white/20 hover:shadow-cyan-500/20">
         <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30"></div>
         <IconComponent
           className={`${tech.color} text-5xl sm:text-6xl lg:text-7xl transition-all duration-200 group-hover:drop-shadow-lg relative z-10`}
