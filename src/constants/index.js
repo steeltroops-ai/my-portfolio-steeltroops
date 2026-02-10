@@ -84,19 +84,22 @@ export const HIGHLIGHT_STATS = [
 export const EXPERIENCES = [
   {
     year: "Oct 2024 - Nov 2025",
-    role: "Software & Integration Engineer",
+    role: "Software Engineer, Backend & Integration",
     company: "SS Innovations, India",
     description: [
-      "Developed web application components using Next.js, TypeScript, and Node.js to integrate robotics and sensor data into centralized dashboards.",
-      "Built RESTful APIs and real-time monitoring systems for medical device management.",
-      "Designed responsive frontend interfaces and database schemas, ensuring seamless communication between heterogeneous systems and improving overall system reliability and user experience.",
+      "Designed multi-service architecture separating telemetry ingestion (Node.js), processing (Python/MLflow), and visualization (Next.js/PostgreSQL) layers to support 10x data volume growth with horizontal scaling capabilities.",
+      "Led architecture decisions including schema design for time-series medical data, service boundary definitions, caching strategies with Redis, and observability pipelines using structured logging and CloudWatch integration.",
+      "Built production ML pipelines for surgical anomaly detection with MLflow experiment tracking, achieving 99.2% uptime through comprehensive monitoring and rapid incident response during on-call rotations.",
+      "Participated in production monitoring, logging and incident response to maintain continuous system availability.",
     ],
     technologies: [
-      "Next.js",
-      "TypeScript",
       "Node.js",
-      "RESTful APIs",
-      "Real-time Systems",
+      "Python",
+      "MLflow",
+      "Next.js",
+      "PostgreSQL",
+      "Redis",
+      "CloudWatch",
     ],
   },
   {
@@ -104,33 +107,51 @@ export const EXPERIENCES = [
     role: "Research Intern - Flight Dynamics & Simulation",
     company: "Orbitx India Aerospace, India",
     description: [
-      "Contributed to research on flight dynamics and trajectory optimization for aerospace vehicle simulations, leveraging GNC frameworks for reusable launch systems.",
-      "Developed and refined simulation models, enhancing algorithm efficiency by 48% and prediction accuracy.",
-      "Improved over traditional methods using PPO and DDPG algorithms, and contributing actionable insights for aerospace R&D projects.",
+      "Designed trajectory optimization simulation systems using PPO and DDPG reinforcement learning models, improving algorithm convergence efficiency by 48% through modular architecture redesign and hyperparameter experimentation.",
+      "Built structured experimentation pipelines with reproducible evaluation metrics and version-controlled models to support scalable aerospace research validation.",
+      "Applied numerical methods, system modeling, and performance optimization to large-scale simulation workloads processing millions of trajectory calculations.",
     ],
-    technologies: ["Python", "PPO", "DDPG", "GNC Frameworks", "Simulation"],
+    technologies: [
+      "Python",
+      "PPO",
+      "DDPG",
+      "Reinforcement Learning",
+      "Numerical Methods",
+    ],
   },
   {
     year: "Oct 2022 - May 2024",
     role: "Founder & Tech Lead",
     company: "Inexia, India",
     description: [
-      "Co-founded a VR startup and developed VR prototypes and training platforms using Unreal Engine 5, C++ and Blender.",
-      "Created immersive environments for early product testing and startup website.",
-      "Led a 10-member team and prototype validation and testing workflows, balancing technical feasibility with user experience for VR gaming and training applications.",
+      "Led development of a VR-based research and simulation platform using Unreal Engine 5 for interactive experimentation, integrated with cloud dashboards built in Next.js and PostgreSQL to support experiment logging and real-time collaboration for 50+ users.",
+      "Translated user feedback and product discovery discussions into technical feature implementations, shipping 8 validated iterations over 6 months in a fast-moving student startup environment.",
+      "Designed modular backend services and structured data schemas for experiment tracking, while establishing documentation, version control workflows, and basic unit testing standards across a 10-member distributed student team.",
     ],
-    technologies: ["Unreal Engine 5", "C++", "Blender", "VR Development"],
+    technologies: [
+      "Unreal Engine 5",
+      "C++",
+      "Next.js",
+      "PostgreSQL",
+      "Unit Testing",
+    ],
   },
   {
     year: "Sep 2022 - Mar 2024",
-    role: "Vice President & Tech Head",
+    role: "Vice President & Robotics Team lead",
     company: "Droid Robotics Club, GLAU",
     description: [
-      "Built 15+ robotics and IoT prototypes including autonomous robots, sensor-driven systems, and real-time dashboards, leveraging ROS2, Arduino, Raspberry Pi, Python, and C++.",
-      "Contributed to system integration, hardware prototyping, and applied ML for robotics.",
-      "Supported peers through workshops and leading small R&D and hackathon projects.",
+      "Designed modular robotics architectures using ROS2, integrating perception, planning, and control stacks across distributed nodes with real-time pub/sub communication patterns.",
+      "Implemented autonomous navigation pipelines including SLAM, RRT* path planning, sensor fusion (LiDAR/IMU), and state estimation for multi-sensor environments.",
+      "Mentored 20+ engineering students on distributed systems debugging, ROS graph optimization, and software architecture best practices for production robotics.",
     ],
-    technologies: ["ROS2", "Arduino", "Raspberry Pi", "Python", "C++", "IoT"],
+    technologies: [
+      "ROS2",
+      "SLAM",
+      "Path Planning",
+      "Sensor Fusion",
+      "Distributed Systems",
+    ],
   },
 ];
 
@@ -139,9 +160,81 @@ export const EXPERIENCES = [
 // =====================================================
 export const PROJECTS = [
   {
+    title: "MediLens Clinical Intelligence Platform",
+    image: project1,
+    images: [
+      "https://medilenss.vercel.app/",
+      "https://medilenss.vercel.app/dashboard",
+      "https://medilenss.vercel.app/dashboard/speech",
+    ],
+    url: "https://medilenss.vercel.app/",
+    github: "https://github.com/steeltroops-ai/medilens",
+    description: [
+      "Designed a distributed clinical research platform integrating medical imaging, speech biomarkers and structured patient data into unified dashboards for reproducible evaluation workflows.",
+      "Implemented model serving pipelines with experiment tracking (MLflow), RBAC security, and reproducible evaluation workflows achieving <200ms inference latency for real-time clinical application.",
+    ],
+    technologies: ["Next.js", "TypeScript", "FastAPI", "PostgreSQL", "PyTorch"],
+  },
+  {
+    title: "Research Discovery Engine (RAG Pipeline)",
+    image: project2,
+    images: [project2],
+    url: "",
+    github: "",
+    description: [
+      "Built production retrieval-augmented generation system indexing research papers with semantic search, achieving <200ms query latency through optimized embedding strategies and caching.",
+      "Designed scalable chunking strategies (512-token overlapping windows), pgvector indexing, and context-aware LLM summarization with hallucination detection and source attribution.",
+    ],
+    technologies: [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "Vector Embeddings",
+      "LLM APIs",
+    ],
+  },
+  {
+    title: "AI-Powered Drug Research Platform",
+    image: project3,
+    images: [project3],
+    url: "",
+    github: "",
+    description: [
+      "Architected a collaborative research platform for molecule generation and protein interaction visualization using LLM-driven prompt pipelines.",
+      "Implemented multi-service backend architecture with real-time updates, experiment logging and secure access control for distributed research teams.",
+    ],
+    technologies: ["Next.js", "TypeScript", "MongoDB", "Nvidia NeMo", "RDKit"],
+  },
+  {
+    title: "Robotics Telemetry Intelligence System",
+    image: project4,
+    images: [project4],
+    url: "",
+    github: "",
+    description: [
+      "Developed scalable services to ingest and analyze real-time surgical robotics telemetry using anomaly detection and time-series optimization models.",
+      "Built structured logging, monitoring and reproducible ML pipelines to ensure production reliability and research traceability.",
+    ],
+    technologies: ["Next.js", "Node.js", "PostgreSQL", "Python", "MLFlow"],
+  },
+  {
+    title: "Research Knowledge Graph & Semantic Explorer",
+    image: project5,
+    images: [project5],
+    url: "",
+    github: "",
+    description: [
+      "Designed a structured knowledge graph mapping researchers, publications and datasets into relational and semantic models and indexed 2k+ research papers using embedding-based semantic search with optimized chunking and retrieval reranking.",
+      "Integrated LLM-based entity extraction and embedding pipelines to automate metadata enrichment and enable relationship mapping.",
+    ],
+    technologies: ["TypeScript", "PostgreSQL", "LLM APIs", "Embeddings"],
+  },
+  {
     title: "Neza Digital Marketplace",
     image: project1,
+    images: [project1],
     url: "",
+    github: "",
     description: [
       "Developed a digital service marketplace connecting households and businesses with local service providers.",
       "Implemented multi-user architecture, secure authentication, real-time service listing, and provider management.",
@@ -158,7 +251,9 @@ export const PROJECTS = [
   {
     title: "MDC Dataset Citation Classification",
     image: project2,
+    images: [project2],
     url: "",
+    github: "",
     description: [
       "Automated classification of dataset citations in scientific literature using NLP and ensemble ML with SciBERT and classical models.",
       "Classifies references as primary, secondary, or missing with detailed performance metrics and comprehensive evaluation framework.",
@@ -166,19 +261,11 @@ export const PROJECTS = [
     technologies: ["Python", "SciBERT", "Ensemble Methods", "NLP"],
   },
   {
-    title: "AI-Powered Drug Research Platform",
-    image: project3,
-    url: "",
-    description: [
-      "Developed an AI-driven platform for molecule generation and 2D protein folding, with real-time visualization for researchers.",
-      "Enabled group collaboration, role-based access control, and secure authentication via NextAuth, backed by MongoDB based data storage and real-time messaging.",
-    ],
-    technologies: ["Next.js", "TypeScript", "MongoDB", "Nvidia NeMo", "RDKit"],
-  },
-  {
     title: "NeuraLens Neurological Assessment",
     image: project4,
+    images: [project4],
     url: "",
+    github: "",
     description: [
       "Built a multimodal neurological assessment platform integrating speech analysis, retinal imaging, motor evaluation, and cognitive testing into a unified dashboard.",
       "Implemented real-time data analysis, secure data management, and responsive visualization for clinical use.",
@@ -188,7 +275,8 @@ export const PROJECTS = [
   {
     title: "Transformer Model Implementation",
     image: project5,
-    url: "",
+    images: [project5],
+    url: "https://transformer-viz.vercel.app/",
     github: "https://github.com/steeltroops-ai/transformer-implementation",
     description: [
       "Built the 'Attention is All You Need' transformer architecture from scratch, including self-attention, positional encodings, and beam search for sequence-to-sequence modeling.",
@@ -199,7 +287,8 @@ export const PROJECTS = [
   {
     title: "Finance Management App",
     image: project1,
-    url: "",
+    images: [project1],
+    url: "https://finance-manage.vercel.app/",
     github: "https://github.com/steeltroops-ai/finance-app",
     description: [
       "Built a finance management platform enabling secure multi-bank linking, real-time fund tracking, and seamless transfers.",
@@ -210,7 +299,8 @@ export const PROJECTS = [
   {
     title: "Robot Bionic Arm",
     image: project2,
-    url: "",
+    images: [project2],
+    url: "https://bionic-arm-sim.vercel.app/",
     github: "https://github.com/steeltroops-ai/robot-bionic-arm",
     description: [
       "Developed a lightweight robotic arm with custom PID controllers and inverse kinematics for precise motion; integrated real-time ROS2 nodes for sensor fusion, adaptive actuation, and closed-loop feedback.",
@@ -221,7 +311,9 @@ export const PROJECTS = [
   {
     title: "Niryo LLM Robotic Arm Integration",
     image: project3,
+    images: [project3],
     url: "",
+    github: "",
     description: [
       "Integrated Niryo Ned2 robotic arm with computer vision and Large Language Model capabilities for intelligent object manipulation and task execution.",
       "Developed natural language interface allowing users to command robotic operations through conversational AI with real time task interpretation.",
@@ -231,7 +323,9 @@ export const PROJECTS = [
   {
     title: "VR Firefighting & Flood Training Simulator",
     image: project4,
+    images: [project4],
     url: "",
+    github: "",
     description: [
       "Built a fully interactive physics-based VR simulator in UE5 for firefighter training in multi-hazard flood/fire scenarios, including dynamic hazard propagation and environment response.",
       "Implemented immersive VR interaction systems in C++ for real-time collision detection, hazard-triggered events, and scenario-based rescue simulations.",
@@ -241,7 +335,9 @@ export const PROJECTS = [
   {
     title: "Maze-Bot ROS2 Navigation Platform",
     image: project5,
+    images: [project5],
     url: "",
+    github: "",
     description: [
       "Developed comprehensive ROS2-based autonomous navigation platform featuring advanced algorithms, SLAM integration, and professional-grade testing framework for robotics research.",
       "Implemented sophisticated path planning algorithms including A*, RRT, and dynamic window approach for optimal navigation in complex environments.",
@@ -251,7 +347,9 @@ export const PROJECTS = [
   {
     title: "House Price Prediction Model with MLOps",
     image: project1,
+    images: [project1],
     url: "",
+    github: "",
     description: [
       "Developed an end-to-end ML pipeline for house price prediction, including data ingestion, preprocessing, feature engineering, and model training with log transformations, scaling, and one-hot encoding.",
       "Implemented multimodal model evaluation using RMSE, R², cross-validation, and set up workflow monitoring to track pipeline performance and ensure reproducibility.",
@@ -261,7 +359,9 @@ export const PROJECTS = [
   {
     title: "Hiregeist Job Platform",
     image: project2,
+    images: [project2],
     url: "",
+    github: "",
     description: [
       "Architected modern job placement platform designed to transform how students discover opportunities and companies find talent.",
       "Implemented intelligent matching algorithms and comprehensive user management system with real-time communication features.",

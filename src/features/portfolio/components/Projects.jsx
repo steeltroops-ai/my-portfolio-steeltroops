@@ -2,17 +2,33 @@ import { PROJECTS } from "@/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaGithub,
-  FaExternalLinkAlt,
   FaChevronDown,
   FaChevronUp,
+  FaChevronLeft,
+  FaChevronRight,
   FaRocket,
   FaLayerGroup,
 } from "react-icons/fa";
+import { FiGlobe } from "react-icons/fi";
 import { useState } from "react";
 import { useAnalytics } from "@/shared/analytics/useAnalytics";
 
 const ProjectCard = ({ project, isExpanded, onToggle }) => {
   const { trackEvent } = useAnalytics();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const images = project.images || (project.image ? [project.image] : []);
+  const hasMultipleImages = images.length > 1;
+
+  const nextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   const handleToggle = () => {
     if (!isExpanded) {
@@ -23,9 +39,9 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
   return (
     <div
       onClick={handleToggle}
-      className={`group cursor-pointer flex flex-col h-full relative overflow-hidden rounded-2xl transition-all duration-500
+      className={`group cursor-pointer flex flex-col relative overflow-hidden rounded-2xl transition-all duration-500
         bg-transparent backdrop-blur-none border-0 z-0
-        ${isExpanded ? "shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
+        ${isExpanded ? "md:min-h-[1000px] h-auto shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "h-[480px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
     >
       {/* Liquid Glass Outline - Apple Style Refraction */}
       <div className="absolute inset-0 rounded-2xl border border-white/20 pointer-events-none z-30"></div>
@@ -63,25 +79,116 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       {/* Project Image Area with Progressive Mask */}
       <div
         className={`relative overflow-hidden transition-all duration-700 ease-in-out z-10
-          ${isExpanded ? "h-[300px] sm:h-[400px]" : "h-48 sm:h-56 md:h-52"}`}
+          ${isExpanded ? "h-[450px] sm:h-[550px]" : "h-[320px]"}`}
         style={{
-          maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, black 92%, transparent 100%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, black 85%, transparent 100%)",
+            "linear-gradient(to bottom, black 92%, transparent 100%)",
         }}
       >
-        <img
-          src={
-            project.url
-              ? `https://image.thum.io/get/width/1200/crop/800/noanimate/${project.url}`
-              : project.image
-          }
-          alt={project.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          onError={(e) => {
-            e.target.src = project.image;
-          }}
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={currentImageIndex}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.5 }}
+            src={(() => {
+              const currentImg = images[isExpanded ? currentImageIndex : 0];
+              const isExternalUrl =
+                typeof currentImg === "string" && currentImg.startsWith("http");
+              const isDirectImage =
+                isExternalUrl &&
+                /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(currentImg);
+
+              if (project.url && !hasMultipleImages) {
+                const cleanProjectUrl = project.url.replace(/\/$/, "");
+                return project.url.includes("vercel.app")
+                  ? `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&embed=screenshot.url`
+                  : `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanProjectUrl}`;
+              }
+
+              if (isExternalUrl && !isDirectImage) {
+                const cleanUrl = currentImg.replace(/\/$/, "");
+                // Vercel links often block thum.io, so we use microlink as primary for them
+                if (cleanUrl.includes("vercel.app")) {
+                  return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&embed=screenshot.url`;
+                }
+                return `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanUrl}`;
+              }
+
+              return currentImg;
+            })()}
+            alt={`${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`}
+            className={`w-full h-full object-cover object-top transition-transform duration-700 ${!isExpanded ? "group-hover:scale-110" : ""}`}
+            data-original-url={images[isExpanded ? currentImageIndex : 0]}
+            onError={(e) => {
+              const currentSrc = e.target.src;
+              const originalUrl = e.target.getAttribute("data-original-url");
+
+              if (!originalUrl || !originalUrl.startsWith("http")) {
+                e.target.src = project.image;
+                return;
+              }
+
+              const cleanUrl = originalUrl.replace(/\/$/, "");
+
+              if (currentSrc.includes("microlink.io")) {
+                // Microlink failed, try WordPress
+                e.target.src = `https://s0.wp.com/mshots/v1/${encodeURIComponent(cleanUrl)}?w=1200`;
+              } else if (currentSrc.includes("thum.io")) {
+                // Thum.io failed, try WordPress
+                e.target.src = `https://s0.wp.com/mshots/v1/${encodeURIComponent(cleanUrl)}?w=1200`;
+              } else if (currentSrc.includes("s0.wp.com")) {
+                // WordPress failed, try Microlink (if we didn't start with it) or Thum.io
+                if (originalUrl.includes("vercel.app")) {
+                  // If vercel, we likely already tried microlink, so try thum.io just in case
+                  e.target.src = `https://image.thum.io/get/width/1200/crop/800/noanimate/${cleanUrl}`;
+                } else {
+                  e.target.src = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&embed=screenshot.url`;
+                }
+              } else {
+                e.target.src = project.image;
+              }
+            }}
+          />
+        </AnimatePresence>
+
+        {/* Carousel Controls - Only visible when expanded */}
+        {hasMultipleImages && isExpanded && (
+          <>
+            <div className="absolute inset-y-0 left-0 flex items-center pl-4 z-40">
+              <button
+                onClick={prevImage}
+                className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20"
+              >
+                <FaChevronLeft className="text-xs" />
+              </button>
+            </div>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-4 z-40">
+              <button
+                onClick={nextImage}
+                className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20"
+              >
+                <FaChevronRight className="text-xs" />
+              </button>
+            </div>
+            {/* Carousel Dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-40">
+              {images.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    i === currentImageIndex
+                      ? "w-4 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                      : "w-1 bg-white/40"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
         {/* Softened overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
 
@@ -120,7 +227,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                     }}
                     className="p-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-white/20 hover:scale-110 transition-all"
                   >
-                    <FaExternalLinkAlt className="text-white text-xs" />
+                    <FiGlobe className="text-white text-sm" />
                   </a>
                 )}
               </motion.div>
@@ -160,7 +267,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
 
       {/* Card Content Area */}
       <div
-        className={`p-6 sm:p-8 flex-1 flex flex-col relative z-20 ${isExpanded ? "bg-white/[0.01]" : ""}`}
+        className={`px-6 pb-6 pt-1 sm:px-8 sm:pb-8 sm:pt-2 flex-1 flex flex-col relative z-20 ${isExpanded ? "bg-white/[0.01]" : ""}`}
       >
         {!isExpanded && (
           <div className="mb-3">
@@ -266,7 +373,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                           className="group/btn flex items-center justify-between px-6 py-4 rounded-xl bg-indigo-500/5 hover:bg-indigo-500/15 transition-all border border-indigo-500/20"
                         >
                           <div className="flex items-center gap-3">
-                            <FaExternalLinkAlt className="text-base text-indigo-400/70 group-hover/btn:text-indigo-400 transition-colors" />
+                            <FiGlobe className="text-base text-indigo-400/70 group-hover/btn:text-indigo-400 transition-colors" />
                             <span className="text-sm font-semibold text-indigo-300/70 group-hover/btn:text-indigo-300 transition-colors">
                               Live Demo
                             </span>
@@ -308,11 +415,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                   : project.description}
               </p>
 
-              <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest group-hover:text-white transition-colors">
+              <div className="absolute bottom-6 left-6 right-6 pt-4 border-t border-white/5 flex items-center justify-between pointer-events-none">
+                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.2em] group-hover:text-white transition-colors">
                   Explore Project
                 </span>
-                <FaChevronDown className="text-neutral-600 group-hover:text-white group-hover:translate-y-0.5 transition-all text-[10px]" />
+                <FaChevronDown className="text-neutral-600 group-hover:text-white group-hover:translate-y-0.5 transition-all text-[9px]" />
               </div>
             </motion.div>
           )}

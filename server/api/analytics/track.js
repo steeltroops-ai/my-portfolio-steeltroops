@@ -4,13 +4,64 @@ import crypto from "crypto";
 
 const sql = neon(process.env.DATABASE_URL || "");
 
-function jsonResponse(res, data, status = 200) {
-  res.status(status).json(data);
-}
+/**
+ * Robust IP detection
+ */
+const getClientIp = (req) => {
+  try {
+    const forwarded = req.headers["x-forwarded-for"];
+    if (forwarded) {
+      return typeof forwarded === "string"
+        ? forwarded.split(",")[0]
+        : forwarded[0];
+    }
+    return req.headers["x-real-ip"] || req.socket?.remoteAddress || "127.0.0.1";
+  } catch (e) {
+    return "127.0.0.1";
+  }
+};
 
-function errorResponse(res, message, status = 500) {
-  res.status(status).json({ success: false, error: message });
-}
+/**
+ * Geo-location mapper (No-fail)
+ */
+const getLocation = async (ip) => {
+  if (!ip || ip === "127.0.0.1" || ip.includes("::1")) {
+    return { city: "Localhost", country: "Dev", region: "Local" };
+  }
+  try {
+    // Timeout for fetch to prevent hanging
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
+    const res = await fetch(
+      `http://ip-api.com/json/${ip}?fields=status,countryCode,regionName,city,lat,lon,isp,org`,
+      {
+        signal: controller.signal,
+      }
+    );
+    clearTimeout(timeout);
+
+    const data = await res.json();
+    if (data.status === "fail")
+      return { city: "Unknown", country: "Unknown", region: "Unknown" };
+
+    return {
+      city: data.city || "Unknown",
+      country: data.countryCode || "Unknown",
+      region: data.regionName || "Unknown",
+      lat: data.lat || 0,
+      lon: data.lon || 0,
+      isp: data.isp || "Unknown",
+      org: data.org || "Unknown",
+    };
+  } catch (e) {
+    console.warn(
+      "[Analytics] Geo Lookup failed, falling back to Unknown:",
+      e.message
+    );
+    return { city: "Unknown", country: "Unknown", region: "Unknown" };
+  }
+};
 
 export default async function handler(req, res) {
   // CORS
@@ -18,26 +69,12 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return errorResponse(res, "Method not allowed", 405);
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   const { action } = req.query;
-  const data = req.body;
+  const ip = getClientIp(req);
 
   try {
-    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-    // Mask IP for privacy (hash it)
-    const maskedIp = crypto
-      .createHash("md5")
-      .update(ip + (process.env.IP_SALT || "salt"))
-      .digest("hex");
-
-    // Action: Initialize Visit
     if (action === "init") {
       const {
         visitorId,
@@ -47,84 +84,111 @@ export default async function handler(req, res) {
         referrer,
         utm,
         path,
-      } = data;
+      } = req.body;
 
-      const parser = new UAParser(userAgent);
-      const ua = parser.getResult();
+      if (!visitorId || !sessionId) {
+        console.warn("[Analytics] Missing identity tokens in body:", req.body);
+        return res.status(400).json({ error: "Missing identity tokens" });
+      }
 
-      // Get Vercel Geolocation Headers
-      const country = req.headers["x-vercel-ip-country"] || "Unknown";
-      const region = req.headers["x-vercel-ip-country-region"] || "Unknown";
-      const city = req.headers["x-vercel-ip-city"] || "Unknown";
-      const continent = req.headers["x-vercel-ip-continent"] || "Unknown";
-      const lat = req.headers["x-vercel-ip-latitude"] || null;
-      const lon = req.headers["x-vercel-ip-longitude"] || null;
+      console.log(`[Analytics] Processing init for session ${sessionId}...`);
 
-      // Upsert Visitor Profile
-      const visitors = await sql`
+      const parser = new UAParser(userAgent || "");
+      const browser = parser.getBrowser();
+      const os = parser.getOS();
+      const device = parser.getDevice();
+      const loc = await getLocation(ip);
+
+      // 1. Update/Create Profile
+      await sql`
         INSERT INTO visitor_profiles (
-          visitor_id, ip_address, browser, os, device_brand, device_type, screen_size,
-          country, region, city, continent, lat, lon, last_seen
-        ) VALUES (
-          ${visitorId}, ${maskedIp}, ${ua.browser.name}, ${ua.os.name}, 
-          ${ua.device.vendor || "Generic"}, ${ua.device.type || "desktop"}, ${screenResolution},
-          ${country}, ${region}, ${city}, ${continent}, ${lat}, ${lon}, NOW()
+          visitor_id, ip_address, browser, os, device_type, screen_size,
+          country, city, region, isp, org, first_seen, last_seen, visit_count, is_owner
+        )
+        VALUES (
+          ${visitorId}, ${ip}, ${browser.name || "Unknown"}, ${os.name || "Unknown"}, 
+          ${device.type || "desktop"}, ${screenResolution || "Unknown"},
+          ${loc.country}, ${loc.city}, ${loc.region}, ${loc.isp || "Unknown"}, ${loc.org || "Unknown"},
+          NOW(), NOW(), 1, FALSE
         )
         ON CONFLICT (visitor_id) DO UPDATE SET
           last_seen = NOW(),
-          visit_count = visitor_profiles.visit_count + 1
-        RETURNING id
+          visit_count = visitor_profiles.visit_count + 1,
+          ip_address = EXCLUDED.ip_address,
+          city = EXCLUDED.city,
+          country = EXCLUDED.country,
+          browser = EXCLUDED.browser,
+          os = EXCLUDED.os
       `;
 
-      const visitorUuid = visitors[0].id;
-
-      // Create Session
+      // 2. Log Session
       await sql`
         INSERT INTO visitor_sessions (
-          visitor_uuid, session_id, referrer, utm_source, utm_medium, utm_campaign, entry_page
-        ) VALUES (
-          ${visitorUuid}, ${sessionId}, ${referrer}, ${utm?.source}, ${utm?.medium}, ${utm?.campaign}, ${path}
+          visitor_uuid, session_id, start_time, last_heartbeat, 
+          referrer, utm_source, utm_medium, utm_campaign, entry_page
         )
-        ON CONFLICT (session_id) DO NOTHING
+        SELECT id, ${sessionId}, NOW(), NOW(), ${referrer || ""}, ${utm?.source || ""}, ${utm?.medium || ""}, ${utm?.campaign || ""}, ${path || "/"}
+        FROM visitor_profiles WHERE visitor_id = ${visitorId}
+        ON CONFLICT (session_id) DO UPDATE SET last_heartbeat = NOW()
       `;
 
-      return jsonResponse(res, { success: true, visitorUuid });
+      // 3. Log Initial Page View
+      await sql`
+        INSERT INTO visitor_events (
+          session_uuid, event_type, path, timestamp
+        )
+        SELECT id, 'page_view', ${path || "/"}, NOW()
+        FROM visitor_sessions WHERE session_id = ${sessionId}
+      `;
+
+      console.log(`[Analytics] Success init for ${sessionId}`);
+      return res.status(200).json({ success: true });
     }
 
-    // Action: Heartbeat (Live Now Tracking)
-    if (action === "heartbeat") {
-      const { visitorId, sessionId } = data;
-
-      await sql`
-        UPDATE visitor_profiles SET last_seen = NOW() WHERE visitor_id = ${visitorId}
-      `;
-
-      await sql`
-        UPDATE visitor_sessions SET last_heartbeat = NOW() WHERE session_id = ${sessionId}
-      `;
-
-      return jsonResponse(res, { success: true });
-    }
-
-    // Action: Log Event
     if (action === "event") {
-      const { sessionId, type, label, value, path } = data;
+      const { sessionId, type, label, value, path } = req.body;
+      if (!sessionId)
+        return res.status(400).json({ error: "Missing sessionId" });
 
-      const sessions =
-        await sql`SELECT id FROM visitor_sessions WHERE session_id = ${sessionId}`;
-      if (sessions.length > 0) {
+      await sql`
+        INSERT INTO visitor_events (
+          session_uuid, event_type, event_label, event_value, path, timestamp
+        )
+        SELECT id, ${type}, ${label || ""}, ${value || ""}, ${path || "/"}, NOW()
+        FROM visitor_sessions WHERE session_id = ${sessionId}
+      `;
+
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === "heartbeat") {
+      const { sessionId, visitorId } = req.body;
+
+      if (sessionId) {
         await sql`
-          INSERT INTO visitor_events (session_uuid, event_type, event_label, event_value, path)
-          VALUES (${sessions[0].id}, ${type}, ${label}, ${value}, ${path})
+          UPDATE visitor_sessions 
+          SET last_heartbeat = NOW() 
+          WHERE session_id = ${sessionId}
         `;
       }
 
-      return jsonResponse(res, { success: true });
+      if (visitorId) {
+        await sql`
+          UPDATE visitor_profiles
+          SET last_seen = NOW()
+          WHERE visitor_id = ${visitorId}
+        `;
+      }
+
+      return res.status(200).json({ success: true });
     }
 
-    return errorResponse(res, "Invalid action", 400);
+    return res.status(400).json({ error: "Invalid action" });
   } catch (error) {
-    console.error("Analytics API error:", error);
-    return errorResponse(res, error.message || "Internal server error", 500);
+    console.error("[Analytics] Tracker Error:", error.message);
+    return res.status(500).json({
+      error: "INTERNAL_TRACKER_ERROR",
+      message: error.message,
+    });
   }
 }
