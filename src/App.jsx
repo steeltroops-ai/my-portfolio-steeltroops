@@ -21,10 +21,7 @@ const App = () => {
         </div>
       </div>
 
-      <div
-        id="main-content"
-        className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl"
-      >
+      <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         <Navbar />
         <Hero />
         <About />

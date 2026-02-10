@@ -180,17 +180,6 @@ html.lenis body {
     white-space: nowrap;
     border: 0;
   }
-
-  .sr-only.focus\:not-sr-only:focus {
-    position: absolute;
-    width: auto;
-    height: auto;
-    padding: 0.5rem 1rem;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
 }
 
 /* Comprehensive syntax highlighting styles for code blocks - GitHub Dark theme */
