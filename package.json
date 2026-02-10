@@ -8,12 +8,13 @@
     "dev:vite": "vite --host",
     "dev:api": "node server/local-api.js",
     "dev:vercel": "vercel dev",
-    "build": "vite build",
+    "build": "bun run sitemap && vite build",
     "preview": "vite preview",
     "lint": "bunx eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "init-admin": "node scripts/init-admin.js",
     "hash-password": "node scripts/hash-password.js",
-    "update-password": "node scripts/update-admin-password.js"
+    "update-password": "node scripts/update-admin-password.js",
+    "sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
     "@cerebras/cerebras_cloud_sdk": "^1.64.1",
