@@ -39,11 +39,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
   return (
     <motion.div
       layout
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2 }}
       onClick={handleToggle}
       className={`group cursor-pointer flex flex-col relative overflow-hidden rounded-2xl
         bg-transparent backdrop-blur-none border-0 z-0
-        ${isExpanded ? "md:h-[932px] h-auto shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "h-[450px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
+        ${isExpanded ? "md:h-[932px] min-h-[450px] h-auto shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "h-[450px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
     >
       {/* Liquid Glass Outline - Apple Style Refraction */}
       <div className="absolute inset-0 rounded-2xl border border-white/20 pointer-events-none z-30"></div>
@@ -311,6 +311,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
         <AnimatePresence mode="wait">
           {isExpanded ? (
             <motion.div
+              layout
               key="expanded"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -448,6 +449,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
             </motion.div>
           ) : (
             <motion.div
+              layout
               key="collapsed"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -503,7 +505,12 @@ const Projects = () => {
             return (
               <motion.div
                 layout
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 20,
+                  mass: 1.2,
+                }}
                 id={`project-${index}`}
                 key={`${project.title}-${index}`}
                 className={`
