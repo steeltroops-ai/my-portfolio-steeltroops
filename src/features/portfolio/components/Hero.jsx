@@ -64,7 +64,7 @@ const Hero = () => {
                 variants={itemVariants}
                 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-light tracking-tight leading-snug sm:leading-snug md:leading-snug lg:leading-snug text-center lg:text-left"
               >
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-slate-200 to-purple-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-slate-200 to-blue-400">
                   Full Stack, Robotics &<br className="hidden sm:block" />
                   <span className="sm:hidden"> </span>Machine Learning Engineer
                 </span>
@@ -75,8 +75,8 @@ const Hero = () => {
               >
                 {HERO_CONTENT.map((paragraph, index) => (
                   <div key={index} className="flex gap-3 group/item">
-                    <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-[var(--color-bullet-bg)] group-hover/item:bg-[var(--color-bullet-hover)] transition-colors shrink-0" />
-                    <p className="text-[var(--text-description)] text-sm sm:text-base lg:text-base font-light leading-relaxed text-justify lg:text-left">
+                    <div className="mt-2 h-1 w-1 rounded-full bg-[var(--color-bullet-bg)] group-hover/item:bg-[var(--color-bullet-hover)] transition-colors shrink-0" />
+                    <p className="text-[var(--text-description)] text-sm sm:text-base lg:text-base font-light leading-relaxed tracking-tight text-justify lg:text-left">
                       {paragraph}
                     </p>
                   </div>

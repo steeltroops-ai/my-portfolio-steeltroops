@@ -3,16 +3,16 @@ import SocialLinks from "@/shared/components/ui/SocialLinks";
 
 const Navbar = () => {
   return (
-    <header className="flex items-center justify-between py-4 sm:py-5 lg:py-6 mb-6 sm:mb-8 lg:mb-12 px-2 sm:px-0">
-      
-      <div className="flex items-center justify-center flex-shrink-0">
+    <header className="relative flex items-center justify-end min-h-[5rem] mb-6 sm:mb-8 lg:mb-12 px-2 sm:px-0">
+      {/* Absolute Logo Entry - Perfectly Vertically Centered */}
+      <div className="absolute left-2 sm:left-0 top-1/2 -translate-y-1/2 z-50 flex items-center">
         <a
           href="/"
-          className="block h-8 sm:h-10 cursor-pointer"
+          className="flex items-center h-10 cursor-pointer"
           aria-label="Mayank Pratap Singh - Home"
         >
           <img
-            className="w-12 sm:w-14 md:w-16 h-auto transition-all duration-300"
+            className="w-15 h-auto transition-all duration-300"
             src={logo}
             alt="Logo"
             width={64}
@@ -21,7 +21,9 @@ const Navbar = () => {
           />
         </a>
       </div>
-      <SocialLinks />
+
+      {/* Social Links - Vertically Centered via parent's items-center */}
+      <SocialLinks className="justify-end pr-2 sm:pr-0" />
     </header>
   );
 };

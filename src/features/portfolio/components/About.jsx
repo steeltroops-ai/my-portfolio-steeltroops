@@ -86,7 +86,7 @@ const About = () => {
             <div className="flex flex-col items-center lg:items-start space-y-4 sm:space-y-5 lg:space-y-8">
               <motion.h2
                 variants={headingVariants}
-                className="section-title lg:text-left"
+                className="my-8 sm:my-12 lg:my-0 section-title lg:text-left"
               >
                 About <span>Me</span>
               </motion.h2>
@@ -96,8 +96,8 @@ const About = () => {
               >
                 {ABOUT_TEXT.map((paragraph, index) => (
                   <div key={index} className="flex gap-3 group/item">
-                    <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-[var(--color-bullet-bg)] group-hover/item:bg-[var(--color-bullet-hover)] transition-colors shrink-0" />
-                    <p className="text-[var(--text-description)] text-sm sm:text-base lg:text-base font-light leading-relaxed text-justify lg:text-left">
+                    <div className="mt-2 h-1 w-1 rounded-full bg-[var(--color-bullet-bg)] group-hover/item:bg-[var(--color-bullet-hover)] transition-colors shrink-0" />
+                    <p className="text-[var(--text-description)] text-sm sm:text-base lg:text-base font-light leading-relaxed tracking-tight text-justify lg:text-left">
                       {paragraph}
                     </p>
                   </div>

@@ -35,7 +35,7 @@ const socialLinks = [
 const SocialLinks = ({ className = "", iconClassName = "" }) => {
   return (
     <div
-      className={`flex justify-center gap-2.5 sm:gap-3 md:gap-4 text-lg sm:text-xl md:text-2xl items-center ${className}`}
+      className={`flex justify-center gap-4 text-2xl items-center ${className}`}
     >
       {socialLinks.map(({ href, icon: Icon, label }) => (
         <a
