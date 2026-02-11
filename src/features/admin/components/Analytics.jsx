@@ -174,6 +174,10 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
     }
     hubsLayerRef.current.clearLayers();
 
+    // 3. Inject Nodes & Calculate Bounds
+    let localValidCount = 0;
+    const bounds = [];
+
     // 2.6 Inject Hub Nodes (Aggregated City Data)
     topLocations.forEach((hub) => {
       const hLat = parseFloat(hub.lat);
@@ -196,10 +200,6 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
         { direction: "top", className: "tactical-tooltip" }
       );
     });
-
-    // 3. Inject Nodes & Calculate Bounds
-    let localValidCount = 0;
-    const bounds = [];
 
     console.log("[ForensicMap] Received", locations.length, "raw nodes.");
 
