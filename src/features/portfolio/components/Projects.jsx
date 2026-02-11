@@ -37,9 +37,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
     onToggle();
   };
   return (
-    <div
+    <motion.div
+      layout
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onClick={handleToggle}
-      className={`group cursor-pointer flex flex-col relative overflow-hidden rounded-2xl transition-all duration-500
+      className={`group cursor-pointer flex flex-col relative overflow-hidden rounded-2xl
         bg-transparent backdrop-blur-none border-0 z-0
         ${isExpanded ? "md:h-[932px] h-auto shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "h-[450px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
     >
@@ -77,8 +79,9 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent pointer-events-none z-30"></div>
 
       {/* Project Image Area with Progressive Mask */}
-      <div
-        className={`relative overflow-hidden transition-all duration-700 ease-in-out z-10
+      <motion.div
+        layout
+        className={`relative overflow-hidden z-10
           ${isExpanded ? "h-[240px] sm:h-auto sm:aspect-video" : "h-[220px]"}`}
         style={{
           maskImage: "linear-gradient(to bottom, black 90%, transparent 100%)",
@@ -275,7 +278,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
             </motion.div>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Card Content Area */}
       <div
@@ -466,7 +469,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -480,7 +483,7 @@ const Projects = () => {
         document
           .getElementById(`project-${id}`)
           ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 350);
+      }, 400);
     }
   };
 
@@ -498,10 +501,12 @@ const Projects = () => {
           {PROJECTS.map((project, index) => {
             const isExpanded = expandedId === index;
             return (
-              <div
+              <motion.div
+                layout
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 id={`project-${index}`}
                 key={`${project.title}-${index}`}
-                className={`transition-all duration-300 ease-out 
+                className={`
                   ${isExpanded ? "md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2 z-10" : "z-0"}`}
               >
                 <ProjectCard
@@ -509,7 +514,7 @@ const Projects = () => {
                   isExpanded={isExpanded}
                   onToggle={() => toggleExpand(index)}
                 />
-              </div>
+              </motion.div>
             );
           })}
         </div>
