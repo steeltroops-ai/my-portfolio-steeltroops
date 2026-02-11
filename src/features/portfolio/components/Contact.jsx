@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { FiSend, FiCheck } from "react-icons/fi";
+import { BiSend, BiCheck } from "react-icons/bi";
 import {
   useSubmitContactMessage,
   useContactFormValidation,
@@ -151,20 +151,6 @@ const Contact = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.02] pointer-events-none z-30"></div>
 
             <div className="p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 relative z-10">
-              {/* Success Message - Responsive Liquid Glass */}
-              {showSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center justify-center p-3 sm:p-4 mb-6 space-x-2 border border-green-400/50 rounded-full bg-green-500/20 backdrop-blur-md shadow-lg shadow-green-500/10"
-                >
-                  <FiCheck className="text-base sm:text-lg text-green-400" />
-                  <p className="text-xs sm:text-sm text-green-400 font-light">
-                    Message sent successfully!
-                  </p>
-                </motion.div>
-              )}
-
               {/* Honeypot field for spam bots - should remain empty */}
               <div className="hidden" aria-hidden="true">
                 <label htmlFor="_hp">Leave this field empty</label>
@@ -297,55 +283,60 @@ const Contact = () => {
                     {formData.message.length}/2000
                   </span>
                 </motion.div>
-
-                {/* Send Button - Inside Form Container for semantic submission */}
-                <motion.div
-                  whileInView={{ opacity: 1, y: 0 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                  className="flex flex-col items-center pt-6 space-y-2 sm:space-y-3"
-                >
-                  <motion.button
-                    type="submit"
-                    disabled={isLoading}
-                    whileHover={{ scale: isLoading ? 1 : 1.05 }}
-                    whileTap={{ scale: isLoading ? 1 : 0.95 }}
-                    className={`inline-flex items-center justify-center px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-light rounded-full transition-all duration-300 backdrop-blur-md shadow-lg ${
-                      isLoading
-                        ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
-                        : "bg-purple-500/20 text-purple-300 border border-purple-400/50 hover:bg-purple-500/30 hover:border-purple-400/70 hover:shadow-xl hover:shadow-purple-500/20"
-                    }`}
-                  >
-                    <span className="flex items-center space-x-2">
-                      {isLoading ? (
-                        <>
-                          <div className="w-3.5 h-3.5 border-2 border-transparent rounded-full border-t-neutral-400 animate-spin" />
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Send Message</span>
-                          <FiSend className="text-sm sm:text-base" />
-                        </>
-                      )}
-                    </span>
-                  </motion.button>
-
-                  {/* Error Messages - Responsive */}
-                  {errors.submit && (
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-xs sm:text-sm text-neutral-400 text-center max-w-sm px-4"
-                      role="alert"
-                    >
-                      {errors.submit}
-                    </motion.p>
-                  )}
-                </motion.div>
               </form>
             </div>
           </div>
+
+          {/* Send Button - Outside Form Container */}
+          <motion.div
+            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="flex flex-col items-center pt-8 space-y-2 sm:space-y-3"
+          >
+            <motion.button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className={`inline-flex items-center justify-center px-6 py-2 text-sm font-light tracking-wide rounded-full transition-all duration-300 ${
+                isLoading
+                  ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
+                  : showSuccess
+                    ? "bg-white/[0.01] text-green-400 border border-green-500/30 shadow-none"
+                    : "bg-white/[0.01] text-purple-300 border border-purple-500/30 hover:bg-white/[0.05] hover:border-purple-400 focus:outline-none shadow-none"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-transparent rounded-full border-t-neutral-400 animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : showSuccess ? (
+                  <>
+                    <span>Sent</span>
+                    <BiCheck className="text-xl" />
+                  </>
+                ) : (
+                  <>
+                    <span>Send</span>
+                    <BiSend className="text-lg" />
+                  </>
+                )}
+              </span>
+            </motion.button>
+
+            {/* Error Messages - Responsive */}
+            {errors.submit && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs sm:text-sm text-red-400 text-center max-w-sm px-4 mt-2"
+                role="alert"
+              >
+                {errors.submit}
+              </motion.p>
+            )}
+          </motion.div>
         </motion.div>
       </div>
     </section>

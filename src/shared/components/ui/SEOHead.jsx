@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 const SEOHead = ({
   title,
   description = "Full-stack developer specializing in modern web technologies",
-  image = "/profiletop.png",
+  image = "/hodakaprofile.jpg",
   url = window.location.href,
   type = "website",
   author = "Mayank Pratap Singh",
@@ -32,6 +32,8 @@ const SEOHead = ({
         content="vycsFH0oxZh3hYxinQ1JGOghyPymDAt4tkDFdKk-V7M"
       />
       <link rel="canonical" href={canonicalUrl} />
+      <link rel="icon" type="image/png" href="/favicon.png?v=3" />
+      <link rel="apple-touch-icon" href="/favicon.png?v=3" />
 
       {/* Open Graph Meta Tags */}
       <meta property="og:title" content={fullTitle} />
@@ -87,7 +89,7 @@ const SEOHead = ({
             name: "Mayank Pratap Singh",
             alternateName: "steeltroops",
             description: description,
-            image: "https://steeltroops.vercel.app/profiletop.png",
+            image: "https://steeltroops.vercel.app/hodakaprofile.jpg",
             jobTitle: "Full Stack & Machine Learning Engineer",
             url: "https://steeltroops.vercel.app",
             knowsAbout: [

@@ -1,5 +1,5 @@
 // Service Worker for Portfolio Caching - Optimized for Bun + Vite
-const CACHE_VERSION = "1.1.0";
+const CACHE_VERSION = "1.1.1";
 const STATIC_CACHE_NAME = `portfolio-static-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `portfolio-dynamic-v${CACHE_VERSION}`;
 
