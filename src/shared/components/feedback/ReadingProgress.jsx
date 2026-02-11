@@ -15,7 +15,7 @@ const ReadingProgress = ({
   const [readingTime, setReadingTime] = useState(0);
   const [percentage, setPercentage] = useState(0);
   const progressRef = useRef(null);
-  
+
   // Create a motion value for smooth animation
   const scrollProgress = useMotionValue(0);
 
@@ -28,31 +28,55 @@ const ReadingProgress = ({
 
   // Calculate scroll progress manually to ensure 100% at bottom
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      
-      if (scrollHeight > 0) {
-        const progress = Math.min(1, Math.max(0, scrollTop / scrollHeight));
-        scrollProgress.set(progress);
-        setPercentage(Math.round(progress * 100));
-      }
-      
-      // Show after scrolling 100px
-      setIsVisible(scrollTop > 100);
+    let scrollHeight = 0;
+    let windowHeight = 0;
+    let isTicking = false;
+
+    const updateLayout = () => {
+      scrollHeight = document.documentElement.scrollHeight;
+      windowHeight = window.innerHeight;
     };
 
+    const handleScroll = () => {
+      if (!isTicking) {
+        requestAnimationFrame(() => {
+          const scrollTop =
+            window.scrollY || document.documentElement.scrollTop;
+          const totalScrollable = scrollHeight - windowHeight;
+
+          if (totalScrollable > 0) {
+            const progress = Math.min(
+              1,
+              Math.max(0, scrollTop / totalScrollable)
+            );
+            scrollProgress.set(progress);
+            setPercentage(Math.round(progress * 100));
+          }
+
+          // Show after scrolling 100px
+          setIsVisible(scrollTop > 100);
+          isTicking = false;
+        });
+        isTicking = true;
+      }
+    };
+
+    updateLayout();
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", updateLayout, { passive: true });
     handleScroll(); // Initial calculation
-    
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateLayout);
+    };
   }, [scrollProgress]);
 
   // Calculate estimated reading time
   useEffect(() => {
     const calculateReadingTime = () => {
       const content = target?.current || document.body;
-      const text = content.textContent || content.innerText || "";
+      const text = content.textContent || "";
       const wordsPerMinute = 200; // Average reading speed
       const words = text.trim().split(/\s+/).length;
       const time = Math.ceil(words / wordsPerMinute);
@@ -161,21 +185,42 @@ export const useReadingProgress = (target = null) => {
   const [isReading, setIsReading] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const element = target || document.documentElement;
-      const scrollTop =
-        window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = element.scrollHeight - element.clientHeight;
-      const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    let scrollHeight = 0;
+    let clientHeight = 0;
+    let isTicking = false;
 
-      setProgress(Math.min(100, Math.max(0, progress)));
-      setIsReading(progress > 5 && progress < 95); // Consider "reading" between 5% and 95%
+    const updateLayout = () => {
+      const element = target || document.documentElement;
+      scrollHeight = element.scrollHeight;
+      clientHeight = element.clientHeight;
     };
 
+    const handleScroll = () => {
+      if (!isTicking) {
+        requestAnimationFrame(() => {
+          const scrollTop =
+            window.pageYOffset || document.documentElement.scrollTop;
+          const totalScrollable = scrollHeight - clientHeight;
+          const progress =
+            totalScrollable > 0 ? (scrollTop / totalScrollable) * 100 : 0;
+
+          setProgress(Math.min(100, Math.max(0, progress)));
+          setIsReading(progress > 5 && progress < 95); // Consider "reading" between 5% and 95%
+          isTicking = false;
+        });
+        isTicking = true;
+      }
+    };
+
+    updateLayout();
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", updateLayout, { passive: true });
     handleScroll(); // Initial calculation
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateLayout);
+    };
   }, [target]);
 
   return { progress, isReading };

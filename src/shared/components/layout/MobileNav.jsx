@@ -52,9 +52,11 @@ const MobileNav = () => {
 
     observeSections();
 
-    // Use MutationObserver for lazy-loaded sections
+    // Use MutationObserver for lazy-loaded sections - with debouncing
+    let mutationTimeout;
     const mutationObserver = new MutationObserver(() => {
-      observeSections();
+      clearTimeout(mutationTimeout);
+      mutationTimeout = setTimeout(observeSections, 250);
     });
 
     mutationObserver.observe(document.body, {
