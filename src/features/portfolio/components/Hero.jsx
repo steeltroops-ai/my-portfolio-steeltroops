@@ -1,5 +1,5 @@
 import { HERO_CONTENT, PERSONAL, HIGHLIGHT_STATS } from "@/constants";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -47,20 +47,20 @@ const Hero = () => {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl lg:py-16">
         <div className="flex flex-wrap items-center lg:items-start">
-          <motion.div
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="w-full lg:w-1/2 lg:pr-8"
           >
             <div className="flex flex-col items-center lg:items-start space-y-4 sm:space-y-5 lg:space-y-5">
-              <motion.h1
+              <m.h1
                 variants={itemVariants}
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-thin tracking-tight mt-4 sm:mt-8 lg:mt-0 leading-none text-center lg:text-left"
               >
                 {PERSONAL.name}
-              </motion.h1>
-              <motion.div
+              </m.h1>
+              <m.div
                 variants={itemVariants}
                 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-light tracking-tight leading-snug sm:leading-snug md:leading-snug lg:leading-snug text-center lg:text-left"
               >
@@ -68,8 +68,8 @@ const Hero = () => {
                   Full Stack, Robotics &<br className="hidden sm:block" />
                   <span className="sm:hidden"> </span>Machine Learning Engineer
                 </span>
-              </motion.div>
-              <motion.div
+              </m.div>
+              <m.div
                 variants={itemVariants}
                 className="space-y-4 max-w-lg md:max-w-xl mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
               >
@@ -81,19 +81,16 @@ const Hero = () => {
                     </p>
                   </div>
                 ))}
-              </motion.div>
+              </m.div>
 
               <div className="flex flex-col items-center lg:items-start gap-6 pt-6 sm:pt-8">
                 {/* 3 Main Highlight Reels */}
-                <motion.div
+                <m.div
                   variants={itemVariants}
                   className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6"
                 >
                   {HIGHLIGHT_STATS.map((stat, i) => (
-                    <motion.div
-                      key={i}
-                      className="relative group cursor-default"
-                    >
+                    <m.div key={i} className="relative group cursor-default">
                       <div className="relative px-4 py-1.5 rounded-xl overflow-hidden transition-all duration-700 bg-white/[0.02] border border-white/10 ring-1 ring-white/5 flex flex-col items-center lg:items-start min-w-[95px] sm:min-w-[115px] group-hover:bg-purple-950/30 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.08)]">
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                         <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-tighter text-purple-400/75 group-hover:text-white transition-colors duration-500">
@@ -103,16 +100,16 @@ const Hero = () => {
                           {stat.label}
                         </span>
                       </div>
-                    </motion.div>
+                    </m.div>
                   ))}
-                </motion.div>
+                </m.div>
 
                 {/* Hire Me Button - Centered Below */}
-                <motion.div
+                <m.div
                   variants={itemVariants}
                   className="flex justify-center lg:justify-start w-full"
                 >
-                  <motion.div
+                  <m.div
                     onClick={() =>
                       document
                         .getElementById("contact")
@@ -132,14 +129,14 @@ const Hero = () => {
                         </span>
                       </div>
                     </div>
-                  </motion.div>
-                </motion.div>
+                  </m.div>
+                </m.div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
           <div className="w-full lg:w-1/2 lg:pl-8 mt-8 sm:mt-10 lg:mt-0">
             <div className="flex justify-center lg:justify-end">
-              <motion.img
+              <m.img
                 variants={imageVariants}
                 initial="hidden"
                 animate="visible"

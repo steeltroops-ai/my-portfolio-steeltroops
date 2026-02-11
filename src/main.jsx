@@ -9,6 +9,7 @@ import App from "@/App.jsx";
 import ErrorBoundary from "@/shared/components/feedback/ErrorBoundary";
 import "@/index.css";
 import AnalyticsTracker from "@/shared/analytics/AnalyticsTracker";
+import { LazyMotion } from "framer-motion";
 
 // Lazy load non-critical shared components
 const FloatingChatButton = lazy(
@@ -86,6 +87,8 @@ const LoadingSpinner = () => (
 // Minimal fallback for non-critical floating components
 const MinimalFallback = () => null;
 
+const loadFeatures = () => import("framer-motion").then((res) => res.domMax);
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
@@ -110,57 +113,65 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               touchMultiplier: 1.5,
             }}
           >
-            <Router
-              future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-            >
-              <AnalyticsTracker />
-              <Suspense fallback={<LoadingSpinner />}>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={
-                      <>
-                        <App />
-                        <Suspense fallback={<MinimalFallback />}>
-                          <FloatingChatButton />
-                          <MobileNav />
-                        </Suspense>
-                      </>
-                    }
-                  />
-                  <Route path="/blogs" element={<Blog />} />
-                  <Route path="/blogs/:slug" element={<BlogPost />} />
-                  <Route path="/admin/login" element={<AdminLogin />} />
+            <LazyMotion features={loadFeatures} strict>
+              <Router
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
+                <AnalyticsTracker />
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        <>
+                          <App />
+                          <Suspense fallback={<MinimalFallback />}>
+                            <FloatingChatButton />
+                            <MobileNav />
+                          </Suspense>
+                        </>
+                      }
+                    />
+                    <Route path="/blogs" element={<Blog />} />
+                    <Route path="/blogs/:slug" element={<BlogPost />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
 
-                  {/* Admin Routes with Layout */}
-                  <Route
-                    element={
-                      <ProtectedRoute>
-                        <AdminLayout />
-                      </ProtectedRoute>
-                    }
-                  >
+                    {/* Admin Routes with Layout */}
                     <Route
-                      path="/admin/dashboard"
-                      element={<AdminDashboard />}
-                    />
-                    <Route path="/admin/post/new" element={<BlogEditor />} />
-                    <Route
-                      path="/admin/post/edit/:id"
-                      element={<BlogEditor />}
-                    />
-                    <Route
-                      path="/admin/ai-generator"
-                      element={<AIBlogGenerator />}
-                    />
-                    <Route path="/admin/messages" element={<MessageCenter />} />
-                    <Route path="/admin/analytics" element={<Analytics />} />
-                  </Route>
-                  {/* 404 Not Found - Must be last */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </Router>
+                      element={
+                        <ProtectedRoute>
+                          <AdminLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route
+                        path="/admin/dashboard"
+                        element={<AdminDashboard />}
+                      />
+                      <Route path="/admin/post/new" element={<BlogEditor />} />
+                      <Route
+                        path="/admin/post/edit/:id"
+                        element={<BlogEditor />}
+                      />
+                      <Route
+                        path="/admin/ai-generator"
+                        element={<AIBlogGenerator />}
+                      />
+                      <Route
+                        path="/admin/messages"
+                        element={<MessageCenter />}
+                      />
+                      <Route path="/admin/analytics" element={<Analytics />} />
+                    </Route>
+                    {/* 404 Not Found - Must be last */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </Router>
+            </LazyMotion>
           </ReactLenis>
         </HelmetProvider>
       </QueryClientProvider>

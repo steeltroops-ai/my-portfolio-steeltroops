@@ -1,5 +1,5 @@
 import { PROJECTS } from "@/constants";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   FaGithub,
   FaChevronDown,
@@ -77,7 +77,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent pointer-events-none z-30"></div>
 
       {/* Project Image Area with Progressive Mask */}
-      <motion.div
+      <m.div
         layout
         className={`relative overflow-hidden z-10
           ${isExpanded ? "h-[240px] sm:h-auto sm:aspect-video" : "h-[220px]"}`}
@@ -88,7 +88,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
         }}
       >
         <AnimatePresence mode="wait">
-          <motion.img
+          <m.img
             key={currentImageIndex}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -202,7 +202,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
         <div className="absolute top-4 right-4 flex gap-2 z-20">
           <AnimatePresence>
             {!isExpanded && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
@@ -246,7 +246,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                     />
                   </a>
                 )}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
           {isExpanded && (
@@ -266,17 +266,17 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
         {/* Title Overlay for Expanded Card */}
         {isExpanded && (
           <div className="absolute bottom-4 left-6 right-6 z-10">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               <span className="text-white text-[9px] font-light uppercase tracking-[0.2em] bg-black-600/30 px-2.5 py-1 rounded-full border border-purple-500/50 backdrop-blur-md shadow-lg ring-1 ring-white/10">
                 Project Deep Dive
               </span>
-            </motion.div>
+            </m.div>
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Card Content Area */}
       <div
@@ -308,7 +308,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
 
         <AnimatePresence mode="popLayout">
           {isExpanded ? (
-            <motion.div
+            <m.div
               key="expanded"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -443,9 +443,9 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 </span>
                 <FaChevronUp className="text-neutral-600 group-hover/close:text-white group-hover/close:-translate-y-0.5 transition-all text-[10px]" />
               </div>
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="collapsed"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -463,7 +463,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 </span>
                 <FaChevronDown className="text-neutral-600 group-hover:text-white group-hover:translate-y-0.5 transition-all text-[9px]" />
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
@@ -492,7 +492,7 @@ const Projects = () => {
           {PROJECTS.map((project, index) => {
             const isExpanded = expandedId === index;
             return (
-              <motion.div
+              <m.div
                 layout
                 transition={{
                   type: "spring",
@@ -521,7 +521,7 @@ const Projects = () => {
                   isExpanded={isExpanded}
                   onToggle={() => toggleExpand(index)}
                 />
-              </motion.div>
+              </m.div>
             );
           })}
         </div>

@@ -2,6 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval' https://vercel.live; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://api.microlink.io https://vitals.vercel-insights.com; frame-src 'self' https://vercel.live; object-src 'none'; base-uri 'self';"
+    />
     <link rel="icon" type="image/png" href="/favicon.png?v=3" />
     <link rel="apple-touch-icon" href="/favicon.png?v=3" />
     <link rel="manifest" href="/site.webmanifest" />
@@ -15,51 +19,27 @@
     <!-- Preload critical fonts early to avoid chaining -->
     <link
       rel="preload"
-      href="https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyeAZ9hiA.woff2"
+      href="/fonts/inter-thin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/inter-variable.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
 
-    <!-- DNS prefetch for external domains -->
-    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
-
-    <!-- Preconnect to critical third-party origins -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
     <!-- Inlined Critical Font Styles - Variable Font for Ultra-Thin support (100-900) -->
     <meta name="theme-color" content="#0a0a0a" />
     <meta name="color-scheme" content="dark" />
 
-    <!-- Critical CSS inline -->
-    <style id="critical-css">
-      body {
-        background-color: #0a0a0a;
-        color: #e5e7eb;
-        font-family: "Inter", sans-serif;
-      }
-      .loading-screen {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-      }
-    </style>
-
     <title>Mayank Pratap Singh | Full Stack & ML Engineer</title>
 
     <!-- Fix for "This document requires 'TrustedHTML' assignment" error -->
-    <script>
-      if (window.trustedTypes && window.trustedTypes.createPolicy) {
-        if (!window.trustedTypes.defaultPolicy) {
-          window.trustedTypes.createPolicy("default", {
-            createHTML: (string) => string,
-            createScript: (string) => string,
-            createScriptURL: (string) => string,
-          });
-        }
-      }
-    </script>
+    <script src="/security.js"></script>
     <meta
       name="title"
       content="Mayank Pratap Singh | Full Stack & ML Engineer"

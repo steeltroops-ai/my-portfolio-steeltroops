@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   FiHome,
   FiUser,
@@ -109,7 +109,7 @@ const MobileNav = () => {
                     aria-current={isActive ? "true" : undefined}
                   >
                     {isActive && (
-                      <motion.div
+                      <m.div
                         layoutId="active-pill-mobile"
                         className="absolute inset-0 bg-purple-500/20 border border-purple-400/50 rounded-lg shadow-lg"
                         transition={{

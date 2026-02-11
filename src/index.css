@@ -1,11 +1,254 @@
 /* Optimized Font Loading - No external imports for better performance */
 @import "tailwindcss";
-@import "./styles/theme.css";
-@import "./styles/typography.css";
 
-/* Optimized font loading with multiple weights and display strategies */
+/* -------------------------------------------------------------------------- */
+/* INLINED TRPOGRAPHY.CSS (Critical Fonts & Base Styles)                      */
+/* -------------------------------------------------------------------------- */
+
+/* 1. Font Definitions */
+
+/* Specialized Thin Weight (Extra Crisp) - For Hero & Section Titles */
+@font-face {
+  font-family: "Inter-Thin";
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url("/fonts/inter-thin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
+}
+
+/* Variable Global Font (Weights 100-900) - For Body & UI */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter-variable.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+
+/* 2. Global Variables helpers */
+:root {
+  --font-heading: "Inter", sans-serif;
+  --font-thin: "Inter-Thin", "Inter", sans-serif;
+  --font-heading-tracking: -0.025em;
+}
+
 @layer base {
-  /* Font faces are now centralized in typography.css */
+  html {
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+  }
+  body {
+    background-color: #0a0a0a;
+    color: #e5e7eb;
+  }
+}
+
+@layer components {
+  /* Ultra-thin typography class (Generic) */
+  .hairline-thin {
+    font-family: var(--font-thin);
+    font-weight: 100 !important;
+    font-variation-settings: "wght" 100;
+    -webkit-font-smoothing: grayscale;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0.02em;
+  }
+
+  /* Main Section Headings (e.g., "My Experience") */
+  .section-title {
+    font-size: 1.5rem; /* text-2xl */
+    line-height: 2rem;
+    text-align: center;
+
+    /* Inherit strict thin styling */
+    font-family: var(--font-thin);
+    font-weight: 100 !important;
+    font-variation-settings: "wght" 100;
+    -webkit-font-smoothing: grayscale;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0.02em;
+  }
+
+  /* Shared Font Style for Roles and Project Names */
+  .title-font {
+    font-family: var(--font-heading);
+    font-weight: 200; /* Extra Light for signature thin look */
+    letter-spacing: var(--font-heading-tracking);
+  }
+
+  /* Responsive sizing for section titles moved here for centralization */
+  @media (min-width: 640px) {
+    .section-title {
+      font-size: 1.875rem; /* sm:text-3xl */
+      line-height: 2.25rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .section-title {
+      font-size: 2.25rem; /* md:text-4xl */
+      line-height: 2.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .section-title {
+      font-size: 2.25rem; /* lg:text-4xl fallback */
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .section-title {
+      font-size: 3rem; /* xl:text-5xl */
+      line-height: 1;
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* INLINED THEME.CSS (Design Tokens & Shared Patterns)                        */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  /* --- Primary Color Palette --- */
+  /* Unified Purple Design System */
+  --brand-purple: #a855f7; /* Main Brand Color (purple-500) */
+  --brand-purple-light: #d8b4fe; /* Light Accent (purple-300) */
+  --brand-purple-dark: #7e22ce; /* Dark Accent (purple-700) */
+  --brand-purple-soft: rgba(168, 85, 247, 0.15); /* Soft Backgrounds */
+  --brand-purple-glow: rgba(168, 85, 247, 0.6); /* Strong Glow Effects */
+
+  /* --- Semantic Purple Usages --- */
+  /* Interactive Elements */
+  --color-accent-primary: var(--brand-purple);
+  --color-accent-hover: var(--brand-purple-light);
+  --color-accent-subtle: rgba(168, 85, 247, 0.1);
+  --color-accent-border: rgba(168, 85, 247, 0.2);
+
+  /* Feature Elements (Bullets, Tags) */
+  --color-bullet-bg: rgba(168, 85, 247, 0.6);
+  --color-bullet-hover: var(--brand-purple-light);
+  --color-tag-bg: rgba(168, 85, 247, 0.1);
+  --color-tag-border: rgba(168, 85, 247, 0.2);
+  --color-tag-text: #e9d5ff; /* purple-200 */
+
+  /* --- Typography Colors --- */
+  /* Headings */
+  --heading-main-primary: #ffffff;
+  --heading-main-secondary: #737373; /* neutral-500 */
+  --heading-sub-main: #e5e5e5; /* neutral-200 */
+  --heading-sub-accent: #e9d5ff; /* purple-200 */
+
+  /* Body Text */
+  --text-body-main: #f5f5f5; /* neutral-100 */
+  --text-description: #a3a3a3; /* neutral-400 equivalent - Centralized Description Color */
+  --text-muted: #a3a3a3; /* Alias for general muted text */
+
+  /* Special Text */
+  --text-accent-purple: rgba(216, 180, 254, 0.9); /* purple-300 / 0.9 */
+  --text-tag-white: #ffffff;
+
+  /* --- UI Component Styles --- */
+  /* Glass Card Presets */
+  --glass-bg: rgba(255, 255, 255, 0.01);
+  --glass-bg-hover: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-border-hover: rgba(255, 255, 255, 0.1);
+
+  /* Accent & Interaction Glows */
+  --glow-accent-subtle: rgba(168, 85, 247, 0.15);
+  --glow-accent-strong: rgba(168, 85, 247, 0.6);
+
+  /* Scifi / Circuit Accents */
+  --circuit-line: #262626; /* neutral-800 */
+  --circuit-accent: rgba(168, 85, 247, 0.4);
+}
+
+@layer components {
+  /* Centralized Section Heading Style - Color Only */
+  .section-title {
+    color: var(--heading-main-primary);
+  }
+
+  .section-title span {
+    color: var(--heading-main-secondary);
+  }
+
+  /* Shared Glass Card Base */
+  .glass-card {
+    position: relative;
+    overflow: hidden;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 500ms;
+    border-radius: 1rem; /* rounded-2xl */
+    border-width: 1px;
+    border-style: solid;
+    backdrop-filter: blur(6px);
+    background-color: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-card:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  /* Liquid Glass Effect - Matching Mobile Nav exactly */
+  .liquid-glass {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.01);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .liquid-glass-highlight {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.1),
+      transparent,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .liquid-glass-top-line {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    top: 0;
+    height: 1px;
+    background-image: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    pointer-events: none;
+  }
 }
 
 :root {
