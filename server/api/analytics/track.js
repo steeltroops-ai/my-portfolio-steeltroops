@@ -247,6 +247,22 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
+    if (action === "pageview") {
+      const { sessionId, path } = req.body;
+      if (!sessionId)
+        return res.status(400).json({ error: "Missing sessionId" });
+
+      await sql`
+        INSERT INTO visitor_events (
+          session_uuid, event_type, path, timestamp
+        )
+        SELECT id, 'page_view', ${path || "/"}, NOW()
+        FROM visitor_sessions WHERE session_id = ${sessionId}
+      `;
+
+      return res.status(200).json({ success: true });
+    }
+
     return res.status(400).json({ error: "Invalid action" });
   } catch (error) {
     console.error("[Analytics] Tracker Error:", error.message);
