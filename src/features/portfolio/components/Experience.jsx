@@ -147,8 +147,8 @@ const ExperienceCard = ({ experience, index, isLast }) => {
             <ul className="space-y-3 mb-6">
               {experience.description.map((point, i) => (
                 <li key={i} className="flex gap-3 group/item">
-                  <div className="mt-2 h-1 w-1 rounded-full bg-purple-500/60 group-hover/item:bg-purple-300 transition-colors shrink-0" />
-                  <p className="text-neutral-400 font-light leading-relaxed text-sm">
+                  <div className="mt-2 h-1 w-1 rounded-full bg-[var(--color-bullet-bg)] group-hover/item:bg-[var(--color-bullet-hover)] transition-colors shrink-0" />
+                  <p className="text-[var(--text-description)] font-light leading-relaxed text-sm">
                     {point}
                   </p>
                 </li>
@@ -159,7 +159,7 @@ const ExperienceCard = ({ experience, index, isLast }) => {
               {experience.technologies.map((tech, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-light text-purple-200 uppercase tracking-tighter"
+                  className="px-2 py-0.5 rounded-full bg-[var(--color-tag-bg)] border border-[var(--color-tag-border)] text-[10px] font-light text-[var(--color-tag-text)] uppercase tracking-tighter"
                 >
                   {tech}
                 </span>

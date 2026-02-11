@@ -74,13 +74,12 @@ const Hero = () => {
                 className="space-y-4 max-w-lg md:max-w-xl mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
               >
                 {HERO_CONTENT.map((paragraph, index) => (
-                  <p
-                    key={index}
-                    className="text-sm sm:text-base lg:text-base font-light leading-relaxed text-justify"
-                    style={{ color: "var(--text-body-main)" }}
-                  >
-                    {paragraph}
-                  </p>
+                  <div key={index} className="flex gap-3 group/item">
+                    <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-[var(--color-bullet-bg)] group-hover/item:bg-[var(--color-bullet-hover)] transition-colors shrink-0" />
+                    <p className="text-[var(--text-description)] text-sm sm:text-base lg:text-base font-light leading-relaxed text-justify lg:text-left">
+                      {paragraph}
+                    </p>
+                  </div>
                 ))}
               </motion.div>
 
@@ -144,7 +143,7 @@ const Hero = () => {
                 variants={imageVariants}
                 initial="hidden"
                 animate="visible"
-                src="/profiletop.png"
+                src="/hodakaprofile.jpg"
                 className="rounded-3xl w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-full h-auto"
                 alt="Mayank Pratap Singh"
                 width={600}
