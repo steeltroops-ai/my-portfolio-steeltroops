@@ -1,4 +1,4 @@
-import { HERO_CONTENT, PERSONAL, HIGHLIGHT_STATS } from "@/constants";
+import { HERO_CONTENT, PERSONAL, HIGHLIGHT_STATS, IMAGES } from "@/constants";
 import { m } from "framer-motion";
 
 const containerVariants = {
@@ -34,7 +34,6 @@ const imageVariants = {
       type: "spring",
       stiffness: 80,
       damping: 15,
-      delay: 0.3,
     },
   },
 };
@@ -140,7 +139,9 @@ const Hero = () => {
                 variants={imageVariants}
                 initial="hidden"
                 animate="visible"
-                src="/hodakaprofile.jpg"
+                src={IMAGES.profile}
+                srcSet={`${IMAGES.profileMobile} 480w, ${IMAGES.profile} 1024w`}
+                sizes="(max-width: 640px) 280px, 600px"
                 className="rounded-3xl w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-full h-auto"
                 alt="Mayank Pratap Singh"
                 width={600}

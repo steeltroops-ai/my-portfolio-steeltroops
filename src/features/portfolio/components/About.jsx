@@ -1,5 +1,4 @@
-import aboutImg from "@/assets/about.jpg";
-import { ABOUT_TEXT, PERSONAL } from "@/constants";
+import { ABOUT_TEXT, PERSONAL, IMAGES } from "@/constants";
 import { motion } from "framer-motion";
 
 const containerVariants = {
@@ -71,7 +70,7 @@ const About = () => {
               <motion.img
                 variants={imageVariants}
                 className="rounded-3xl w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-full h-auto"
-                src={aboutImg}
+                src={IMAGES.about}
                 alt="About Mayank Pratap Singh"
                 width={500}
                 height={600}

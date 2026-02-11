@@ -6,6 +6,19 @@ import project5 from "@/assets/projects/project-5.jpg";
 import blackhole from "@/assets/projects/blackhole.jpg";
 import blackhole1 from "@/assets/projects/blackhole1.jpg";
 
+// Brand & Profile Images
+import logo from "@/assets/mps.png";
+import about from "@/assets/about.jpg";
+import hodakabout from "@/assets/hodakabout.jpg";
+
+export const IMAGES = {
+  logo,
+  profile: "/hodakaprofile.jpg", // Static path for immediate LCP discoverability (matches index.html preload)
+  profileMobile: "/hodakaprofile_mobile.jpg",
+  about,
+  aboutAlt: hodakabout,
+};
+
 // =====================================================
 // PERSONAL INFO - Easy to change
 // =====================================================
@@ -50,7 +63,7 @@ export const SITE_META = {
   keywords:
     "Mayank Pratap Singh, Full Stack Developer, React Developer, Node.js, Next.js, AI, Machine Learning, Web Development, JavaScript, TypeScript, Python, Robotics, ROS2, Portfolio",
   siteUrl: "https://steeltroops.vercel.app",
-  ogImage: "https://steeltroops.vercel.app/profiletop.png",
+  ogImage: "https://steeltroops.vercel.app/hodakaprofile.jpg",
 };
 
 // =====================================================

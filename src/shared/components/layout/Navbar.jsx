@@ -1,4 +1,4 @@
-import logo from "@/assets/mps.png";
+import { IMAGES } from "@/constants";
 import SocialLinks from "@/shared/components/ui/SocialLinks";
 
 const Navbar = () => {
@@ -13,7 +13,7 @@ const Navbar = () => {
         >
           <img
             className="w-15 h-auto transition-all duration-300"
-            src={logo}
+            src={IMAGES.logo}
             alt="Logo"
             width={64}
             height={40}
