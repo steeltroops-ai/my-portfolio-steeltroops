@@ -57,9 +57,11 @@ export const useAnalytics = () => {
     }
   }, []);
 
+  // One-time initialization on mount
   useEffect(() => {
+    let heartbeatInterval;
+
     const initTracking = async () => {
-      // Skip if admin
       if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
 
       const visitorId = getVisitorId();
@@ -77,7 +79,7 @@ export const useAnalytics = () => {
           screenResolution: `${window.screen.width}x${window.screen.height}`,
           referrer: document.referrer,
           utm: getUTM(),
-          path: location.pathname,
+          path: window.location.pathname,
           forensics: {
             ...forensicData,
             fingerprint,
@@ -86,7 +88,7 @@ export const useAnalytics = () => {
       });
 
       // Heartbeat every 45s
-      const heartbeatInterval = setInterval(async () => {
+      heartbeatInterval = setInterval(async () => {
         try {
           await fetch("/api/analytics/track?action=heartbeat", {
             method: "POST",
@@ -97,12 +99,37 @@ export const useAnalytics = () => {
           /* ignore */
         }
       }, 45000);
-
-      return () => clearInterval(heartbeatInterval);
     };
 
     initTracking();
-  }, [location.pathname]);
+
+    return () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+    };
+  }, []); // Run only once on mount
+
+  // Track page views on location change
+  useEffect(() => {
+    const trackPageView = async () => {
+      if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
+
+      try {
+        await fetch("/api/analytics/track?action=pageview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: getSessionId(),
+            path: location.pathname,
+            referrer: document.referrer,
+          }),
+        });
+      } catch (err) {
+        // Silent fail
+      }
+    };
+
+    trackPageView();
+  }, [location.pathname]); // Track on every path change
 
   return { trackEvent };
 };
