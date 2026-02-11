@@ -86,17 +86,33 @@ const ScrollspyNav = () => {
       observerOptions
     );
 
-    // Query all section elements by ID and observe them
-    sections.forEach((section) => {
-      const element = document.getElementById(section.id);
-      if (element) {
-        observer.observe(element);
-      }
+    // Function to find and observe sections
+    const observeSections = () => {
+      sections.forEach((section) => {
+        const element = document.getElementById(section.id);
+        if (element) {
+          observer.observe(element);
+        }
+      });
+    };
+
+    // Initial observation attempt
+    observeSections();
+
+    // Use MutationObserver to handle lazy-loaded sections
+    const mutationObserver = new MutationObserver(() => {
+      observeSections();
     });
 
-    // Cleanup function to disconnect observer on unmount
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Cleanup function to disconnect observers on unmount
     return () => {
       observer.disconnect();
+      mutationObserver.disconnect();
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }

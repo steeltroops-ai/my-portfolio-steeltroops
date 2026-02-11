@@ -43,12 +43,29 @@ const MobileNav = () => {
       observerOptions
     );
 
-    sections.forEach((section) => {
-      const element = document.getElementById(section.id);
-      if (element) observer.observe(element);
+    const observeSections = () => {
+      sections.forEach((section) => {
+        const element = document.getElementById(section.id);
+        if (element) observer.observe(element);
+      });
+    };
+
+    observeSections();
+
+    // Use MutationObserver for lazy-loaded sections
+    const mutationObserver = new MutationObserver(() => {
+      observeSections();
     });
 
-    return () => observer.disconnect();
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
   }, []);
 
   const handleNavClick = (sectionId) => {
