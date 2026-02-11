@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import {
   getPublishedPosts,
   getAllPosts,
@@ -23,15 +28,76 @@ export const blogQueryKeys = {
   tags: () => [...blogQueryKeys.all, "tags"],
 };
 
-// Hook for fetching published posts (public blog) - now with hybrid support
+// Helper to get cached data from localStorage
+const getLocalStorageCache = (key) => {
+  if (typeof window === "undefined") return null;
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+
+    // Validate data structure before using it
+    if (!data || typeof data !== "object") return null;
+    if (!data.data || !Array.isArray(data.data)) return null;
+    if (typeof data.count !== "number") return null;
+
+    // Return cached data if less than 5 minutes old
+    if (Date.now() - timestamp < 5 * 60 * 1000) {
+      return data;
+    }
+
+    // Clear expired cache
+    localStorage.removeItem(key);
+  } catch (e) {
+    // Clear corrupted cache
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+    return null;
+  }
+  return null;
+};
+
+// Helper to save data to localStorage
+const setLocalStorageCache = (key, data) => {
+  if (typeof window === "undefined") return;
+  try {
+    // Only save valid data
+    if (!data || typeof data !== "object") return;
+    if (!data.data || !Array.isArray(data.data)) return;
+    if (typeof data.count !== "number") return;
+
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        data,
+        timestamp: Date.now(),
+      })
+    );
+  } catch (e) {
+    // Ignore localStorage errors (quota exceeded, etc)
+  }
+};
+
+// Hook for fetching published posts (public blog) - now with hybrid support and persistence
 export const usePublishedPosts = (options = {}) => {
+  const cacheKey = `blog-posts-${JSON.stringify(options)}`;
+  const cachedData = getLocalStorageCache(cacheKey);
+
   return useQuery({
     queryKey: blogQueryKeys.publishedPosts(options),
-    queryFn: () => getPublishedPosts(options),
+    queryFn: async () => {
+      const data = await getPublishedPosts(options);
+      setLocalStorageCache(cacheKey, data);
+      return data;
+    },
+    initialData: cachedData, // Load from localStorage immediately
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     retry: 1, // Reduced retry for faster fallback
+    placeholderData: keepPreviousData, // Keep previous data while fetching new page
+    refetchInterval: 60000, // 1 minute auto-refresh
     select: (data) => ({
       posts: data.data || [],
       count: data.count || 0,

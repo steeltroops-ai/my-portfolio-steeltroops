@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -9,11 +9,48 @@ import {
   FiList,
   FiX,
 } from "react-icons/fi";
-import { usePublishedPosts, useTags } from "../hooks/useBlogQueries";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  usePublishedPosts,
+  useTags,
+  blogQueryKeys,
+} from "../hooks/useBlogQueries";
+import { getPublishedPosts } from "../services/HybridBlogService";
 import FloatingChatButton from "@/shared/components/ui/FloatingChatButton";
 import SocialLinks from "@/shared/components/ui/SocialLinks";
 import SEOHead from "@/shared/components/ui/SEOHead";
 import OptimizedImage from "@/shared/components/media/OptimizedImage";
+
+// Skeleton Loader for critical initial paint
+const BlogCardSkeleton = ({ view }) => (
+  <div
+    className={`relative overflow-hidden border rounded-xl border-white/5 bg-white/[0.02] ${
+      view === "grid"
+        ? "h-full flex flex-col"
+        : "flex flex-col sm:flex-row h-[128px] sm:h-[154px]"
+    }`}
+  >
+    <div
+      className={`animate-pulse bg-white/5 ${
+        view === "grid"
+          ? "w-full aspect-[2/1]"
+          : "hidden sm:block w-32 sm:w-64 lg:w-72 h-full"
+      }`}
+    />
+    <div
+      className={`flex-1 p-6 space-y-4 ${
+        view === "list" ? "justify-center" : ""
+      }`}
+    >
+      <div className="h-6 bg-white/5 rounded w-3/4 animate-pulse" />
+      <div className="h-4 bg-white/5 rounded w-1/2 animate-pulse" />
+      <div className="flex gap-2 pt-2">
+        <div className="h-6 w-16 bg-white/5 rounded animate-pulse" />
+        <div className="h-6 w-16 bg-white/5 rounded animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
 
 const Blog = () => {
   const navigate = useNavigate();
@@ -23,12 +60,14 @@ const Blog = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [layoutView, setLayoutView] = useState("grid"); // "grid" or "list"
   const postsPerPage = 6;
+  const queryClient = useQueryClient();
 
   // Optimize fetching: Only fetch what we need for the current page
   // This drastically improves LCP and Reduces Network Payload
   const {
     data: postsData,
-    isLoading: postsLoading,
+    isPending: postsLoading,
+    isPlaceholderData,
     error: postsError,
     refetch,
   } = usePublishedPosts({
@@ -38,7 +77,7 @@ const Blog = () => {
     tags: selectedTags,
   });
 
-  const { data: tagsData, isLoading: tagsLoading } = useTags();
+  const { data: tagsData, isPending: tagsLoading } = useTags();
 
   // Extract data from response - API now handles the heavy lifting
   const posts = postsData?.posts || [];
@@ -46,7 +85,16 @@ const Blog = () => {
   const totalPages = Math.ceil(totalPosts / postsPerPage);
 
   const tags = tagsData || [];
-  const loading = postsLoading || tagsLoading;
+
+  // Show skeleton if:
+  // 1. We're loading AND don't have placeholder data (initial load)
+  // 2. OR if we're loading tags (initial setup)
+  // 3. OR if posts array is empty AND we're pending (hard refresh scenario)
+  const showSkeleton =
+    (postsLoading && !isPlaceholderData) ||
+    tagsLoading ||
+    (posts.length === 0 && postsLoading);
+  const loading = postsLoading && !isPlaceholderData;
   const error = postsError ? "Failed to load blog posts" : "";
 
   const handleTagToggle = (tag) => {
@@ -69,6 +117,38 @@ const Blog = () => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
+
+  // Prefetch next page for instant pagination
+  useEffect(() => {
+    // Only prefetch if we have posts loaded and there's a next page
+    if (totalPosts > 0 && currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      queryClient.prefetchQuery({
+        queryKey: blogQueryKeys.publishedPosts({
+          limit: postsPerPage,
+          offset: (nextPage - 1) * postsPerPage,
+          search: searchTerm,
+          tags: selectedTags,
+        }),
+        queryFn: () =>
+          getPublishedPosts({
+            limit: postsPerPage,
+            offset: (nextPage - 1) * postsPerPage,
+            search: searchTerm,
+            tags: selectedTags,
+          }),
+        staleTime: 5 * 60 * 1000,
+      });
+    }
+  }, [
+    currentPage,
+    totalPages,
+    totalPosts,
+    searchTerm,
+    selectedTags,
+    queryClient,
+    postsPerPage,
+  ]);
 
   // Dynamic preconnect AND preload for LCP image
   React.useEffect(() => {
@@ -334,7 +414,21 @@ const Blog = () => {
 
         {/* Blog Posts Grid/List */}
         <div className="px-4 sm:px-0">
-          {!loading && !error && (
+          {showSkeleton && (
+            <div
+              className={`mb-12 ${
+                layoutView === "grid"
+                  ? "grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                  : "flex flex-col gap-6"
+              }`}
+            >
+              {[...Array(6)].map((_, i) => (
+                <BlogCardSkeleton key={i} view={layoutView} />
+              ))}
+            </div>
+          )}
+
+          {!showSkeleton && !error && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
