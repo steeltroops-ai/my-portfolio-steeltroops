@@ -10,12 +10,10 @@ import {
   FiX,
 } from "react-icons/fi";
 import { usePublishedPosts, useTags } from "../hooks/useBlogQueries";
-import {
-  FloatingChatButton,
-  SocialLinks,
-  SEOHead,
-  OptimizedImage,
-} from "@/shared";
+import FloatingChatButton from "@/shared/components/ui/FloatingChatButton";
+import SocialLinks from "@/shared/components/ui/SocialLinks";
+import SEOHead from "@/shared/components/ui/SEOHead";
+import OptimizedImage from "@/shared/components/media/OptimizedImage";
 
 const Blog = () => {
   const navigate = useNavigate();
@@ -26,74 +24,26 @@ const Blog = () => {
   const [layoutView, setLayoutView] = useState("grid"); // "grid" or "list"
   const postsPerPage = 6;
 
-  // Use React Query hooks for data fetching - Fetch all initially for instant filtering
+  // Optimize fetching: Only fetch what we need for the current page
+  // This drastically improves LCP and Reduces Network Payload
   const {
-    data: allPostsData,
+    data: postsData,
     isLoading: postsLoading,
     error: postsError,
+    refetch,
   } = usePublishedPosts({
-    limit: 1000,
+    limit: postsPerPage,
+    offset: (currentPage - 1) * postsPerPage,
+    search: searchTerm,
+    tags: selectedTags,
   });
 
   const { data: tagsData, isLoading: tagsLoading } = useTags();
 
-  // O(1) Tag Map Implementation
-  const postsByTag = React.useMemo(() => {
-    const map = new Map();
-    const rawPosts = allPostsData?.posts || [];
-    rawPosts.forEach((post) => {
-      post.tags?.forEach((tag) => {
-        if (!map.has(tag)) map.set(tag, new Set());
-        map.get(tag).add(post);
-      });
-    });
-    return map;
-  }, [allPostsData]);
-
-  // Instant local filtering logic
-  const filteredPosts = React.useMemo(() => {
-    let result = allPostsData?.posts || [];
-
-    // Tag Filtering (O(1) approach for multi-tag intersection)
-    if (selectedTags.length > 0) {
-      // Start with posts from the first tag
-      let intersection = new Set(postsByTag.get(selectedTags[0]) || []);
-
-      // Intersect with remaining tags
-      for (let i = 1; i < selectedTags.length; i++) {
-        const tagPosts = postsByTag.get(selectedTags[i]) || new Set();
-        const nextIntersection = new Set();
-        intersection.forEach((post) => {
-          if (tagPosts.has(post)) nextIntersection.add(post);
-        });
-        intersection = nextIntersection;
-      }
-      result = Array.from(intersection);
-    }
-
-    // Search Filtering
-    if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter(
-        (post) =>
-          post.title.toLowerCase().includes(lowerSearch) ||
-          post.excerpt?.toLowerCase().includes(lowerSearch) ||
-          post.content?.toLowerCase().includes(lowerSearch)
-      );
-    }
-
-    return result;
-  }, [allPostsData, searchTerm, selectedTags, postsByTag]);
-
-  // Extract data from filtered results
-  const totalPosts = filteredPosts.length;
+  // Extract data from response - API now handles the heavy lifting
+  const posts = postsData?.posts || [];
+  const totalPosts = postsData?.count || 0;
   const totalPages = Math.ceil(totalPosts / postsPerPage);
-
-  // Slice posts for the current page
-  const posts = React.useMemo(() => {
-    const startIndex = (currentPage - 1) * postsPerPage;
-    return filteredPosts.slice(startIndex, startIndex + postsPerPage);
-  }, [filteredPosts, currentPage]);
 
   const tags = tagsData || [];
   const loading = postsLoading || tagsLoading;
@@ -111,7 +61,61 @@ const Blog = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setCurrentPage(1);
+    refetch();
   };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Dynamic preconnect AND preload for LCP image
+  React.useEffect(() => {
+    if (posts.length > 0 && posts[0].featured_image_url) {
+      try {
+        const imageUrl = posts[0].featured_image_url;
+        const url = new URL(imageUrl);
+        const origin = url.origin;
+
+        // 1. Preconnect to origin (DNS + TLS handshake)
+        const existingPreconnect = document.querySelector(
+          `link[rel="preconnect"][href="${origin}"]`
+        );
+        if (!existingPreconnect) {
+          const preconnect = document.createElement("link");
+          preconnect.rel = "preconnect";
+          preconnect.href = origin;
+          document.head.appendChild(preconnect);
+
+          // Add dns-prefetch as fallback
+          const dnsPrefetch = document.createElement("link");
+          dnsPrefetch.rel = "dns-prefetch";
+          dnsPrefetch.href = origin;
+          document.head.appendChild(dnsPrefetch);
+        }
+
+        // 2. Preload the actual LCP image (start download immediately)
+        const existingPreload = document.querySelector(
+          `link[rel="preload"][href="${imageUrl}"]`
+        );
+        if (!existingPreload) {
+          const preload = document.createElement("link");
+          preload.rel = "preload";
+          preload.as = "image";
+          preload.href = imageUrl;
+          preload.fetchPriority = "high";
+          // Add responsive image hints if needed
+          preload.imageSrcset = imageUrl;
+          preload.imageSizes =
+            "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw";
+          document.head.appendChild(preload);
+        }
+      } catch (e) {
+        // Invalid URL, skip
+      }
+    }
+  }, [posts]);
 
   return (
     <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
@@ -176,14 +180,17 @@ const Blog = () => {
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange}
                   placeholder="Search posts..."
                   className="relative z-0 w-full py-2.5 pl-10 pr-10 text-sm text-white border-0 rounded-lg bg-transparent backdrop-blur-[2px] shadow-sm focus:outline-none transition-all duration-300 placeholder:text-purple-200/40"
                 />
                 {searchTerm && (
                   <button
                     type="button"
-                    onClick={() => setSearchTerm("")}
+                    onClick={() => {
+                      setSearchTerm("");
+                      setCurrentPage(1);
+                    }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/40 hover:text-white transition-colors z-20"
                     aria-label="Clear search"
                   >
@@ -315,7 +322,7 @@ const Blog = () => {
           <div className="py-20 text-center">
             <p className="mb-4 text-red-400">{error}</p>
             <button
-              onClick={() => refetchPosts()}
+              onClick={() => refetch()}
               className="relative group px-6 py-2 transition-all duration-300 border rounded-lg bg-white/5 border-white/10 backdrop-blur-sm shadow-lg hover:bg-red-500/10 hover:border-red-500/30 text-white font-medium overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-b from-red-500/[0.03] via-transparent to-transparent pointer-events-none"></div>
@@ -415,6 +422,13 @@ const Blog = () => {
                               <OptimizedImage
                                 src={post.featured_image_url}
                                 alt={post.title}
+                                priority={index === 0}
+                                width={layoutView === "grid" ? 800 : 1200}
+                                sizes={
+                                  layoutView === "grid"
+                                    ? "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    : "(max-width: 640px) 100vw, 800px"
+                                }
                                 className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                               />
                             </div>

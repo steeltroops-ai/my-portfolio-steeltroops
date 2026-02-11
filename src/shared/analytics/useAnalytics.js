@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { getForensicData, hashFingerprint } from "./forensics";
 
 // Simple UID generator for visitor and session
 const generateId = () =>
@@ -74,6 +73,8 @@ export const useAnalytics = () => {
 
     const initTracking = async () => {
       if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
+
+      const { getForensicData, hashFingerprint } = await import("./forensics");
 
       const visitorId = getVisitorId();
       const sessionId = getSessionId();

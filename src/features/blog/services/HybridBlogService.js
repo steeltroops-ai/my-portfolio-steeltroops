@@ -117,12 +117,21 @@ const getStaticTags = () => {
  */
 export const getPublishedPosts = async (options = {}) => {
   try {
-    if (await isNeonAvailable()) {
-      const result = await getNeonPosts(options);
-      if (!result.error) {
-        return result;
+    // Try Neon first directly without separate check to save latency
+    // Only skip if we know it's down via cache
+    if (neonAvailabilityCache !== false) {
+      try {
+        const result = await getNeonPosts(options);
+        if (!result.error) {
+          neonAvailabilityCache = true;
+          neonAvailabilityTimestamp = Date.now();
+          return result;
+        }
+      } catch (e) {
+        // Silent fail to static
       }
     }
+
     // Fallback to static content without indicating "offline"
     return filterStaticPosts(staticBlogPosts, options);
   } catch (error) {
@@ -136,10 +145,16 @@ export const getPublishedPosts = async (options = {}) => {
  */
 export const getPostBySlug = async (slug, includeUnpublished = false) => {
   try {
-    if (await isNeonAvailable()) {
-      const result = await getNeonPostBySlug(slug, includeUnpublished);
-      if (!result.error && result.data) {
-        return result;
+    if (neonAvailabilityCache !== false) {
+      try {
+        const result = await getNeonPostBySlug(slug, includeUnpublished);
+        if (!result.error && result.data) {
+          neonAvailabilityCache = true;
+          neonAvailabilityTimestamp = Date.now();
+          return result;
+        }
+      } catch (e) {
+        // Silent fail
       }
     }
 
@@ -169,10 +184,16 @@ export const getPostBySlug = async (slug, includeUnpublished = false) => {
  */
 export const getAllTags = async () => {
   try {
-    if (await isNeonAvailable()) {
-      const result = await getNeonTags();
-      if (!result.error && result.data && result.data.length > 0) {
-        return result;
+    if (neonAvailabilityCache !== false) {
+      try {
+        const result = await getNeonTags();
+        if (!result.error && result.data && result.data.length > 0) {
+          neonAvailabilityCache = true;
+          neonAvailabilityTimestamp = Date.now();
+          return result;
+        }
+      } catch (e) {
+        // Silent fail
       }
     }
     return getStaticTags();

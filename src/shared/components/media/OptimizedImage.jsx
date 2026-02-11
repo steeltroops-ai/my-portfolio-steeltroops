@@ -18,7 +18,7 @@ const OptimizedImage = ({
   ...props
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(!lazy);
+  const [isInView, setIsInView] = useState(!lazy || priority);
   const [error, setError] = useState(false);
   const imgRef = useRef(null);
   const observerRef = useRef(null);
@@ -30,7 +30,8 @@ const OptimizedImage = ({
   const generateAVIFSrc = (originalSrc) => {
     if (!avif || !originalSrc) return null;
 
-    // For Supabase storage URLs, we can add transformation parameters
+    // Only optimize Supabase storage URLs
+    // External URLs don't support transformation without a paid CDN service
     if (originalSrc.includes("supabase.co/storage")) {
       const url = new URL(originalSrc);
       url.searchParams.set("format", "avif");
@@ -47,7 +48,8 @@ const OptimizedImage = ({
   const generateWebPSrc = (originalSrc) => {
     if (!webp || !originalSrc) return null;
 
-    // For Supabase storage URLs, we can add transformation parameters
+    // Only optimize Supabase storage URLs
+    // External URLs don't support transformation without a paid CDN service
     if (originalSrc.includes("supabase.co/storage")) {
       const url = new URL(originalSrc);
       url.searchParams.set("format", "webp");
@@ -62,21 +64,25 @@ const OptimizedImage = ({
 
   // Generate responsive image sources
   const generateSrcSet = (originalSrc) => {
-    if (!originalSrc || !originalSrc.includes("supabase.co/storage")) {
-      return undefined;
+    if (!originalSrc) return undefined;
+
+    // Only generate srcset for Supabase storage URLs
+    // External URLs are served directly from their origin
+    if (originalSrc.includes("supabase.co/storage")) {
+      const breakpoints = [480, 768, 1024, 1280, 1920];
+      const srcSet = breakpoints
+        .map((bp) => {
+          const url = new URL(originalSrc);
+          url.searchParams.set("width", bp.toString());
+          if (quality) url.searchParams.set("quality", quality.toString());
+          return `${url.toString()} ${bp}w`;
+        })
+        .join(", ");
+
+      return srcSet;
     }
 
-    const breakpoints = [480, 768, 1024, 1280, 1920];
-    const srcSet = breakpoints
-      .map((bp) => {
-        const url = new URL(originalSrc);
-        url.searchParams.set("width", bp.toString());
-        if (quality) url.searchParams.set("quality", quality.toString());
-        return `${url.toString()} ${bp}w`;
-      })
-      .join(", ");
-
-    return srcSet;
+    return undefined;
   };
 
   // Generate optimized sources early to use in preload effect
@@ -167,11 +173,7 @@ const OptimizedImage = ({
   }
 
   return (
-    <div
-      ref={imgRef}
-      className={`relative overflow-hidden ${className}`}
-      style={{ width, height }}
-    >
+    <div ref={imgRef} className={`relative overflow-hidden ${className}`}>
       {/* Placeholder */}
       {placeholder && !isLoaded && (
         <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
@@ -211,7 +213,6 @@ const OptimizedImage = ({
             className={`
               transition-opacity duration-300
               ${isLoaded ? "opacity-100" : "opacity-0"}
-              ${className}
             `}
             {...props}
           />

@@ -23,8 +23,6 @@ export default defineConfig({
       "@/lib": resolve(__dirname, "./src/lib"),
       "@/data": resolve(__dirname, "./src/data"),
       "@/constants": resolve(__dirname, "./src/constants"),
-      react: resolve(__dirname, "node_modules/react"),
-      "react-dom": resolve(__dirname, "node_modules/react-dom"),
     },
   },
   server: {
@@ -55,22 +53,52 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"],
-          router: ["react-router-dom"],
-          query: ["@tanstack/react-query"],
-
-          markdown: [
-            "react-markdown",
-            "remark-gfm",
-            "rehype-highlight",
-            "rehype-raw",
-            "highlight.js",
-          ],
-          editor: ["react-quill", "quill"],
-          motion: ["framer-motion"],
-          icons: ["react-icons"],
-          utils: ["dompurify", "prop-types"],
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (
+              id.includes("react") ||
+              id.includes("react-dom") ||
+              id.includes("scheduler")
+            ) {
+              return "vendor";
+            }
+            if (id.includes("framer-motion") || id.includes("popmotion")) {
+              return "motion";
+            }
+            if (id.includes("ua-parser-js")) {
+              return "forensics";
+            }
+            if (id.includes("react-router") || id.includes("@remix-run")) {
+              return "router";
+            }
+            if (id.includes("@tanstack")) {
+              return "query";
+            }
+            if (id.includes("react-icons")) {
+              return "icons";
+            }
+            if (
+              id.includes("highlight.js") ||
+              id.includes("rehype") ||
+              id.includes("remark") ||
+              id.includes("micromark") ||
+              id.includes("unified")
+            ) {
+              return "blog-libs";
+            }
+            if (id.includes("quill")) {
+              return "editor-libs";
+            }
+            if (id.includes("dompurify") || id.includes("prop-types")) {
+              return "utils";
+            }
+            return "shared-vendor";
+          }
+          // Internal chunking for features to keep index lean
+          if (id.includes("src/features/portfolio")) return "portfolio-feature";
+          if (id.includes("src/features/blog")) return "blog-feature";
+          if (id.includes("src/features/admin")) return "admin-feature";
+          if (id.includes("src/shared/components")) return "shared-components";
         },
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
