@@ -20,12 +20,12 @@ const ExperienceCard = ({ experience, index, isLast }) => {
         transition={{ duration: 0.6, delay: index * 0.1 }}
         className="hidden lg:flex flex-col items-end pt-5"
       >
-        <span className="text-xl font-bold text-white tracking-tight">
+        <span className="text-xl font-light text-white tracking-tight">
           {experience.year.includes(" - ")
             ? experience.year.split(" - ")[1]
             : "Present"}
         </span>
-        <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest mt-1">
+        <span className="text-[10px] font-light text-purple-300 uppercase tracking-widest mt-1">
           {experience.year.split(" - ")[0]}
         </span>
       </motion.div>
@@ -106,7 +106,7 @@ const ExperienceCard = ({ experience, index, isLast }) => {
             />
             <div className="absolute inset-0 blur-[4px] bg-purple-500/30 rounded-full" />
           </div>
-          <span className="text-[10px] font-bold text-neutral-400 tracking-widest uppercase">
+          <span className="text-[10px] font-light text-neutral-400 tracking-widest uppercase">
             {experience.year}
           </span>
           <div className="h-px flex-1 bg-gradient-to-r from-purple-500/30 via-neutral-800 to-transparent" />
@@ -136,10 +136,10 @@ const ExperienceCard = ({ experience, index, isLast }) => {
           {/* Card Body */}
           <div className="p-6 sm:p-8 relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-4">
-              <h3 className="text-lg font-bold text-white tracking-tight title-font">
+              <h3 className="text-lg text-white tracking-tight title-font">
                 {experience.role}
               </h3>
-              <span className="text-xs font-medium text-white/70">
+              <span className="text-xs font-light text-white/70">
                 {experience.company}
               </span>
             </div>
@@ -159,7 +159,7 @@ const ExperienceCard = ({ experience, index, isLast }) => {
               {experience.technologies.map((tech, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-200 uppercase tracking-tighter"
+                  className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-light text-purple-200 uppercase tracking-tighter"
                 >
                   {tech}
                 </span>

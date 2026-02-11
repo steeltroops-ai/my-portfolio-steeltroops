@@ -222,7 +222,8 @@ const BlogPost = () => {
                   alt={post.title}
                   className="w-full h-full object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 60vw"
-                  lazy={false} // Don't lazy load featured images
+                  lazy={false}
+                  priority={true} // Enable preload for LCP image
                   webp={true}
                 />
               </motion.div>
@@ -484,7 +485,7 @@ const BlogPost = () => {
               {/* Navigation & Table of Contents */}
               <div className="p-6 rounded-xl border backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg">
                 {/* Breadcrumb */}
-                <div className="flex items-center text-xs text-neutral-400 mb-6">
+                <div className="flex items-center text-xs text-neutral-300 mb-6">
                   <Link
                     to="/"
                     className="hover:text-cyan-400 transition-colors"
@@ -521,7 +522,7 @@ const BlogPost = () => {
                           className={`block w-full text-left text-sm transition-colors leading-relaxed ${
                             activeId === heading.id
                               ? "text-cyan-400 font-medium"
-                              : "text-neutral-400 hover:text-neutral-200"
+                              : "text-neutral-300 hover:text-neutral-100"
                           } ${heading.level === 1 ? "pl-0 font-medium" : heading.level === 2 ? "pl-0" : "pl-4"}`}
                         >
                           {heading.text}
@@ -541,7 +542,7 @@ const BlogPost = () => {
                   <div className="flex items-start gap-3">
                     <FiCalendar className="mt-1 text-purple-400 flex-shrink-0" />
                     <div>
-                      <p className="text-neutral-400">Published</p>
+                      <p className="text-neutral-300 font-medium">Published</p>
                       <p className="text-white">
                         {new Date(post.created_at).toLocaleDateString("en-US", {
                           year: "numeric",
@@ -555,7 +556,9 @@ const BlogPost = () => {
                     <div className="flex items-start gap-3">
                       <FiClock className="mt-1 text-purple-400 flex-shrink-0" />
                       <div>
-                        <p className="text-neutral-400">Reading Time</p>
+                        <p className="text-neutral-300 font-medium">
+                          Reading Time
+                        </p>
                         <p className="text-white">{post.read_time} min read</p>
                       </div>
                     </div>
@@ -565,7 +568,7 @@ const BlogPost = () => {
                       ✍️
                     </span>
                     <div>
-                      <p className="text-neutral-400">Author</p>
+                      <p className="text-neutral-300 font-medium">Author</p>
                       <p className="text-white">{post.author}</p>
                     </div>
                   </div>
@@ -582,7 +585,7 @@ const BlogPost = () => {
                     {post.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-3 py-1 text-xs rounded-full bg-purple-500/10 text-purple-300/70 border border-purple-400/20"
+                        className="px-3 py-1 text-xs rounded-full bg-purple-500/10 text-purple-200 border border-purple-400/20"
                       >
                         {tag}
                       </span>

@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { ReactLenis } from "lenis/react";
 import App from "@/App.jsx";
-import { ErrorBoundary } from "@/shared";
+import ErrorBoundary from "@/shared/components/feedback/ErrorBoundary";
 import "@/index.css";
 import AnalyticsTracker from "@/shared/analytics/AnalyticsTracker";
 

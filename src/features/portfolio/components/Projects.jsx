@@ -213,8 +213,13 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                       trackEvent("projects", "github_click", project.title);
                     }}
                     className="p-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-white/20 hover:scale-110 transition-all"
+                    aria-label={`View ${project.title} source code on GitHub`}
+                    title="View Source Code"
                   >
-                    <FaGithub className="text-white text-sm" />
+                    <FaGithub
+                      className="text-white text-sm"
+                      aria-hidden="true"
+                    />
                   </a>
                 )}
                 {project.url && (
@@ -227,8 +232,13 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                       trackEvent("projects", "demo_click", project.title);
                     }}
                     className="p-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-white/20 hover:scale-110 transition-all"
+                    aria-label={`Visit ${project.title} live demo`}
+                    title="View Live Demo"
                   >
-                    <FiGlobe className="text-white text-sm" />
+                    <FiGlobe
+                      className="text-white text-sm"
+                      aria-hidden="true"
+                    />
                   </a>
                 )}
               </motion.div>
@@ -241,6 +251,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 onToggle();
               }}
               className="hidden lg:flex p-2.5 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all border border-white/20"
+              aria-label="Collapse project details"
             >
               <FaChevronUp className="text-sm" />
             </button>
@@ -255,10 +266,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-1.5"
             >
-              <span className="text-white/80 text-[9px] font-bold uppercase tracking-[0.2em] bg-white/5 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-md">
+              <span className="text-white/80 text-[9px] font-light uppercase tracking-[0.2em] bg-white/5 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-md">
                 Project Deep Dive
               </span>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white title-font drop-shadow-2xl tracking-tight">
+              <h3 className="text-2xl sm:text-3xl text-white title-font drop-shadow-2xl tracking-tight">
                 {project.title}
               </h3>
             </motion.div>
@@ -272,14 +283,19 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       >
         {!isExpanded && (
           <div className="mb-3">
-            <h3 className="text-lg font-bold title-font text-neutral-200 group-hover:text-white transition-colors mb-1 tracking-tight">
+            <h3 className="text-lg title-font text-neutral-200 group-hover:text-white transition-colors mb-1 tracking-tight">
               {project.title}
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2"
+              role="list"
+              aria-label="Key technologies"
+            >
               {project.technologies.slice(0, 3).map((tech, i) => (
                 <span
                   key={i}
-                  className="text-[9px] uppercase tracking-wider font-bold text-purple-300/80 group-hover:text-purple-300 transition-colors"
+                  className="text-[9px] uppercase tracking-wider text-purple-300/80 group-hover:text-purple-300 transition-colors"
+                  role="listitem"
                 >
                   {tech}
                   {i < 2 ? " •" : ""}
@@ -304,15 +320,23 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 <div className="lg:col-span-3 space-y-6">
                   <div className="flex items-center gap-4">
                     <div className="h-px w-8 bg-purple-500/50"></div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-purple-300 shrink-0">
+                    <span className="text-[10px] font-light uppercase tracking-[0.2em] text-purple-300 shrink-0">
                       Core Initiatives
                     </span>
                     <div className="h-px flex-1 bg-gradient-to-r from-purple-500/20 to-transparent"></div>
                   </div>
-                  <div className="space-y-4">
+                  <div
+                    className="space-y-4"
+                    role="list"
+                    aria-label="Project description points"
+                  >
                     {Array.isArray(project.description) ? (
                       project.description.map((point, i) => (
-                        <div key={i} className="flex gap-4 group/item">
+                        <div
+                          key={i}
+                          className="flex gap-4 group/item"
+                          role="listitem"
+                        >
                           <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-white/30 group-hover/item:bg-white/60 transition-colors shrink-0" />
                           <p className="text-sm sm:text-base leading-relaxed text-neutral-300 font-light">
                             {point}
@@ -331,14 +355,19 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 <div className="lg:col-span-2 space-y-6">
                   <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-6">
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-4">
+                      <h4 className="text-[10px] font-light uppercase tracking-widest text-neutral-500 mb-4">
                         Technical Snapshot
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div
+                        className="flex flex-wrap gap-2"
+                        role="list"
+                        aria-label="All technologies used"
+                      >
                         {project.technologies.map((tech, i) => (
                           <span
                             key={i}
-                            className="text-[10px] font-bold text-white/70 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+                            className="text-[10px] font-light text-white/70 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+                            role="listitem"
                           >
                             {tech}
                           </span>
@@ -353,14 +382,15 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="group/btn flex items-center justify-between px-6 py-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/10"
+                          aria-label={`View source code for ${project.title} on GitHub`}
                         >
                           <div className="flex items-center gap-3">
                             <FaGithub className="text-xl text-white/70 group-hover/btn:text-white transition-colors" />
-                            <span className="text-sm font-semibold text-white/70 group-hover/btn:text-white transition-colors">
+                            <span className="text-sm font-light text-white/70 group-hover/btn:text-white transition-colors">
                               Source Code
                             </span>
                           </div>
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 group-hover/btn:text-neutral-300 transition-colors">
+                          <div className="text-[10px] font-light uppercase tracking-widest text-neutral-500 group-hover/btn:text-neutral-300 transition-colors">
                             GitHub
                           </div>
                         </a>
@@ -372,14 +402,15 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="group/btn flex items-center justify-between px-6 py-4 rounded-xl bg-indigo-500/5 hover:bg-indigo-500/15 transition-all border border-indigo-500/20"
+                          aria-label={`View live demo for ${project.title}`}
                         >
                           <div className="flex items-center gap-3">
                             <FiGlobe className="text-base text-indigo-400/70 group-hover/btn:text-indigo-400 transition-colors" />
-                            <span className="text-sm font-semibold text-indigo-300/70 group-hover/btn:text-indigo-300 transition-colors">
+                            <span className="text-sm font-light text-indigo-300/70 group-hover/btn:text-indigo-300 transition-colors">
                               Live Demo
                             </span>
                           </div>
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/50 group-hover/btn:text-indigo-400/50 transition-colors">
+                          <div className="text-[10px] font-light uppercase tracking-widest text-indigo-500/50 group-hover/btn:text-indigo-400/50 transition-colors">
                             Preview
                           </div>
                         </a>
@@ -396,8 +427,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                   onToggle();
                 }}
                 className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between cursor-pointer group/close"
+                role="button"
+                aria-label="Collapse project details"
               >
-                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest group-hover/close:text-white transition-colors">
+                <span className="text-[10px] font-light text-neutral-500 uppercase tracking-widest group-hover/close:text-white transition-colors">
                   Collapse Project
                 </span>
                 <FaChevronUp className="text-neutral-600 group-hover/close:text-white group-hover/close:-translate-y-0.5 transition-all text-[10px]" />
@@ -417,7 +450,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               </p>
 
               <div className="absolute bottom-6 left-6 right-6 pt-4 border-t border-white/5 flex items-center justify-between pointer-events-none">
-                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.2em] group-hover:text-white transition-colors">
+                <span className="text-[9px] font-light text-neutral-500 uppercase tracking-[0.2em] group-hover:text-white transition-colors">
                   Explore Project
                 </span>
                 <FaChevronDown className="text-neutral-600 group-hover:text-white group-hover:translate-y-0.5 transition-all text-[9px]" />

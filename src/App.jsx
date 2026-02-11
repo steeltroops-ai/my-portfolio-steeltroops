@@ -1,8 +1,10 @@
 // Portfolio components (Critical)
-import { Hero } from "@/features/portfolio";
+import Hero from "@/features/portfolio/components/Hero";
 
 // Shared layout components (Critical)
-import { Navbar, ScrollspyNav, SEOHead } from "@/shared";
+import Navbar from "@/shared/components/layout/Navbar";
+import ScrollspyNav from "@/shared/components/layout/ScrollspyNav";
+import SEOHead from "@/shared/components/ui/SEOHead";
 import { lazy, Suspense } from "react";
 
 // Lazy load non-critical sections below the fold
@@ -43,13 +45,17 @@ const App = () => {
 
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         <Navbar />
-        <Hero />
-        <Suspense fallback={<SectionLoader />}>
-          <About />
-          <Technologies />
-          <Experience />
-          <Projects />
-          <Contact />
+        <main id="main-content">
+          <Hero />
+          <Suspense fallback={<SectionLoader />}>
+            <About />
+            <Technologies />
+            <Experience />
+            <Projects />
+            <Contact />
+          </Suspense>
+        </main>
+        <Suspense fallback={null}>
           <Footer />
         </Suspense>
       </div>

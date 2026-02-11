@@ -45,8 +45,10 @@ const SocialLinks = ({ className = "", iconClassName = "" }) => {
           rel="noopener noreferrer"
           className={`cursor-pointer hover:text-cyan-300 transition-colors duration-200 focus:outline-none rounded-sm ${iconClassName}`}
           aria-label={label}
+          title={label}
         >
-          <Icon />
+          <Icon aria-hidden="true" />
+          <span className="sr-only">{label}</span>
         </a>
       ))}
     </div>

@@ -50,7 +50,7 @@ const Footer = () => {
               </a>
               <div className="flex items-center justify-center md:justify-end gap-2 text-sm text-neutral-500">
                 <FiMapPin className="w-4 h-4" />
-                <span>{PERSONAL.location}</span>
+                <span title="Location">{PERSONAL.location}</span>
               </div>
             </div>
           </div>

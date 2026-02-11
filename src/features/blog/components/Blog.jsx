@@ -9,7 +9,12 @@ import {
   FiList,
 } from "react-icons/fi";
 import { usePublishedPosts, useTags } from "../hooks/useBlogQueries";
-import { FloatingChatButton, SocialLinks, SEOHead } from "@/shared";
+import {
+  FloatingChatButton,
+  SocialLinks,
+  SEOHead,
+  OptimizedImage,
+} from "@/shared";
 
 const Blog = () => {
   const navigate = useNavigate();
@@ -123,7 +128,7 @@ const Blog = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search posts..."
-                  className="w-full py-2 pl-10 pr-4 text-white border rounded-lg bg-purple-500/5 border-purple-400/20 backdrop-blur-sm shadow-lg focus:outline-none focus:border-purple-400/40 focus:bg-purple-500/10 transition-all duration-300 placeholder:text-purple-100/40"
+                  className="w-full py-2 pl-10 pr-4 text-white border rounded-lg bg-purple-500/5 border-purple-400/20 backdrop-blur-sm shadow-lg focus:outline-none focus:border-purple-400/40 focus:bg-purple-500/10 transition-all duration-300 placeholder:text-purple-200/60"
                 />
               </div>
             </form>
@@ -290,9 +295,11 @@ const Blog = () => {
                             }`}
                           >
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-                            <img
+                            <OptimizedImage
                               src={post.featured_image_url}
                               alt={post.title}
+                              width={400}
+                              height={300}
                               className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                             />
                           </div>
@@ -308,7 +315,7 @@ const Blog = () => {
                           </h2>
 
                           {/* Excerpt */}
-                          <p className="text-neutral-300/80 text-sm leading-relaxed mb-4 line-clamp-3 group-hover:text-neutral-200 transition-colors">
+                          <p className="text-neutral-200 text-sm leading-relaxed mb-4 line-clamp-3 transition-colors">
                             {post.excerpt}
                           </p>
 
@@ -316,12 +323,12 @@ const Blog = () => {
                           <div className="flex-1" />
 
                           {/* Meta Info */}
-                          <div className="flex items-center justify-between text-sm text-purple-300/60 group-hover:text-purple-300 transition-colors mt-2">
+                          <div className="flex items-center justify-between text-sm text-purple-200/80 mt-2">
                             <div className="flex items-center gap-2">
                               {post.read_time && (
                                 <span className="flex items-center gap-1.5">
                                   <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                                  {post.read_time} min read
+                                  <span>{post.read_time} min read</span>
                                 </span>
                               )}
                             </div>
