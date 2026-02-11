@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   FiSearch,
   FiFilter,
-  FiArrowLeft,
+  FiChevronLeft,
   FiGrid,
   FiList,
 } from "react-icons/fi";
@@ -22,7 +22,7 @@ const Blog = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [layoutView, setLayoutView] = useState("grid"); // "grid" or "list"
+  const [layoutView, setLayoutView] = useState("list"); // "grid" or "list"
   const postsPerPage = 6;
 
   // Use React Query hooks for data fetching
@@ -78,38 +78,26 @@ const Blog = () => {
       </div>
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         {/* Navigation */}
-        <nav className="flex items-center justify-between py-4 sm:py-5 lg:py-6 mb-4 sm:mb-6 lg:mb-8 px-2 sm:px-0">
+        <nav className="relative flex items-center justify-between min-h-[5rem] mb-4 sm:mb-6 lg:mb-8 px-2 sm:px-0">
           <div className="flex items-center flex-shrink-0">
             <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white transition-colors duration-200 hover:text-cyan-300"
+              onClick={() => navigate("/")}
+              className="group flex items-center gap-2 text-white transition-all duration-300 hover:text-purple-300"
             >
-              <FiArrowLeft className="text-xl sm:text-2xl" />
-              <span>Back</span>
+              <FiChevronLeft className="text-2xl transition-transform duration-300 group-hover:-translate-x-1" />
+              <span className="text-xl font-light tracking-tight">Back</span>
             </button>
           </div>
-          <SocialLinks />
-        </nav>
 
-        {/* Header */}
-        <div className="mb-6 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-1 text-4xl font-bold text-white md:text-5xl"
-          >
-            Blog
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="max-w-2xl mx-auto text-base sm:text-lg text-neutral-400"
-          >
-            Thoughts, tutorials, and insights about web development, technology,
-            and more.
-          </motion.p>
-        </div>
+          {/* Absolute Centered Title */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <h1 className="text-xl sm:text-2xl font-light text-white tracking-tight uppercase">
+              Blogs
+            </h1>
+          </div>
+
+          <SocialLinks onlyLastOnMobile />
+        </nav>
 
         {/* Search and Filters */}
         <motion.div
@@ -275,7 +263,7 @@ const Blog = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * index }}
-                      className={`relative group overflow-hidden transition-all duration-300 border rounded-xl backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 hover:border-white/20 ${
+                      className={`relative group overflow-hidden transition-all duration-300 border rounded-xl backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg hover:shadow-[4px_8px_20px_rgba(34,211,238,0.2)] hover:border-white/20 ${
                         layoutView === "grid"
                           ? "h-full flex flex-col hover:-translate-y-1"
                           : "flex flex-col sm:flex-row"
@@ -283,51 +271,48 @@ const Blog = () => {
                     >
                       <Link
                         to={`/blogs/${post.slug}`}
-                        className={`flex flex-col flex-1 h-full ${layoutView === "list" ? "sm:flex-row" : ""}`}
+                        className={`flex flex-row flex-1 overflow-hidden h-[120px] sm:h-[154px] ${layoutView === "list" ? "" : "flex-col h-full"}`}
                       >
-                        {/* Featured Image - Square-ish aspect ratio for grid */}
+                        {/* Featured Image - Calibrated Fitting & Centering */}
                         {post.featured_image_url && (
                           <div
-                            className={`relative overflow-hidden ${
+                            className={`relative overflow-hidden flex-shrink-0 ${
                               layoutView === "grid"
                                 ? "w-full aspect-[4/3]"
-                                : "w-full sm:w-64 h-48 sm:h-auto flex-shrink-0"
+                                : "w-28 sm:w-56 lg:w-64 h-full"
                             }`}
                           >
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
                             <OptimizedImage
                               src={post.featured_image_url}
                               alt={post.title}
-                              width={400}
-                              height={300}
-                              className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                             />
                           </div>
                         )}
 
-                        {/* Content Container */}
+                        {/* Content Container - Compact & Aligned */}
                         <div
-                          className={`flex flex-col flex-1 p-6 ${layoutView === "list" ? "justify-center" : ""}`}
+                          className={`flex flex-col flex-1 p-3 sm:p-5 min-w-0 ${layoutView === "list" ? "justify-center" : ""}`}
                         >
-                          {/* Title */}
-                          <h2 className="text-xl font-semibold text-white mb-3 leading-tight transition-colors group-hover:text-purple-300 line-clamp-2">
-                            {post.title}
-                          </h2>
+                          <div className="min-w-0">
+                            {/* Title - Performance Optimized */}
+                            <h2 className="text-sm sm:text-xl font-semibold text-white mb-1.5 sm:mb-2 leading-tight transition-colors group-hover:text-purple-300 line-clamp-2">
+                              {post.title}
+                            </h2>
 
-                          {/* Excerpt */}
-                          <p className="text-neutral-200 text-sm leading-relaxed mb-4 line-clamp-3 transition-colors">
-                            {post.excerpt}
-                          </p>
-
-                          {/* Spacer to push meta to bottom in grid view */}
-                          <div className="flex-1" />
+                            {/* Excerpt - Hidden on very small screens for cleanliness, kept on sm+ */}
+                            <p className="hidden xs:line-clamp-1 sm:line-clamp-2 text-neutral-400 text-[10px] sm:text-sm leading-relaxed mb-2 sm:mb-4 transition-colors">
+                              {post.excerpt}
+                            </p>
+                          </div>
 
                           {/* Meta Info */}
-                          <div className="flex items-center justify-between text-sm text-purple-200/80 mt-2">
+                          <div className="flex items-center justify-between text-[10px] sm:text-xs text-purple-200/60 mt-auto">
                             <div className="flex items-center gap-2">
                               {post.read_time && (
                                 <span className="flex items-center gap-1.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                  <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-purple-400" />
                                   <span>{post.read_time} min read</span>
                                 </span>
                               )}
@@ -342,7 +327,6 @@ const Blog = () => {
                                 {
                                   month: "short",
                                   day: "numeric",
-                                  year: "numeric",
                                 }
                               )}
                             </time>

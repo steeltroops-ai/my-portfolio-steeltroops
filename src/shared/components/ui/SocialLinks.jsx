@@ -32,25 +32,34 @@ const socialLinks = [
   },
 ];
 
-const SocialLinks = ({ className = "", iconClassName = "" }) => {
+const SocialLinks = ({
+  className = "",
+  iconClassName = "",
+  onlyLastOnMobile = false,
+}) => {
   return (
     <div
       className={`flex justify-center gap-4 text-2xl items-center ${className}`}
     >
-      {socialLinks.map(({ href, icon: Icon, label }) => (
-        <a
-          key={href}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`cursor-pointer hover:text-cyan-300 transition-colors duration-200 focus:outline-none rounded-sm ${iconClassName}`}
-          aria-label={label}
-          title={label}
-        >
-          <Icon aria-hidden="true" />
-          <span className="sr-only">{label}</span>
-        </a>
-      ))}
+      {socialLinks.map(({ href, icon: Icon, label }, index) => {
+        const isLast = index === socialLinks.length - 1;
+        return (
+          <a
+            key={href}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`cursor-pointer hover:text-cyan-300 transition-colors duration-200 focus:outline-none rounded-sm ${iconClassName} ${
+              onlyLastOnMobile && !isLast ? "hidden sm:block" : ""
+            }`}
+            aria-label={label}
+            title={label}
+          >
+            <Icon aria-hidden="true" />
+            <span className="sr-only">{label}</span>
+          </a>
+        );
+      })}
     </div>
   );
 };
@@ -58,6 +67,7 @@ const SocialLinks = ({ className = "", iconClassName = "" }) => {
 SocialLinks.propTypes = {
   className: PropTypes.string,
   iconClassName: PropTypes.string,
+  onlyLastOnMobile: PropTypes.bool,
 };
 
 export default SocialLinks;

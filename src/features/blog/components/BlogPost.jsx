@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
 import {
-  FiArrowLeft,
+  FiChevronLeft,
   FiCalendar,
   FiClock,
   FiChevronRight,
@@ -187,17 +187,25 @@ const BlogPost = () => {
 
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         {/* Navigation */}
-        <nav className="flex items-center justify-between py-4 sm:py-5 lg:py-6 mb-6 sm:mb-8 lg:mb-16 px-2 sm:px-0">
+        <nav className="relative flex items-center justify-between min-h-[5rem] mb-6 sm:mb-8 lg:mb-16 px-2 sm:px-0">
           <div className="flex items-center flex-shrink-0">
             <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white transition-colors duration-200 hover:text-cyan-300"
+              onClick={() => navigate("/blogs")}
+              className="group flex items-center gap-2 text-white transition-all duration-300 hover:text-purple-300"
             >
-              <FiArrowLeft className="text-xl sm:text-2xl" />
-              <span>Back</span>
+              <FiChevronLeft className="text-2xl transition-transform duration-300 group-hover:-translate-x-1" />
+              <span className="text-xl font-light tracking-tight">Back</span>
             </button>
           </div>
-          <SocialLinks />
+
+          {/* Absolute Centered Title */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-full max-w-[40%] sm:max-w-[60%] text-center">
+            <h1 className="text-xl sm:text-2xl font-light text-white tracking-tight uppercase truncate px-4">
+              {post.title}
+            </h1>
+          </div>
+
+          <SocialLinks onlyLastOnMobile />
         </nav>
 
         {/* Two Column Layout */}
@@ -228,18 +236,6 @@ const BlogPost = () => {
                 />
               </motion.div>
             )}
-
-            {/* Article Header */}
-            <motion.header
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mb-12"
-            >
-              <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                {post.title}
-              </h1>
-            </motion.header>
 
             {/* Article Content */}
             <motion.div
