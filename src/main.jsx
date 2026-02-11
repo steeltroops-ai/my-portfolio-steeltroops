@@ -102,7 +102,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <HelmetProvider>
           <ReactLenis
             root
-            options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}
+            options={{
+              lerp: 0.05,
+              duration: 2.0,
+              smoothWheel: true,
+              wheelMultiplier: 0.8,
+              touchMultiplier: 1.5,
+            }}
           >
             <Router
               future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
