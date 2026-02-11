@@ -37,13 +37,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
     onToggle();
   };
   return (
-    <motion.div
-      layout
-      transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2 }}
+    <div
       onClick={handleToggle}
-      className={`group cursor-pointer flex flex-col relative overflow-hidden rounded-2xl
-        bg-transparent backdrop-blur-none border-0 z-0
-        ${isExpanded ? "md:h-[932px] min-h-[450px] h-auto shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "h-[450px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
+      className={`group cursor-pointer flex flex-col relative overflow-hidden rounded-2xl will-change-transform h-full w-full
+        bg-transparent backdrop-blur-none border-0
+        ${isExpanded ? "shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
     >
       {/* Liquid Glass Outline - Apple Style Refraction */}
       <div className="absolute inset-0 rounded-2xl border border-white/20 pointer-events-none z-30"></div>
@@ -308,10 +306,9 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
           </div>
         )}
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           {isExpanded ? (
             <motion.div
-              layout
               key="expanded"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -449,7 +446,6 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
             </motion.div>
           ) : (
             <motion.div
-              layout
               key="collapsed"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -471,7 +467,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -480,13 +476,6 @@ const Projects = () => {
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
-    if (expandedId !== id) {
-      setTimeout(() => {
-        document
-          .getElementById(`project-${id}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 400);
-    }
   };
 
   return (
@@ -507,14 +496,25 @@ const Projects = () => {
                 layout
                 transition={{
                   type: "spring",
-                  stiffness: 100,
+                  stiffness: 60,
                   damping: 20,
-                  mass: 1.2,
+                  mass: 1,
+                }}
+                onLayoutAnimationComplete={() => {
+                  if (isExpanded) {
+                    document
+                      .getElementById(`project-${index}`)
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
                 }}
                 id={`project-${index}`}
                 key={`${project.title}-${index}`}
-                className={`
-                  ${isExpanded ? "md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2 z-10" : "z-0"}`}
+                className={`relative rounded-2xl
+                  ${
+                    isExpanded
+                      ? "md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2 md:h-[932px] min-h-[800px] h-auto z-50"
+                      : "h-[450px] z-0"
+                  }`}
               >
                 <ProjectCard
                   project={project}
