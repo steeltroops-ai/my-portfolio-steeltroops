@@ -31,14 +31,8 @@ window.addEventListener("unhandledrejection", (event) => {
   console.error("Unhandled promise rejection:", event.reason);
 });
 
-// Fix for "This document requires 'TrustedHTML' assignment" error
-if (window.trustedTypes && window.trustedTypes.createPolicy) {
-  window.trustedTypes.createPolicy("default", {
-    createHTML: (string) => string,
-    createScript: (string) => string,
-    createScriptURL: (string) => string,
-  });
-}
+// Fix for "This document requires 'TrustedHTML' assignment" error is now handled in index.html
+// to ensure it runs before any bundled code starts.
 
 // Create a client
 const queryClient = new QueryClient({

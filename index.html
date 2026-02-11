@@ -46,8 +46,20 @@
       }
     </style>
 
-    <!-- Primary Meta Tags -->
     <title>Mayank Pratap Singh | Full Stack & ML Engineer</title>
+
+    <!-- Fix for "This document requires 'TrustedHTML' assignment" error -->
+    <script>
+      if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        if (!window.trustedTypes.defaultPolicy) {
+          window.trustedTypes.createPolicy("default", {
+            createHTML: (string) => string,
+            createScript: (string) => string,
+            createScriptURL: (string) => string,
+          });
+        }
+      }
+    </script>
     <meta
       name="title"
       content="Mayank Pratap Singh | Full Stack & ML Engineer"
