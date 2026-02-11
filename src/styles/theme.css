@@ -7,32 +7,41 @@
 
 :root {
   /* --- Primary Color Palette --- */
-  /* --- Unified Purple Design System --- */
-  --brand-purple: #a855f7; /* Main (purple-500) */
-  --brand-purple-light: #d8b4fe; /* Text/Accent (purple-300) */
-  --brand-purple-soft: rgba(168, 85, 247, 0.15); /* Backgrounds */
-  --brand-purple-glow: rgba(168, 85, 247, 0.6); /* Effects/Nodes */
+  /* Unified Purple Design System */
+  --brand-purple: #a855f7; /* Main Brand Color (purple-500) */
+  --brand-purple-light: #d8b4fe; /* Light Accent (purple-300) */
+  --brand-purple-dark: #7e22ce; /* Dark Accent (purple-700) */
+  --brand-purple-soft: rgba(168, 85, 247, 0.15); /* Soft Backgrounds */
+  --brand-purple-glow: rgba(168, 85, 247, 0.6); /* Strong Glow Effects */
 
-  /* --- Primary Color Palette --- */
-  --color-primary-light: var(--brand-purple-light);
-  --color-primary-main: var(--brand-purple);
-  --color-primary-dark: #7e22ce; /* purple-700 */
+  /* --- Semantic Purple Usages --- */
+  /* Interactive Elements */
+  --color-accent-primary: var(--brand-purple);
+  --color-accent-hover: var(--brand-purple-light);
+  --color-accent-subtle: rgba(168, 85, 247, 0.1);
+  --color-accent-border: rgba(168, 85, 247, 0.2);
+
+  /* Feature Elements (Bullets, Tags) */
+  --color-bullet-bg: rgba(168, 85, 247, 0.6);
+  --color-bullet-hover: var(--brand-purple-light);
+  --color-tag-bg: rgba(168, 85, 247, 0.1);
+  --color-tag-border: rgba(168, 85, 247, 0.2);
+  --color-tag-text: #e9d5ff; /* purple-200 */
 
   /* --- Typography Colors --- */
-  /* Main Section Headings (e.g., "My Experience") */
+  /* Headings */
   --heading-main-primary: #ffffff;
-  --heading-main-secondary: theme("colors.neutral.500");
+  --heading-main-secondary: #737373; /* neutral-500 */
+  --heading-sub-main: #e5e5e5; /* neutral-200 */
+  --heading-sub-accent: #e9d5ff; /* purple-200 */
 
-  /* Subheadings & Roles (e.g., "Software Engineer") */
-  --heading-sub-main: theme("colors.neutral.200");
-  --heading-sub-accent: theme("colors.purple.200");
+  /* Body Text */
+  --text-body-main: #f5f5f5; /* neutral-100 */
+  --text-description: #a3a3a3; /* neutral-400 equivalent - Centralized Description Color */
+  --text-muted: #a3a3a3; /* Alias for general muted text */
 
-  /* Body Text & Descriptions (Upgraded to a cleaner, more vibrant white) */
-  --text-body-main: theme("colors.neutral.100");
-  --text-body-muted: theme("colors.neutral.400");
-
-  /* Special Text (Dates, Tags) */
-  --text-accent-purple: theme("colors.purple.300 / 0.9");
+  /* Special Text */
+  --text-accent-purple: rgba(216, 180, 254, 0.9); /* purple-300 / 0.9 */
   --text-tag-white: #ffffff;
 
   /* --- UI Component Styles --- */
@@ -47,22 +56,15 @@
   --glow-accent-strong: rgba(168, 85, 247, 0.6);
 
   /* Scifi / Circuit Accents */
-  --circuit-line: theme("colors.neutral.800");
+  --circuit-line: #262626; /* neutral-800 */
   --circuit-accent: rgba(168, 85, 247, 0.4);
-
-  /* Font Styles */
-  --font-heading: "Inter", sans-serif;
-  --font-heading-weight: 100;
-  --font-heading-tracking: -0.025em;
 }
 
 @layer components {
-  /* Centralized Section Heading Style */
+  /* Typography Classes removed - See typography.css */
+
+  /* Centralized Section Heading Style - Color Only */
   .section-title {
-    @apply text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl text-center;
-    font-family: var(--font-heading);
-    font-weight: var(--font-heading-weight);
-    letter-spacing: var(--font-heading-tracking);
     color: var(--heading-main-primary);
   }
 
@@ -70,16 +72,17 @@
     color: var(--heading-main-secondary);
   }
 
-  /* Shared Font Style for Roles and Project Names */
-  .title-font {
-    font-family: var(--font-heading);
-    font-weight: 500; /* Medium for readability but same family/tracking */
-    letter-spacing: var(--font-heading-tracking);
-  }
-
   /* Shared Glass Card Base */
   .glass-card {
-    @apply relative overflow-hidden transition-all duration-500 rounded-2xl border backdrop-blur-[6px];
+    position: relative;
+    overflow: hidden;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 500ms;
+    border-radius: 1rem; /* rounded-2xl */
+    border-width: 1px;
+    border-style: solid;
+    backdrop-filter: blur(6px);
     background-color: rgba(255, 255, 255, 0.015);
     border-color: rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
@@ -93,14 +96,40 @@
 
   /* Liquid Glass Effect - Matching Mobile Nav exactly */
   .liquid-glass {
-    @apply relative overflow-hidden bg-white/[0.01] backdrop-blur-[4px] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] border border-white/30;
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.01);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.3);
   }
 
   .liquid-glass-highlight {
-    @apply absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent pointer-events-none;
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.1),
+      transparent,
+      transparent
+    );
+    pointer-events: none;
   }
 
   .liquid-glass-top-line {
-    @apply absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none;
+    position: absolute;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    top: 0;
+    height: 1px;
+    background-image: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    pointer-events: none;
   }
 }

@@ -34,15 +34,46 @@ export default {
       },
       // Enhanced responsive breakpoints
       screens: {
-        'xs': '475px',
+        xs: "475px",
         // => @media (min-width: 475px) { ... }
       },
       // Responsive spacing
       spacing: {
-        'safe-top': 'env(safe-area-inset-top)',
-        'safe-bottom': 'env(safe-area-inset-bottom)',
-        'safe-left': 'env(safe-area-inset-left)',
-        'safe-right': 'env(safe-area-inset-right)',
+        "safe-top": "env(safe-area-inset-top)",
+        "safe-bottom": "env(safe-area-inset-bottom)",
+        "safe-left": "env(safe-area-inset-left)",
+        "safe-right": "env(safe-area-inset-right)",
+      },
+      // Centralized Color System Mapping
+      colors: {
+        brand: {
+          purple: "var(--brand-purple)",
+          light: "var(--brand-purple-light)",
+          dark: "var(--brand-purple-dark)",
+          soft: "var(--brand-purple-soft)",
+          glow: "var(--brand-purple-glow)",
+        },
+        accent: {
+          primary: "var(--color-accent-primary)",
+          hover: "var(--color-accent-hover)",
+          subtle: "var(--color-accent-subtle)",
+          border: "var(--color-accent-border)",
+        },
+        bullet: {
+          bg: "var(--color-bullet-bg)",
+          hover: "var(--color-bullet-hover)",
+        },
+        tag: {
+          bg: "var(--color-tag-bg)",
+          border: "var(--color-tag-border)",
+          text: "var(--color-tag-text)",
+        },
+        text: {
+          main: "var(--text-body-main)",
+          description: "var(--text-description)",
+          muted: "var(--text-muted)",
+          purple: "var(--text-accent-purple)",
+        },
       },
     },
   },
