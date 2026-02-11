@@ -34,6 +34,15 @@ const getUTM = () => {
   };
 };
 
+// Helper to safely run tasks during browser idle time to avoid blocking the main thread
+const onIdle = (cb) => {
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    window.requestIdleCallback(cb, { timeout: 2000 });
+  } else {
+    setTimeout(cb, 100);
+  }
+};
+
 export const useAnalytics = () => {
   const location = useLocation();
 
@@ -41,16 +50,18 @@ export const useAnalytics = () => {
     try {
       if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
 
-      await fetch("/api/analytics/track?action=event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: getSessionId(),
-          type,
-          label,
-          value,
-          path: window.location.pathname,
-        }),
+      onIdle(async () => {
+        await fetch("/api/analytics/track?action=event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: getSessionId(),
+            type,
+            label,
+            value,
+            path: window.location.pathname,
+          }),
+        });
       });
     } catch (err) {
       // Silent fail
@@ -101,7 +112,9 @@ export const useAnalytics = () => {
       }, 45000);
     };
 
-    initTracking();
+    onIdle(() => {
+      initTracking();
+    });
 
     return () => {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
@@ -128,7 +141,9 @@ export const useAnalytics = () => {
       }
     };
 
-    trackPageView();
+    onIdle(() => {
+      trackPageView();
+    });
   }, [location.pathname]); // Track on every path change
 
   return { trackEvent };

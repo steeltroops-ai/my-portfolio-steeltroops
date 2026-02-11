@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { motion, useSpring, useMotionValue } from "framer-motion";
+import { motion, useSpring, useScroll } from "framer-motion";
 
 const ReadingProgress = ({
   target = null, // Target element to track (defaults to document body)
@@ -16,61 +16,34 @@ const ReadingProgress = ({
   const [percentage, setPercentage] = useState(0);
   const progressRef = useRef(null);
 
-  // Create a motion value for smooth animation
-  const scrollProgress = useMotionValue(0);
+  // Use Framer Motion's built-in useScroll hook for optimized performance
+  const { scrollYProgress, scrollY } = useScroll({
+    target: target || undefined,
+    offset: ["start start", "end end"],
+  });
 
   // Add spring animation for smoother progress bar
-  const scaleX = useSpring(scrollProgress, {
+  const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001,
   });
 
-  // Calculate scroll progress manually to ensure 100% at bottom
+  // Sync percentage and visibility state
   useEffect(() => {
-    let scrollHeight = 0;
-    let windowHeight = 0;
-    let isTicking = false;
+    const unsubscribeProgress = scrollYProgress.on("change", (latest) => {
+      setPercentage(Math.round(latest * 100));
+    });
 
-    const updateLayout = () => {
-      scrollHeight = document.documentElement.scrollHeight;
-      windowHeight = window.innerHeight;
-    };
-
-    const handleScroll = () => {
-      if (!isTicking) {
-        requestAnimationFrame(() => {
-          const scrollTop =
-            window.scrollY || document.documentElement.scrollTop;
-          const totalScrollable = scrollHeight - windowHeight;
-
-          if (totalScrollable > 0) {
-            const progress = Math.min(
-              1,
-              Math.max(0, scrollTop / totalScrollable)
-            );
-            scrollProgress.set(progress);
-            setPercentage(Math.round(progress * 100));
-          }
-
-          // Show after scrolling 100px
-          setIsVisible(scrollTop > 100);
-          isTicking = false;
-        });
-        isTicking = true;
-      }
-    };
-
-    updateLayout();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", updateLayout, { passive: true });
-    handleScroll(); // Initial calculation
+    const unsubscribeScroll = scrollY.on("change", (latest) => {
+      setIsVisible(latest > 100);
+    });
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", updateLayout);
+      unsubscribeProgress();
+      unsubscribeScroll();
     };
-  }, [scrollProgress]);
+  }, [scrollYProgress, scrollY]);
 
   // Calculate estimated reading time
   useEffect(() => {
@@ -184,44 +157,17 @@ export const useReadingProgress = (target = null) => {
   const [progress, setProgress] = useState(0);
   const [isReading, setIsReading] = useState(false);
 
+  const { scrollYProgress } = useScroll({
+    target: target || undefined,
+    offset: ["start start", "end end"],
+  });
+
   useEffect(() => {
-    let scrollHeight = 0;
-    let clientHeight = 0;
-    let isTicking = false;
-
-    const updateLayout = () => {
-      const element = target || document.documentElement;
-      scrollHeight = element.scrollHeight;
-      clientHeight = element.clientHeight;
-    };
-
-    const handleScroll = () => {
-      if (!isTicking) {
-        requestAnimationFrame(() => {
-          const scrollTop =
-            window.pageYOffset || document.documentElement.scrollTop;
-          const totalScrollable = scrollHeight - clientHeight;
-          const progress =
-            totalScrollable > 0 ? (scrollTop / totalScrollable) * 100 : 0;
-
-          setProgress(Math.min(100, Math.max(0, progress)));
-          setIsReading(progress > 5 && progress < 95); // Consider "reading" between 5% and 95%
-          isTicking = false;
-        });
-        isTicking = true;
-      }
-    };
-
-    updateLayout();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", updateLayout, { passive: true });
-    handleScroll(); // Initial calculation
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", updateLayout);
-    };
-  }, [target]);
+    return scrollYProgress.on("change", (latest) => {
+      setProgress(latest * 100);
+      setIsReading(latest > 0.05 && latest < 0.95);
+    });
+  }, [scrollYProgress]);
 
   return { progress, isReading };
 };

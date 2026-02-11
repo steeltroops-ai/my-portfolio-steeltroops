@@ -87,7 +87,8 @@ const LoadingSpinner = () => (
 // Minimal fallback for non-critical floating components
 const MinimalFallback = () => null;
 
-const loadFeatures = () => import("framer-motion").then((res) => res.domMax);
+const loadFeatures = () =>
+  import("framer-motion").then((res) => res.domAnimation);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
