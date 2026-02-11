@@ -56,15 +56,15 @@ const About = () => {
   return (
     <section
       id="about"
-      className="pb-8 sm:pb-12 md:pb-12 lg:pb-4 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
+      className="pt-12 sm:pt-16 lg:pt-24 pb-12 sm:pb-16 lg:pb-20 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl md:py-12 lg:py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
-          className="flex flex-wrap items-center"
+          className="flex flex-wrap items-center lg:items-center"
         >
           <div className="w-full lg:w-1/2 lg:pr-8 mt-8 sm:mt-10 lg:mt-0 order-2 lg:order-1">
             <div className="flex justify-center lg:justify-start">
@@ -83,16 +83,16 @@ const About = () => {
             variants={contentVariants}
             className="w-full lg:w-1/2 lg:pl-8 order-1 lg:order-2"
           >
-            <div className="flex flex-col items-center lg:items-start space-y-4 sm:space-y-5 lg:space-y-8">
+            <div className="flex flex-col items-center lg:items-start space-y-4 sm:space-y-5 lg:space-y-12">
               <motion.h2
                 variants={headingVariants}
-                className="my-8 sm:my-12 lg:my-0 section-title lg:text-left"
+                className="mt-0 mb-8 lg:mb-0 lg:pb-6 section-title lg:text-left"
               >
                 About <span>Me</span>
               </motion.h2>
               <motion.div
                 variants={contentVariants}
-                className="space-y-4 max-w-lg md:max-w-xl mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
+                className="space-y-4 w-full mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
               >
                 {ABOUT_TEXT.map((paragraph, index) => (
                   <div key={index} className="flex gap-3 group/item">

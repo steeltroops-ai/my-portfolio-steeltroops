@@ -24,12 +24,15 @@ const CACHE_DURATION = 30000; // 30 seconds
 // Check if Neon API is available (with caching)
 const isNeonAvailable = async () => {
   const now = Date.now();
-  
+
   // Use cached result if still valid
-  if (neonAvailabilityCache !== null && now - neonAvailabilityTimestamp < CACHE_DURATION) {
+  if (
+    neonAvailabilityCache !== null &&
+    now - neonAvailabilityTimestamp < CACHE_DURATION
+  ) {
     return neonAvailabilityCache;
   }
-  
+
   try {
     const result = await getNeonPosts({ limit: 1 });
     neonAvailabilityCache = !result.error;
@@ -116,7 +119,7 @@ export const getPublishedPosts = async (options = {}) => {
   try {
     if (await isNeonAvailable()) {
       const result = await getNeonPosts(options);
-      if (!result.error && result.data && result.data.length > 0) {
+      if (!result.error) {
         return result;
       }
     }
@@ -243,28 +246,40 @@ export const getDataSourceInfo = async () => {
 // Admin write operations - require Neon
 export const createPost = async (postData) => {
   if (!(await isNeonAvailable())) {
-    return { data: null, error: { message: "Database not available for write operations" } };
+    return {
+      data: null,
+      error: { message: "Database not available for write operations" },
+    };
   }
   return neonCreatePost(postData);
 };
 
 export const updatePost = async (id, postData) => {
   if (!(await isNeonAvailable())) {
-    return { data: null, error: { message: "Database not available for write operations" } };
+    return {
+      data: null,
+      error: { message: "Database not available for write operations" },
+    };
   }
   return neonUpdatePost(id, postData);
 };
 
 export const deletePost = async (id) => {
   if (!(await isNeonAvailable())) {
-    return { success: false, error: { message: "Database not available for write operations" } };
+    return {
+      success: false,
+      error: { message: "Database not available for write operations" },
+    };
   }
   return neonDeletePost(id);
 };
 
 export const togglePostPublished = async (id, published) => {
   if (!(await isNeonAvailable())) {
-    return { data: null, error: { message: "Database not available for write operations" } };
+    return {
+      data: null,
+      error: { message: "Database not available for write operations" },
+    };
   }
   return neonTogglePostPublished(id, published);
 };

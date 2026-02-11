@@ -78,36 +78,119 @@ export default async function handler(req, res) {
       }
 
       // Get list of posts
-      let posts;
-      let countResult;
       const limitNum = parseInt(limit) || 10;
       const offsetNum = parseInt(offset) || 0;
+      const isAdmin = all === "true";
 
-      if (all === "true") {
-        // Admin View: All posts (Drafts + Published)
+      if (isAdmin) {
         const session = await verifyAuth(req);
         if (!session || session.role !== "admin") {
           return errorResponse(res, "Unauthorized", 401);
         }
+      }
 
-        posts = await sql`
-          SELECT * FROM blog_posts 
-          ORDER BY created_at DESC 
-          LIMIT ${limitNum} OFFSET ${offsetNum}
-        `;
+      // Build Query Conditions
+      let conditions = [];
+      if (!isAdmin) conditions.push("published = true");
 
-        countResult = await sql`SELECT COUNT(*) as count FROM blog_posts`;
+      if (search) {
+        conditions.push(
+          `(title ILIKE ${"%" + search + "%"} OR content ILIKE ${"%" + search + "%"} OR excerpt ILIKE ${"%" + search + "%"})`
+        );
+      }
+
+      if (tags) {
+        const tagList = tags.split(",");
+        conditions.push(
+          `tags && ARRAY[${tagList.map((t) => `'${t}'`).join(",")}]::text[]`
+        );
+      }
+
+      const whereClause =
+        conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+      // We need to use unsafe for dynamic queries in Neon, but since we are using
+      // template literal parameters for values, it's safer.
+      // However, Neon's template literal doesn't support dynamic WHERE clauses easily.
+      // We will perform the search using a slightly more manual approach for conditions
+      // while keeping values parameterized where possible.
+
+      let posts;
+      let countResult;
+
+      // For simplicity and safety with the Neon driver, we'll handle the most common cases:
+      if (!search && !tags) {
+        if (isAdmin) {
+          posts =
+            await sql`SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult = await sql`SELECT COUNT(*) as count FROM blog_posts`;
+        } else {
+          posts =
+            await sql`SELECT * FROM blog_posts WHERE published = true ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult =
+            await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true`;
+        }
       } else {
-        // Public View: Only Published
-        posts = await sql`
-          SELECT * FROM blog_posts 
-          WHERE published = true 
-          ORDER BY created_at DESC 
-          LIMIT ${limitNum} OFFSET ${offsetNum}
-        `;
+        // Dynamic search/tag query
+        // Note: We use string interpolation for condition structure but MUST parameterize values.
+        // Neon driver doesn't support dynamic query building well, so we use a more verbose approach.
+        const searchPattern = search ? `%${search}%` : null;
+        const tagArray =
+          tags && tags.length > 0
+            ? tags
+                .split(",")
+                .map((t) => t.trim())
+                .filter((t) => t !== "")
+            : null;
 
-        countResult =
-          await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true`;
+        // If after filtering tagArray is empty, treat as null
+        const hasTags = tagArray && tagArray.length > 0;
+
+        if (isAdmin) {
+          if (search && hasTags) {
+            posts =
+              await sql`SELECT * FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult =
+              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[]`;
+          } else if (search) {
+            posts =
+              await sql`SELECT * FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult =
+              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern})`;
+          } else if (hasTags) {
+            posts =
+              await sql`SELECT * FROM blog_posts WHERE tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult =
+              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE tags && ${tagArray}::text[]`;
+          } else {
+            // Fallback for edge cases where code enters here but params are empty after cleaning
+            posts =
+              await sql`SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult = await sql`SELECT COUNT(*) as count FROM blog_posts`;
+          }
+        } else {
+          if (search && hasTags) {
+            posts =
+              await sql`SELECT * FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult =
+              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[]`;
+          } else if (search) {
+            posts =
+              await sql`SELECT * FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult =
+              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern})`;
+          } else if (hasTags) {
+            posts =
+              await sql`SELECT * FROM blog_posts WHERE published = true AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult =
+              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND tags && ${tagArray}::text[]`;
+          } else {
+            posts =
+              await sql`SELECT * FROM blog_posts WHERE published = true ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+            countResult =
+              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true`;
+          }
+        }
       }
 
       return jsonResponse(res, {

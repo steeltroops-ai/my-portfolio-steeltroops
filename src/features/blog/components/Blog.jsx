@@ -7,6 +7,7 @@ import {
   FiChevronLeft,
   FiGrid,
   FiList,
+  FiX,
 } from "react-icons/fi";
 import { usePublishedPosts, useTags } from "../hooks/useBlogQueries";
 import {
@@ -22,43 +23,95 @@ const Blog = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [layoutView, setLayoutView] = useState("list"); // "grid" or "list"
+  const [layoutView, setLayoutView] = useState("grid"); // "grid" or "list"
   const postsPerPage = 6;
 
-  // Use React Query hooks for data fetching
+  // Use React Query hooks for data fetching - Fetch all initially for instant filtering
   const {
-    data: postsData,
+    data: allPostsData,
     isLoading: postsLoading,
     error: postsError,
   } = usePublishedPosts({
-    limit: postsPerPage,
-    offset: (currentPage - 1) * postsPerPage,
-    search: searchTerm,
-    tags: selectedTags,
+    limit: 1000,
   });
 
   const { data: tagsData, isLoading: tagsLoading } = useTags();
 
-  // Extract data from React Query results
-  const posts = postsData?.posts || [];
-  const totalPosts = postsData?.count || 0;
+  // O(1) Tag Map Implementation
+  const postsByTag = React.useMemo(() => {
+    const map = new Map();
+    const rawPosts = allPostsData?.posts || [];
+    rawPosts.forEach((post) => {
+      post.tags?.forEach((tag) => {
+        if (!map.has(tag)) map.set(tag, new Set());
+        map.get(tag).add(post);
+      });
+    });
+    return map;
+  }, [allPostsData]);
+
+  // Instant local filtering logic
+  const filteredPosts = React.useMemo(() => {
+    let result = allPostsData?.posts || [];
+
+    // Tag Filtering (O(1) approach for multi-tag intersection)
+    if (selectedTags.length > 0) {
+      // Start with posts from the first tag
+      let intersection = new Set(postsByTag.get(selectedTags[0]) || []);
+
+      // Intersect with remaining tags
+      for (let i = 1; i < selectedTags.length; i++) {
+        const tagPosts = postsByTag.get(selectedTags[i]) || new Set();
+        const nextIntersection = new Set();
+        intersection.forEach((post) => {
+          if (tagPosts.has(post)) nextIntersection.add(post);
+        });
+        intersection = nextIntersection;
+      }
+      result = Array.from(intersection);
+    }
+
+    // Search Filtering
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter(
+        (post) =>
+          post.title.toLowerCase().includes(lowerSearch) ||
+          post.excerpt?.toLowerCase().includes(lowerSearch) ||
+          post.content?.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    return result;
+  }, [allPostsData, searchTerm, selectedTags, postsByTag]);
+
+  // Extract data from filtered results
+  const totalPosts = filteredPosts.length;
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+  // Slice posts for the current page
+  const posts = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * postsPerPage;
+    return filteredPosts.slice(startIndex, startIndex + postsPerPage);
+  }, [filteredPosts, currentPage]);
+
   const tags = tagsData || [];
   const loading = postsLoading || tagsLoading;
   const error = postsError ? "Failed to load blog posts" : "";
 
   const handleTagToggle = (tag) => {
+    const trimmedTag = tag.trim();
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(trimmedTag)
+        ? prev.filter((t) => t !== trimmedTag)
+        : [...prev, trimmedTag]
     );
     setCurrentPage(1);
   };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    // Search is handled automatically by React Query when searchTerm changes
   };
-
-  const totalPages = Math.ceil(totalPosts / postsPerPage);
 
   return (
     <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
@@ -96,7 +149,7 @@ const Blog = () => {
             </h1>
           </div>
 
-          <SocialLinks onlyLastOnMobile />
+          <SocialLinks onlyLastOnMobile className="justify-end pr-2 sm:pr-0" />
         </nav>
 
         {/* Search and Filters */}
@@ -106,18 +159,17 @@ const Blog = () => {
           transition={{ delay: 0.2 }}
           className="mb-8"
         >
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 lg:gap-6 px-2 sm:px-0">
             {/* Search */}
             <form
               onSubmit={handleSearchSubmit}
               className="relative group flex-1 max-w-md"
             >
-              {/* Enhanced Liquid Glass Outlines */}
-              <div className="absolute inset-0 rounded-lg border border-white/30 pointer-events-none z-30"></div>
-              <div className="absolute inset-[1px] rounded-[calc(0.5rem-1px)] border border-white/10 pointer-events-none z-30"></div>
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent z-40"></div>
+              {/* Liquid Glass Outlines - Matching Pagination */}
+              <div className="absolute inset-0 rounded-xl border border-white/20 pointer-events-none z-30"></div>
+              <div className="absolute inset-[1px] rounded-[calc(0.75rem-1px)] border border-white/5 pointer-events-none z-30"></div>
 
-              <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.03] via-transparent to-transparent pointer-events-none rounded-lg"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.03] via-transparent to-transparent pointer-events-none rounded-xl"></div>
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-30 group-hover:opacity-60 transition-opacity z-40 pointer-events-none"></div>
               <div className="relative">
                 <FiSearch className="absolute transform -translate-y-1/2 left-4 top-1/2 text-white/50 group-focus-within:text-white transition-colors z-10 pointer-events-none" />
@@ -126,25 +178,35 @@ const Blog = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search posts..."
-                  className="relative z-0 w-full py-2 pl-10 pr-4 text-white border-0 rounded-lg bg-transparent backdrop-blur-[2px] shadow-sm focus:outline-none transition-all duration-300 placeholder:text-purple-200/40"
+                  className="relative z-0 w-full py-2.5 pl-10 pr-10 text-sm text-white border-0 rounded-lg bg-transparent backdrop-blur-[2px] shadow-sm focus:outline-none transition-all duration-300 placeholder:text-purple-200/40"
                 />
-                <div className="absolute inset-0 bg-purple-500/[0.0375] group-focus-within:bg-purple-500/[0.15] rounded-lg transition-colors duration-300 pointer-events-none -z-10" />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/40 hover:text-white transition-colors z-20"
+                    aria-label="Clear search"
+                  >
+                    <FiX className="w-4 h-4" />
+                  </button>
+                )}
+                <div className="absolute inset-0 bg-purple-500/[0.0375] group-focus-within:bg-purple-500/[0.15] rounded-xl transition-colors duration-300 pointer-events-none -z-10" />
               </div>
             </form>
 
             <div className="flex items-stretch gap-2">
               {/* Layout Toggle */}
-              <div className="relative group flex items-stretch border-0 rounded-lg bg-transparent backdrop-blur-[2px] shadow-sm overflow-hidden">
-                {/* Liquid Glass Outlines - Matching Projects.jsx */}
-                <div className="absolute inset-0 rounded-lg border border-white/20 pointer-events-none z-30"></div>
-                <div className="absolute inset-[1px] rounded-[calc(0.5rem-1px)] border border-white/5 pointer-events-none z-30"></div>
+              <div className="relative group flex items-stretch border-0 rounded-xl bg-transparent backdrop-blur-[2px] shadow-sm overflow-hidden">
+                {/* Liquid Glass Outlines - Matching Pagination */}
+                <div className="absolute inset-0 rounded-xl border border-white/20 pointer-events-none z-30"></div>
+                <div className="absolute inset-[1px] rounded-[calc(0.75rem-1px)] border border-white/5 pointer-events-none z-30"></div>
 
                 <div className="absolute inset-0 bg-purple-500/[0.0375] pointer-events-none" />
                 <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.03] via-transparent to-transparent pointer-events-none"></div>
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-30 group-hover:opacity-60 transition-opacity z-40"></div>
                 <button
                   onClick={() => setLayoutView("grid")}
-                  className={`relative z-20 px-3 py-2 flex items-center justify-center transition-all duration-300 ${
+                  className={`relative z-20 px-3 py-2.5 flex items-center justify-center transition-all duration-300 ${
                     layoutView === "grid"
                       ? "bg-purple-500/[0.15] text-purple-100"
                       : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/[0.075]"
@@ -156,7 +218,7 @@ const Blog = () => {
                 <div className="w-px bg-white/10 z-20"></div>
                 <button
                   onClick={() => setLayoutView("list")}
-                  className={`relative z-20 px-3 py-2 flex items-center justify-center transition-all duration-300 ${
+                  className={`relative z-20 px-3 py-2.5 flex items-center justify-center transition-all duration-300 ${
                     layoutView === "list"
                       ? "bg-purple-500/[0.15] text-purple-100"
                       : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/[0.075]"
@@ -170,11 +232,11 @@ const Blog = () => {
               {/* Filter Toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="relative group flex items-center gap-2 px-4 py-2 transition-all duration-300 border-0 rounded-lg bg-transparent backdrop-blur-[2px] shadow-sm text-purple-100 font-medium overflow-hidden"
+                className="relative group flex items-center gap-2 px-4 py-2.5 transition-all duration-300 border-0 rounded-xl bg-transparent backdrop-blur-[2px] shadow-sm text-purple-100 font-medium overflow-hidden"
               >
-                {/* Liquid Glass Outlines - Matching Projects.jsx */}
-                <div className="absolute inset-0 rounded-lg border border-white/20 pointer-events-none z-30"></div>
-                <div className="absolute inset-[1px] rounded-[calc(0.5rem-1px)] border border-white/5 pointer-events-none z-30"></div>
+                {/* Liquid Glass Outlines - Matching Pagination */}
+                <div className="absolute inset-0 rounded-xl border border-white/20 pointer-events-none z-30"></div>
+                <div className="absolute inset-[1px] rounded-[calc(0.75rem-1px)] border border-white/5 pointer-events-none z-30"></div>
 
                 <div
                   className={`absolute inset-0 transition-colors duration-300 pointer-events-none ${showFilters ? "bg-purple-500/[0.15]" : "bg-purple-500/[0.0375] group-hover:bg-purple-500/[0.15]"}`}
@@ -182,7 +244,7 @@ const Blog = () => {
                 <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.03] via-transparent to-transparent pointer-events-none"></div>
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-30 group-hover:opacity-60 transition-opacity z-40 pointer-events-none"></div>
                 <FiFilter className="relative z-40" />
-                <span className="relative z-40">Filters</span>
+                <span className="relative z-40 hidden sm:inline">Filters</span>
                 {selectedTags.length > 0 && (
                   <span className="relative z-40 px-2 py-1 text-xs text-white rounded-full bg-purple-500/30">
                     {selectedTags.length}
@@ -272,7 +334,16 @@ const Blog = () => {
           >
             {posts.length === 0 ? (
               <div className="py-20 text-center">
-                <p className="text-lg text-neutral-400">No blog posts found.</p>
+                <div className="inline-block p-4 rounded-full bg-purple-500/10 mb-4">
+                  <FiSearch className="w-8 h-8 text-purple-400 opacity-50" />
+                </div>
+                <h3 className="text-xl font-medium text-white mb-2">
+                  No matching posts
+                </h3>
+                <p className="text-neutral-400 mb-6 px-4">
+                  We couldn't find any blog posts matching your current search
+                  or filters.
+                </p>
                 {(searchTerm || selectedTags.length > 0) && (
                   <button
                     onClick={() => {
@@ -280,9 +351,9 @@ const Blog = () => {
                       setSelectedTags([]);
                       setCurrentPage(1);
                     }}
-                    className="mt-4 text-purple-400 hover:text-purple-300 transition-colors"
+                    className="px-6 py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-100 hover:bg-purple-500/30 transition-all font-medium"
                   >
-                    Clear filters to see all posts
+                    Clear all filters
                   </button>
                 )}
               </div>
@@ -293,7 +364,7 @@ const Blog = () => {
                     layoutView === "grid"
                       ? "grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                       : "flex flex-col gap-6"
-                  }`}
+                  } px-2 sm:px-0`}
                 >
                   {posts.map((post, index) => (
                     <motion.article
@@ -310,7 +381,6 @@ const Blog = () => {
                       {/* Premium Purple Fade & Liquid Accents */}
                       {layoutView === "grid" && (
                         <>
-                          <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.03] via-transparent to-transparent pointer-events-none z-0"></div>
                           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-30 group-hover:opacity-70 transition-opacity z-10"></div>
                         </>
                       )}
@@ -319,7 +389,7 @@ const Blog = () => {
                         to={`/blogs/${post.slug}`}
                         className={`relative z-10 flex flex-1 overflow-hidden ${
                           layoutView === "list"
-                            ? "flex-row h-[120px] sm:h-[154px]"
+                            ? "flex-row h-[128px] sm:h-[154px] overflow-hidden"
                             : "flex-col h-full"
                         }`}
                       >
@@ -329,7 +399,7 @@ const Blog = () => {
                             className={`relative overflow-hidden flex-shrink-0 ${
                               layoutView === "grid"
                                 ? "w-full aspect-[2/1]"
-                                : "w-28 sm:w-56 lg:w-64 h-full"
+                                : "hidden sm:block w-32 sm:w-64 lg:w-72 h-full"
                             }`}
                             style={
                               layoutView === "grid"
@@ -343,11 +413,6 @@ const Blog = () => {
                             }
                           >
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-
-                            {/* Purple Fade Bridge Overlay */}
-                            {layoutView === "grid" && (
-                              <div className="absolute inset-0 bg-gradient-to-t from-purple-500/10 via-transparent to-transparent pointer-events-none z-10" />
-                            )}
 
                             <OptimizedImage
                               src={post.featured_image_url}
@@ -365,11 +430,6 @@ const Blog = () => {
                               : "p-5 sm:p-6 justify-between"
                           }`}
                         >
-                          {/* Inner Purple Ambient Fade */}
-                          {layoutView === "grid" && (
-                            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.05] via-transparent to-transparent pointer-events-none" />
-                          )}
-
                           <div className="relative z-10 min-w-0">
                             {/* Title - Synchronized with Project Cards (font-medium) */}
                             <h2
@@ -387,7 +447,7 @@ const Blog = () => {
                               className={`text-neutral-400 font-light leading-relaxed transition-colors ${
                                 layoutView === "grid"
                                   ? "text-sm line-clamp-3 mb-4"
-                                  : "hidden xs:line-clamp-1 sm:line-clamp-2 text-[10px] sm:text-sm mb-2 sm:mb-4"
+                                  : "line-clamp-3 sm:line-clamp-2 text-xs sm:text-sm mb-2 sm:mb-4"
                               }`}
                             >
                               {post.excerpt}
