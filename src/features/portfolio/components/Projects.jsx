@@ -41,7 +41,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       onClick={handleToggle}
       className={`group cursor-pointer flex flex-col relative overflow-hidden rounded-2xl transition-all duration-500
         bg-transparent backdrop-blur-none border-0 z-0
-        ${isExpanded ? "md:min-h-[1000px] h-auto shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "h-[480px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
+        ${isExpanded ? "md:h-[932px] h-auto shadow-[0_0_80px_-20px_rgba(255,255,255,0.1)]" : "h-[450px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"}`}
     >
       {/* Liquid Glass Outline - Apple Style Refraction */}
       <div className="absolute inset-0 rounded-2xl border border-white/20 pointer-events-none z-30"></div>
@@ -79,7 +79,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       {/* Project Image Area with Progressive Mask */}
       <div
         className={`relative overflow-hidden transition-all duration-700 ease-in-out z-10
-          ${isExpanded ? "h-[450px] sm:h-[550px]" : "h-[240px]"}`}
+          ${isExpanded ? "h-[240px] sm:h-auto sm:aspect-video" : "h-[220px]"}`}
         style={{
           maskImage: "linear-gradient(to bottom, black 90%, transparent 100%)",
           WebkitMaskImage:
@@ -106,12 +106,12 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               if (project.url && !hasMultipleImages) {
                 const cleanProjectUrl = project.url.replace(/\/$/, "");
                 // Reduced resolution for faster loading
-                return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=800&viewport.height=500`;
+                return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
               }
 
               if (isExternalUrl && !isDirectImage) {
                 const cleanUrl = currentImg.replace(/\/$/, "");
-                return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=800&viewport.height=500`;
+                return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
               }
 
               return currentImg || project.image || null;
@@ -124,7 +124,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               project.imageAlt ||
               `${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`
             }
-            className={`w-full h-full object-cover object-top transition-transform duration-700 ${!isExpanded ? "group-hover:scale-110" : ""}`}
+            className={`w-full h-full transition-transform duration-700 ${
+              isExpanded
+                ? "object-cover object-top"
+                : "object-cover object-top group-hover:scale-110"
+            }`}
             data-original-url={images[isExpanded ? currentImageIndex : 0]}
             onError={(e) => {
               const currentSrc = e.target.src;
@@ -138,7 +142,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               const cleanUrl = originalUrl.replace(/\/$/, "");
 
               if (currentSrc.includes("microlink.io")) {
-                e.target.src = `https://image.thum.io/get/width/800/crop/500/noanimate/${cleanUrl}`;
+                e.target.src = `https://image.thum.io/get/width/1280/crop/720/noanimate/${cleanUrl}`;
               } else {
                 e.target.src =
                   project.image ||
@@ -260,18 +264,14 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
 
         {/* Title Overlay for Expanded Card */}
         {isExpanded && (
-          <div className="absolute bottom-8 left-8 right-8 z-10">
+          <div className="absolute bottom-4 left-6 right-6 z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-1.5"
             >
-              <span className="text-white/80 text-[9px] font-light uppercase tracking-[0.2em] bg-white/5 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-md">
+              <span className="text-white text-[9px] font-light uppercase tracking-[0.2em] bg-black-600/30 px-2.5 py-1 rounded-full border border-purple-500/50 backdrop-blur-md shadow-lg ring-1 ring-white/10">
                 Project Deep Dive
               </span>
-              <h3 className="text-2xl sm:text-3xl text-white title-font drop-shadow-2xl tracking-tight">
-                {project.title}
-              </h3>
             </motion.div>
           </div>
         )}
@@ -279,10 +279,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
 
       {/* Card Content Area */}
       <div
-        className={`px-6 pb-6 pt-1 sm:px-8 sm:pb-8 sm:pt-2 flex-1 flex flex-col relative z-20 ${isExpanded ? "bg-white/[0.01]" : ""}`}
+        className={`px-6 pb-4 pt-2 sm:px-8 sm:pb-6 sm:pt-3 flex-1 flex flex-col relative z-20 text-left ${isExpanded ? "bg-white/[0.01] md:overflow-y-auto" : ""}`}
       >
         {!isExpanded && (
-          <div className="mb-3">
+          <div className="mb-2">
             <h3 className="text-lg title-font text-neutral-200 group-hover:text-white transition-colors mb-1 tracking-tight">
               {project.title}
             </h3>
@@ -312,8 +312,15 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="w-full space-y-8"
+              className="w-full space-y-6"
             >
+              {/* Project Title */}
+              <div>
+                <h3 className="text-xl sm:text-2xl title-font text-white tracking-tight">
+                  {project.title}
+                </h3>
+              </div>
+
               {/* Organized Info Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 {/* Description Column */}
@@ -353,10 +360,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
 
                 {/* Tech Snapshot Column */}
                 <div className="lg:col-span-2 space-y-6">
-                  <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-6">
+                  <div className="p-4 md:p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
                     <div>
-                      <h4 className="text-[10px] font-light uppercase tracking-widest text-neutral-500 mb-4">
-                        Technical Snapshot
+                      <h4 className="text-[10px] font-light uppercase tracking-widest text-neutral-500 mb-3">
+                        Tech Stack
                       </h4>
                       <div
                         className="flex flex-wrap gap-2"
@@ -366,7 +373,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                         {project.technologies.map((tech, i) => (
                           <span
                             key={i}
-                            className="text-[10px] font-light text-white/70 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+                            className="text-[10px] font-light text-white/70 bg-white/5 px-3 py-1 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
                             role="listitem"
                           >
                             {tech}
@@ -375,17 +382,17 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                       </div>
                     </div>
 
-                    <div className="pt-8 border-t border-white/5 flex flex-col gap-4">
+                    <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
                       {project.github && (
                         <a
                           href={project.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group/btn flex items-center justify-between px-6 py-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/10"
+                          className="group/btn flex items-center justify-between px-6 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/10"
                           aria-label={`View source code for ${project.title} on GitHub`}
                         >
-                          <div className="flex items-center gap-3">
-                            <FaGithub className="text-xl text-white/70 group-hover/btn:text-white transition-colors" />
+                          <div className="flex items-center gap-2">
+                            <FaGithub className="text-base text-white/70 group-hover/btn:text-white transition-colors" />
                             <span className="text-sm font-light text-white/70 group-hover/btn:text-white transition-colors">
                               Source Code
                             </span>
@@ -401,16 +408,16 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                           href={project.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group/btn flex items-center justify-between px-6 py-4 rounded-xl bg-indigo-500/5 hover:bg-indigo-500/15 transition-all border border-indigo-500/20"
+                          className="group/btn flex items-center justify-between px-6 py-2 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/15 transition-all border border-emerald-500/20"
                           aria-label={`View live demo for ${project.title}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <FiGlobe className="text-base text-indigo-400/70 group-hover/btn:text-indigo-400 transition-colors" />
-                            <span className="text-sm font-light text-indigo-300/70 group-hover/btn:text-indigo-300 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <FiGlobe className="text-sm text-emerald-400/70 group-hover/btn:text-emerald-400 transition-colors" />
+                            <span className="text-sm font-light text-emerald-300/70 group-hover/btn:text-emerald-300 transition-colors">
                               Live Demo
                             </span>
                           </div>
-                          <div className="text-[10px] font-light uppercase tracking-widest text-indigo-500/50 group-hover/btn:text-indigo-400/50 transition-colors">
+                          <div className="text-[10px] font-light uppercase tracking-widest text-emerald-500/50 group-hover/btn:text-emerald-400/50 transition-colors">
                             Preview
                           </div>
                         </a>

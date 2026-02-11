@@ -131,7 +131,7 @@ const Blog = () => {
       </div>
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         {/* Navigation */}
-        <nav className="relative flex items-center justify-between min-h-[5rem] mb-4 sm:mb-6 lg:mb-8 px-2 sm:px-0">
+        <nav className="relative flex items-center justify-between min-h-[5rem] mb-4 sm:mb-6 lg:mb-8 px-4 sm:px-0">
           <div className="flex items-center flex-shrink-0">
             <button
               onClick={() => navigate("/")}
@@ -149,7 +149,7 @@ const Blog = () => {
             </h1>
           </div>
 
-          <SocialLinks onlyLastOnMobile className="justify-end pr-2 sm:pr-0" />
+          <SocialLinks onlyLastOnMobile className="justify-end" />
         </nav>
 
         {/* Search and Filters */}
@@ -159,7 +159,7 @@ const Blog = () => {
           transition={{ delay: 0.2 }}
           className="mb-8"
         >
-          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 lg:gap-6 px-2 sm:px-0">
+          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 lg:gap-6 px-4 sm:px-0">
             {/* Search */}
             <form
               onSubmit={handleSearchSubmit}
@@ -325,234 +325,222 @@ const Blog = () => {
           </div>
         )}
 
-        {/* Blog Posts Grid */}
-        {!loading && !error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {posts.length === 0 ? (
-              <div className="py-20 text-center">
-                <div className="inline-block p-4 rounded-full bg-purple-500/10 mb-4">
-                  <FiSearch className="w-8 h-8 text-purple-400 opacity-50" />
-                </div>
-                <h3 className="text-xl font-medium text-white mb-2">
-                  No matching posts
-                </h3>
-                <p className="text-neutral-400 mb-6 px-4">
-                  We couldn't find any blog posts matching your current search
-                  or filters.
-                </p>
-                {(searchTerm || selectedTags.length > 0) && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedTags([]);
-                      setCurrentPage(1);
-                    }}
-                    className="px-6 py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-100 hover:bg-purple-500/30 transition-all font-medium"
-                  >
-                    Clear all filters
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <div
-                  className={`mb-12 ${
-                    layoutView === "grid"
-                      ? "grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                      : "flex flex-col gap-6"
-                  } px-2 sm:px-0`}
-                >
-                  {posts.map((post, index) => (
-                    <motion.article
-                      key={post.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                      className={`relative group overflow-hidden transition-all duration-300 border rounded-xl backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg hover:shadow-[4px_8px_20px_rgba(168,85,247,0.2)] hover:border-white/20 ${
-                        layoutView === "grid"
-                          ? "h-full flex flex-col hover:-translate-y-1"
-                          : "flex flex-col sm:flex-row"
-                      }`}
+        {/* Blog Posts Grid/List */}
+        <div className="px-4 sm:px-0">
+          {!loading && !error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              {posts.length === 0 ? (
+                <div className="py-20 text-center">
+                  <div className="inline-block p-4 rounded-full bg-purple-500/10 mb-4">
+                    <FiSearch className="w-8 h-8 text-purple-400 opacity-50" />
+                  </div>
+                  <h3 className="text-xl font-medium text-white mb-2">
+                    No matching posts
+                  </h3>
+                  <p className="text-neutral-400 mb-6 px-4">
+                    We couldn't find any blog posts matching your current search
+                    or filters.
+                  </p>
+                  {(searchTerm || selectedTags.length > 0) && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSelectedTags([]);
+                        setCurrentPage(1);
+                      }}
+                      className="px-6 py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-100 hover:bg-purple-500/30 transition-all font-medium"
                     >
-                      {/* Premium Purple Fade & Liquid Accents */}
-                      {layoutView === "grid" && (
-                        <>
-                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-30 group-hover:opacity-70 transition-opacity z-10"></div>
-                        </>
-                      )}
-
-                      <Link
-                        to={`/blogs/${post.slug}`}
-                        className={`relative z-10 flex flex-1 overflow-hidden ${
-                          layoutView === "list"
-                            ? "flex-row h-[128px] sm:h-[154px] overflow-hidden"
-                            : "flex-col h-full"
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div
+                    className={`mb-12 ${
+                      layoutView === "grid"
+                        ? "grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                        : "flex flex-col gap-6"
+                    }`}
+                  >
+                    {posts.map((post, index) => (
+                      <motion.article
+                        key={post.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className={`relative group overflow-hidden transition-all duration-300 border rounded-xl backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg hover:shadow-[4px_8px_20px_rgba(168,85,247,0.2)] hover:border-white/20 ${
+                          layoutView === "grid"
+                            ? "h-full flex flex-col hover:-translate-y-1"
+                            : "flex flex-col sm:flex-row"
                         }`}
                       >
-                        {/* Featured Image - Reverted to Original Grid Proportions */}
-                        {post.featured_image_url && (
-                          <div
-                            className={`relative overflow-hidden flex-shrink-0 ${
-                              layoutView === "grid"
-                                ? "w-full aspect-[2/1]"
-                                : "hidden sm:block w-32 sm:w-64 lg:w-72 h-full"
-                            }`}
-                            style={
-                              layoutView === "grid"
-                                ? {
-                                    maskImage:
-                                      "linear-gradient(to bottom, black 90%, transparent 100%)",
-                                    WebkitMaskImage:
-                                      "linear-gradient(to bottom, black 90%, transparent 100%)",
-                                  }
-                                : {}
-                            }
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-
-                            <OptimizedImage
-                              src={post.featured_image_url}
-                              alt={post.title}
-                              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                            />
-                          </div>
+                        {/* Premium Purple Fade & Liquid Accents */}
+                        {layoutView === "grid" && (
+                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-30 group-hover:opacity-70 transition-opacity z-10"></div>
                         )}
 
-                        {/* Content Container - Restored Original Grid Spacing */}
-                        <div
-                          className={`relative flex flex-col flex-1 min-w-0 ${
+                        <Link
+                          to={`/blogs/${post.slug}`}
+                          className={`relative z-10 flex flex-1 overflow-hidden ${
                             layoutView === "list"
-                              ? "p-3 sm:p-5 justify-center"
-                              : "p-5 sm:p-6 justify-between"
+                              ? "flex-row h-[128px] sm:h-[154px] overflow-hidden"
+                              : "flex-col h-full"
                           }`}
                         >
-                          <div className="relative z-10 min-w-0">
-                            {/* Title - Synchronized with Project Cards (font-medium) */}
-                            <h2
-                              className={`title-font font-medium tracking-tight text-white leading-tight transition-colors group-hover:text-purple-300 line-clamp-2 ${
+                          {/* Featured Image */}
+                          {post.featured_image_url && (
+                            <div
+                              className={`relative overflow-hidden flex-shrink-0 ${
                                 layoutView === "grid"
-                                  ? "text-xl mb-3"
-                                  : "text-sm sm:text-xl mb-1.5 sm:mb-2"
+                                  ? "w-full aspect-[2/1]"
+                                  : "hidden sm:block w-32 sm:w-64 lg:w-72 h-full"
                               }`}
-                            >
-                              {post.title}
-                            </h2>
-
-                            {/* Excerpt - Synchronized with Project Cards (font-light) */}
-                            <p
-                              className={`text-neutral-400 font-light leading-relaxed transition-colors ${
+                              style={
                                 layoutView === "grid"
-                                  ? "text-sm line-clamp-3 mb-4"
-                                  : "line-clamp-3 sm:line-clamp-2 text-xs sm:text-sm mb-2 sm:mb-4"
-                              }`}
+                                  ? {
+                                      maskImage:
+                                        "linear-gradient(to bottom, black 90%, transparent 100%)",
+                                      WebkitMaskImage:
+                                        "linear-gradient(to bottom, black 90%, transparent 100%)",
+                                    }
+                                  : {}
+                              }
                             >
-                              {post.excerpt}
-                            </p>
-                          </div>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+                              <OptimizedImage
+                                src={post.featured_image_url}
+                                alt={post.title}
+                                className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                              />
+                            </div>
+                          )}
 
-                          {/* Meta Info */}
+                          {/* Content Container */}
                           <div
-                            className={`flex items-center justify-between text-purple-200/60 mt-auto ${
-                              layoutView === "grid"
-                                ? "text-xs"
-                                : "text-[10px] sm:text-xs"
+                            className={`relative flex flex-col flex-1 min-w-0 ${
+                              layoutView === "list"
+                                ? "p-6 sm:p-5 justify-center"
+                                : "p-6 sm:p-6 justify-between"
                             }`}
                           >
-                            <div className="flex items-center gap-2">
-                              {post.read_time && (
-                                <span className="flex items-center gap-1.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                                  <span>{post.read_time} min read</span>
-                                </span>
-                              )}
+                            <div className="relative z-10 min-w-0">
+                              <h2
+                                className={`title-font font-medium tracking-tight text-white leading-tight transition-colors group-hover:text-purple-300 line-clamp-2 ${
+                                  layoutView === "grid"
+                                    ? "text-xl mb-3"
+                                    : "text-sm sm:text-xl mb-1.5 sm:mb-2"
+                                }`}
+                              >
+                                {post.title}
+                              </h2>
+                              <p
+                                className={`text-neutral-400 font-light leading-relaxed transition-colors ${
+                                  layoutView === "grid"
+                                    ? "text-sm line-clamp-3 mb-4"
+                                    : "line-clamp-3 sm:line-clamp-2 text-xs sm:text-sm mb-2 sm:mb-4"
+                                }`}
+                              >
+                                {post.excerpt}
+                              </p>
                             </div>
 
-                            <time
-                              dateTime={post.created_at}
-                              className="font-medium"
+                            <div
+                              className={`flex items-center justify-between text-purple-200/60 mt-auto ${layoutView === "grid" ? "text-xs" : "text-[10px] sm:text-xs"}`}
                             >
-                              {new Date(post.created_at).toLocaleDateString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                }
-                              )}
-                            </time>
+                              <div className="flex items-center gap-2">
+                                {post.read_time && (
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                    <span>{post.read_time} min read</span>
+                                  </span>
+                                )}
+                              </div>
+                              <time
+                                dateTime={post.created_at}
+                                className="font-medium"
+                              >
+                                {new Date(post.created_at).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  }
+                                )}
+                              </time>
+                            </div>
                           </div>
-                        </div>
-                      </Link>
-                    </motion.article>
-                  ))}
-                </div>
-
-                {/* Pagination - Liquid Glass Button Group */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center mt-12 mb-8">
-                    <div className="relative group flex items-stretch border-0 rounded-xl bg-transparent backdrop-blur-[2px] shadow-sm overflow-hidden">
-                      {/* Liquid Glass Outlines */}
-                      <div className="absolute inset-0 rounded-xl border border-white/20 pointer-events-none z-30"></div>
-                      <div className="absolute inset-[1px] rounded-[calc(0.75rem-1px)] border border-white/5 pointer-events-none z-30"></div>
-
-                      <div className="absolute inset-0 bg-white/[0.01] pointer-events-none" />
-                      <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.03] via-transparent to-transparent pointer-events-none"></div>
-                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-30 group-hover:opacity-60 transition-opacity z-40"></div>
-
-                      <button
-                        onClick={() =>
-                          setCurrentPage((prev) => Math.max(prev - 1, 1))
-                        }
-                        disabled={currentPage === 1}
-                        className="relative z-20 px-4 py-2 text-sm font-medium transition-all duration-300 text-purple-100 hover:bg-purple-500/10 disabled:opacity-30 disabled:hover:bg-transparent"
-                      >
-                        Prev
-                      </button>
-
-                      <div className="flex z-20">
-                        {Array.from(
-                          { length: totalPages },
-                          (_, i) => i + 1
-                        ).map((page) => (
-                          <React.Fragment key={page}>
-                            <div className="w-px bg-white/10" />
-                            <button
-                              onClick={() => setCurrentPage(page)}
-                              className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                                currentPage === page
-                                  ? "bg-purple-500/20 text-white shadow-[inset_0_0_12px_rgba(168,85,247,0.2)]"
-                                  : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/10"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          </React.Fragment>
-                        ))}
-                      </div>
-
-                      <div className="w-px bg-white/10 z-20" />
-                      <button
-                        onClick={() =>
-                          setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages)
-                          )
-                        }
-                        disabled={currentPage === totalPages}
-                        className="relative z-20 px-4 py-2 text-sm font-medium transition-all duration-300 text-purple-100 hover:bg-purple-500/10 disabled:opacity-30 disabled:hover:bg-transparent"
-                      >
-                        Next
-                      </button>
-                    </div>
+                        </Link>
+                      </motion.article>
+                    ))}
                   </div>
-                )}
-              </>
-            )}
-          </motion.div>
-        )}
+
+                  {/* Pagination Section - Aligned with Cards */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-12 mb-8">
+                      <div className="relative group flex items-stretch border-0 rounded-xl bg-transparent backdrop-blur-[2px] shadow-sm overflow-hidden">
+                        <div className="absolute inset-0 rounded-xl border border-white/20 pointer-events-none z-30"></div>
+                        <div className="absolute inset-[1px] rounded-[calc(0.75rem-1px)] border border-white/5 pointer-events-none z-30"></div>
+                        <div className="absolute inset-0 bg-white/[0.01] pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.03] via-transparent to-transparent pointer-events-none"></div>
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-30 group-hover:opacity-60 transition-opacity z-40"></div>
+
+                        <button
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          disabled={currentPage === 1}
+                          className="relative z-20 px-4 py-2 text-sm font-medium transition-all duration-300 text-purple-100 hover:bg-purple-500/10 disabled:opacity-30 disabled:hover:bg-transparent"
+                        >
+                          Prev
+                        </button>
+
+                        <div className="flex z-20">
+                          {Array.from(
+                            { length: totalPages },
+                            (_, i) => i + 1
+                          ).map((page) => (
+                            <React.Fragment key={page}>
+                              <div className="w-px bg-white/10" />
+                              <button
+                                onClick={() => setCurrentPage(page)}
+                                className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                                  currentPage === page
+                                    ? "bg-purple-500/20 text-white shadow-[inset_0_0_12px_rgba(168,85,247,0.2)]"
+                                    : "text-purple-300/70 hover:text-purple-100 hover:bg-purple-500/10"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            </React.Fragment>
+                          ))}
+                        </div>
+
+                        <div className="w-px bg-white/10 z-20" />
+                        <button
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages)
+                            )
+                          }
+                          disabled={currentPage === totalPages}
+                          className="relative z-20 px-4 py-2 text-sm font-medium transition-all duration-300 text-purple-100 hover:bg-purple-500/10 disabled:opacity-30 disabled:hover:bg-transparent"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </motion.div>
+          )}
+        </div>
       </div>
       <FloatingChatButton />
     </div>
