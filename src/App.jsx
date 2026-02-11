@@ -1,11 +1,11 @@
-// Portfolio components (Critical)
+// Portfolio components (Critical - Above the fold)
 import Hero from "@/features/portfolio/components/Hero";
 
 // Shared layout components (Critical)
 import Navbar from "@/shared/components/layout/Navbar";
 import ScrollspyNav from "@/shared/components/layout/ScrollspyNav";
 import SEOHead from "@/shared/components/ui/SEOHead";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { LazyMotion } from "framer-motion";
 
 // Lazy load non-critical sections below the fold
@@ -19,6 +19,36 @@ const Experience = lazy(
 const Projects = lazy(() => import("@/features/portfolio/components/Projects"));
 const Contact = lazy(() => import("@/features/portfolio/components/Contact"));
 const Footer = lazy(() => import("@/shared/components/layout/Footer"));
+
+// Intersection Observer wrapper for lazy loading sections
+const LazySection = ({ children, threshold = 0.1, rootMargin = "200px" }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold, rootMargin }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [threshold, rootMargin]);
+
+  return (
+    <div ref={sectionRef} style={{ minHeight: isVisible ? "auto" : "400px" }}>
+      {isVisible && children}
+    </div>
+  );
+};
 
 const App = () => {
   return (
@@ -41,27 +71,44 @@ const App = () => {
         <Navbar />
         <main id="main-content">
           <Hero />
+
+          {/* Load below-fold sections only when scrolling near them */}
+          <LazySection rootMargin="300px">
+            <Suspense fallback={null}>
+              <About />
+            </Suspense>
+          </LazySection>
+
+          <LazySection rootMargin="300px">
+            <Suspense fallback={null}>
+              <Technologies />
+            </Suspense>
+          </LazySection>
+
+          <LazySection rootMargin="300px">
+            <Suspense fallback={null}>
+              <Experience />
+            </Suspense>
+          </LazySection>
+
+          <LazySection rootMargin="300px">
+            <Suspense fallback={null}>
+              <Projects />
+            </Suspense>
+          </LazySection>
+
+          <LazySection rootMargin="200px">
+            <Suspense fallback={null}>
+              <Contact />
+            </Suspense>
+          </LazySection>
+
           <Suspense fallback={null}>
-            <About />
-          </Suspense>
-          <Suspense fallback={null}>
-            <Technologies />
-          </Suspense>
-          <Suspense fallback={null}>
-            <Experience />
-          </Suspense>
-          <Suspense fallback={null}>
-            <Projects />
-          </Suspense>
-          <Suspense fallback={null}>
-            <Contact />
+            <Footer />
           </Suspense>
         </main>
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
+        <ScrollspyNav />
       </div>
-      <ScrollspyNav />
     </div>
   );
 };

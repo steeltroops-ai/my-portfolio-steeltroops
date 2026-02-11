@@ -21,6 +21,7 @@ import {
   InlineSocialShare,
   SocialLinks,
 } from "@/shared";
+import LoadingSpinner from "@/shared/components/ui/LoadingSpinner";
 import Comments from "./Comments/Comments";
 
 const BlogPost = () => {
@@ -123,11 +124,43 @@ const BlogPost = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p>Loading blog post...</p>
+      <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
+        {/* Keep original background */}
+        <div className="fixed top-0 w-full h-full -z-10">
+          <div className="relative w-full h-full bg-black">
+            <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+            <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-[radial-gradient(circle_400px_at_50%_300px,#fbfbfb36,#000)]"></div>
+          </div>
         </div>
+
+        <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
+          {/* Navigation - Show immediately */}
+          <nav className="relative flex items-center justify-between min-h-[5rem] mb-6 sm:mb-8 lg:mb-16 px-2 sm:px-0">
+            <div className="flex items-center flex-shrink-0">
+              <button
+                onClick={() => navigate("/blogs")}
+                className="group flex items-center gap-2 text-white transition-all duration-300 hover:text-purple-300"
+              >
+                <FiChevronLeft className="text-2xl transition-transform duration-300 group-hover:-translate-x-1" />
+                <span className="text-xl font-light tracking-tight">Back</span>
+              </button>
+            </div>
+
+            {/* Title placeholder */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-full max-w-[40%] sm:max-w-[60%] text-center">
+              <h1 className="text-xl sm:text-2xl font-light text-white tracking-tight uppercase truncate px-4">
+                Loading...
+              </h1>
+            </div>
+
+            <SocialLinks onlyLastOnMobile />
+          </nav>
+
+          {/* Loading spinner in content area */}
+          <LoadingSpinner fullScreen={false} message="Loading blog post..." />
+        </div>
+
+        <FloatingChatButton />
       </div>
     );
   }

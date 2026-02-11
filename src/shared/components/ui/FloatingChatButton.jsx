@@ -10,7 +10,7 @@ const FloatingChatButton = () => {
         type: "spring",
         stiffness: 100,
         damping: 15,
-        delay: 0.5,
+        delay: 0.1, // Faster appearance
       }}
       className="fixed right-0 bottom-6 sm:bottom-8 z-50"
     >

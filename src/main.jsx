@@ -18,11 +18,9 @@ import "@/index.css";
 import AnalyticsTracker from "@/shared/analytics/AnalyticsTracker";
 import { LazyMotion } from "framer-motion";
 
-// Lazy load non-critical shared components
-const FloatingChatButton = lazy(
-  () => import("@/shared/components/ui/FloatingChatButton")
-);
-const MobileNav = lazy(() => import("@/shared/components/layout/MobileNav"));
+// Critical shared components - loaded immediately
+import FloatingChatButton from "@/shared/components/ui/FloatingChatButton";
+import MobileNav from "@/shared/components/layout/MobileNav";
 
 // Add error logging for production debugging
 window.addEventListener("error", (event) => {
@@ -81,15 +79,8 @@ const AdminLayout = lazy(() => import("@/features/admin/layouts/AdminLayout"));
 
 const NotFound = lazy(() => import("@/shared/components/feedback/NotFound"));
 
-// Loading component
-const LoadingSpinner = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
-    <div className="flex flex-col items-center space-y-4">
-      <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-      <p className="text-neutral-400 text-sm">Loading...</p>
-    </div>
-  </div>
-);
+// Import global loading spinner
+import LoadingSpinner from "@/shared/components/ui/LoadingSpinner";
 
 // Minimal fallback for non-critical floating components
 const MinimalFallback = () => null;
@@ -97,10 +88,16 @@ const MinimalFallback = () => null;
 const loadFeatures = () =>
   import("framer-motion").then((res) => res.domAnimation);
 
+import { useOnlineStatus, useFocusRefetch } from "@/hooks/useNetworkStatus";
+
 // Prefetch Component - loads blog data AFTER home page is ready
 const PrefetchBlogData = ({ children }) => {
   const queryClient = useQueryClient();
   const [prefetched, setPrefetched] = React.useState(false);
+
+  // Enable online/offline detection with auto-refetch
+  useOnlineStatus();
+  useFocusRefetch();
 
   React.useEffect(() => {
     if (!prefetched) {
@@ -170,10 +167,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                         element={
                           <>
                             <App />
-                            <Suspense fallback={<MinimalFallback />}>
-                              <FloatingChatButton />
-                              <MobileNav />
-                            </Suspense>
+                            <FloatingChatButton />
+                            <MobileNav />
                           </>
                         }
                       />

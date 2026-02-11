@@ -16,6 +16,7 @@ import {
   togglePostPublished,
   getDataSourceInfo,
 } from "../services/HybridBlogService";
+import { cacheManager } from "@/lib/cacheManager";
 
 // Query keys for consistent caching
 export const blogQueryKeys = {
@@ -28,67 +29,17 @@ export const blogQueryKeys = {
   tags: () => [...blogQueryKeys.all, "tags"],
 };
 
-// Helper to get cached data from localStorage
-const getLocalStorageCache = (key) => {
-  if (typeof window === "undefined") return null;
-  try {
-    const cached = localStorage.getItem(key);
-    if (!cached) return null;
-    const { data, timestamp } = JSON.parse(cached);
-
-    // Validate data structure before using it
-    if (!data || typeof data !== "object") return null;
-    if (!data.data || !Array.isArray(data.data)) return null;
-    if (typeof data.count !== "number") return null;
-
-    // Return cached data if less than 5 minutes old
-    if (Date.now() - timestamp < 5 * 60 * 1000) {
-      return data;
-    }
-
-    // Clear expired cache
-    localStorage.removeItem(key);
-  } catch (e) {
-    // Clear corrupted cache
-    try {
-      localStorage.removeItem(key);
-    } catch {}
-    return null;
-  }
-  return null;
-};
-
-// Helper to save data to localStorage
-const setLocalStorageCache = (key, data) => {
-  if (typeof window === "undefined") return;
-  try {
-    // Only save valid data
-    if (!data || typeof data !== "object") return;
-    if (!data.data || !Array.isArray(data.data)) return;
-    if (typeof data.count !== "number") return;
-
-    localStorage.setItem(
-      key,
-      JSON.stringify({
-        data,
-        timestamp: Date.now(),
-      })
-    );
-  } catch (e) {
-    // Ignore localStorage errors (quota exceeded, etc)
-  }
-};
-
-// Hook for fetching published posts (public blog) - now with hybrid support and persistence
+// Hook for fetching published posts (public blog) - now with smart cache manager
 export const usePublishedPosts = (options = {}) => {
   const cacheKey = `blog-posts-${JSON.stringify(options)}`;
-  const cachedData = getLocalStorageCache(cacheKey);
+  const cachedData = cacheManager.get(cacheKey, "blogList");
 
   return useQuery({
     queryKey: blogQueryKeys.publishedPosts(options),
     queryFn: async () => {
       const data = await getPublishedPosts(options);
-      setLocalStorageCache(cacheKey, data);
+      // Save to smart cache (auto-syncs across tabs)
+      cacheManager.set(cacheKey, data, "blogList");
       return data;
     },
     initialData: cachedData, // Load from localStorage immediately
@@ -123,11 +74,22 @@ export const useAllPosts = (options = {}) => {
   });
 };
 
-// Hook for fetching a single post by slug
+// Hook for fetching a single post by slug - with smart cache
 export const usePostBySlug = (slug, includeUnpublished = false) => {
+  const cacheKey = `blog-post-${slug}`;
+  const cachedData = cacheManager.get(cacheKey, "blogPost");
+
   return useQuery({
     queryKey: blogQueryKeys.postBySlug(slug),
-    queryFn: () => getPostBySlug(slug, includeUnpublished),
+    queryFn: async () => {
+      const data = await getPostBySlug(slug, includeUnpublished);
+      // Save to smart cache
+      if (data?.data) {
+        cacheManager.set(cacheKey, data.data, "blogPost");
+      }
+      return data;
+    },
+    initialData: cachedData ? { data: cachedData } : undefined,
     staleTime: 10 * 60 * 1000, // 10 minutes
     cacheTime: 30 * 60 * 1000, // 30 minutes
     enabled: !!slug,
@@ -149,11 +111,22 @@ export const usePostById = (id) => {
   });
 };
 
-// Hook for fetching all tags
+// Hook for fetching all tags - with smart cache
 export const useTags = () => {
+  const cacheKey = "blog-tags";
+  const cachedData = cacheManager.get(cacheKey, "tags");
+
   return useQuery({
     queryKey: blogQueryKeys.tags(),
-    queryFn: getAllTags,
+    queryFn: async () => {
+      const data = await getAllTags();
+      // Save to smart cache
+      if (data?.data) {
+        cacheManager.set(cacheKey, data.data, "tags");
+      }
+      return data;
+    },
+    initialData: cachedData ? { data: cachedData } : undefined,
     staleTime: 15 * 60 * 1000, // 15 minutes (tags don't change often)
     cacheTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,

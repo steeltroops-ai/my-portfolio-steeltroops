@@ -49,12 +49,21 @@ export default defineConfig({
   },
   build: {
     target: "es2020",
-    minify: "esbuild",
+    minify: "terser", // Better compression than esbuild
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.logs in production
+        drop_debugger: true,
+        pure_funcs: ["console.log", "console.info"], // Remove specific console methods
+      },
+    },
     sourcemap: false,
+    cssCodeSplit: true, // Enable CSS code splitting
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
+            // Core React bundle - most critical
             if (
               id.includes("react") ||
               id.includes("react-dom") ||
@@ -62,21 +71,27 @@ export default defineConfig({
             ) {
               return "vendor";
             }
+            // Animation library - lazy loaded
             if (id.includes("framer-motion") || id.includes("popmotion")) {
               return "motion";
             }
+            // Forensics - admin only
             if (id.includes("ua-parser-js")) {
               return "forensics";
             }
+            // Router - critical but separate
             if (id.includes("react-router") || id.includes("@remix-run")) {
               return "router";
             }
+            // Query library - critical
             if (id.includes("@tanstack")) {
               return "query";
             }
+            // Icons - can be split per feature
             if (id.includes("react-icons")) {
               return "icons";
             }
+            // Blog libraries - lazy loaded
             if (
               id.includes("highlight.js") ||
               id.includes("rehype") ||
@@ -86,9 +101,11 @@ export default defineConfig({
             ) {
               return "blog-libs";
             }
+            // Editor - admin only
             if (id.includes("quill")) {
               return "editor-libs";
             }
+            // Utilities
             if (id.includes("dompurify") || id.includes("prop-types")) {
               return "utils";
             }
@@ -114,6 +131,8 @@ export default defineConfig({
       "react-dom",
       "react-router-dom",
       "@tanstack/react-query",
+      "framer-motion", // Pre-bundle for faster dev
     ],
+    exclude: ["@vite/client", "@vite/env"],
   },
 });

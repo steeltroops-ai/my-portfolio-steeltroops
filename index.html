@@ -38,6 +38,13 @@
       crossorigin
     />
 
+    <!-- Preload critical vendor chunks for instant execution -->
+    <link rel="modulepreload" href="/assets/vendor.js" as="script" />
+    <link rel="modulepreload" href="/assets/router.js" as="script" />
+
+    <!-- DNS prefetch for API calls -->
+    <link rel="dns-prefetch" href="https://steeltroops.vercel.app" />
+
     <!-- Inlined Critical Font Styles - Variable Font for Ultra-Thin support (100-900) -->
     <meta name="theme-color" content="#0a0a0a" />
     <meta name="color-scheme" content="dark" />

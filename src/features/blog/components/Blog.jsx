@@ -13,9 +13,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   usePublishedPosts,
   useTags,
-  blogQueryKeys,
-} from "../hooks/useBlogQueries";
-import { getPublishedPosts } from "../services/HybridBlogService";
+  usePrefetchPost,
+} from "@/features/blog/hooks/useBlogQueries";
+import { blogQueryKeys } from "@/features/blog/hooks/useBlogQueries";
+import { getPublishedPosts } from "@/features/blog/services/HybridBlogService";
 import FloatingChatButton from "@/shared/components/ui/FloatingChatButton";
 import SocialLinks from "@/shared/components/ui/SocialLinks";
 import SEOHead from "@/shared/components/ui/SEOHead";
@@ -78,6 +79,7 @@ const Blog = () => {
   });
 
   const { data: tagsData, isPending: tagsLoading } = useTags();
+  const { prefetchPostBySlug } = usePrefetchPost();
 
   // Extract data from response - API now handles the heavy lifting
   const posts = postsData?.posts || [];
@@ -86,14 +88,12 @@ const Blog = () => {
 
   const tags = tagsData || [];
 
-  // Show skeleton if:
-  // 1. We're loading AND don't have placeholder data (initial load)
-  // 2. OR if we're loading tags (initial setup)
-  // 3. OR if posts array is empty AND we're pending (hard refresh scenario)
-  const showSkeleton =
-    (postsLoading && !isPlaceholderData) ||
-    tagsLoading ||
-    (posts.length === 0 && postsLoading);
+  // Show skeleton ONLY if:
+  // 1. We're loading initial data AND don't have any posts yet
+  // 2. AND we're not showing placeholder data from previous page
+  // Never show skeleton if we have posts (even if refetching)
+  const showSkeleton = posts.length === 0 && postsLoading && !isPlaceholderData;
+
   const loading = postsLoading && !isPlaceholderData;
   const error = postsError ? "Failed to load blog posts" : "";
 
@@ -149,6 +149,36 @@ const Blog = () => {
     queryClient,
     postsPerPage,
   ]);
+
+  // Prefetch blog posts when they come into viewport
+  useEffect(() => {
+    if (!posts || posts.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const slug = entry.target.getAttribute("data-slug");
+            if (slug) {
+              prefetchPostBySlug(slug);
+              observer.unobserve(entry.target); // Only prefetch once
+            }
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "100px", // Start prefetching 100px before card is visible
+        threshold: 0.1,
+      }
+    );
+
+    // Observe all blog cards
+    const cards = document.querySelectorAll("[data-blog-card]");
+    cards.forEach((card) => observer.observe(card));
+
+    return () => observer.disconnect();
+  }, [posts, prefetchPostBySlug]);
 
   // Dynamic preconnect AND preload for LCP image
   React.useEffect(() => {
@@ -471,6 +501,8 @@ const Blog = () => {
                     {posts.map((post, index) => (
                       <motion.article
                         key={post.id}
+                        data-blog-card
+                        data-slug={post.slug}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 * index }}
@@ -487,6 +519,7 @@ const Blog = () => {
 
                         <Link
                           to={`/blogs/${post.slug}`}
+                          onMouseEnter={() => prefetchPostBySlug(post.slug)}
                           className={`relative z-10 flex flex-1 overflow-hidden ${
                             layoutView === "list"
                               ? "flex-row h-[128px] sm:h-[154px] overflow-hidden"
