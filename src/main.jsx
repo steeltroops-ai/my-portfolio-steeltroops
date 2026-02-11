@@ -122,7 +122,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 }}
               >
                 <AnalyticsTracker />
-                <Suspense fallback={<LoadingSpinner />}>
+                <Suspense fallback={null}>
                   <Routes>
                     <Route
                       path="/"

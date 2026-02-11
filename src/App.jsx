@@ -20,13 +20,6 @@ const Projects = lazy(() => import("@/features/portfolio/components/Projects"));
 const Contact = lazy(() => import("@/features/portfolio/components/Contact"));
 const Footer = lazy(() => import("@/shared/components/layout/Footer"));
 
-// Minimal loading placeholder for sections
-const SectionLoader = () => (
-  <div className="py-20 flex justify-center items-center">
-    <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-  </div>
-);
-
 const App = () => {
   return (
     <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
@@ -48,19 +41,19 @@ const App = () => {
         <Navbar />
         <main id="main-content">
           <Hero />
-          <Suspense fallback={<SectionLoader />}>
+          <Suspense fallback={null}>
             <About />
           </Suspense>
-          <Suspense fallback={<SectionLoader />}>
+          <Suspense fallback={null}>
             <Technologies />
           </Suspense>
-          <Suspense fallback={<SectionLoader />}>
+          <Suspense fallback={null}>
             <Experience />
           </Suspense>
-          <Suspense fallback={<SectionLoader />}>
+          <Suspense fallback={null}>
             <Projects />
           </Suspense>
-          <Suspense fallback={<SectionLoader />}>
+          <Suspense fallback={null}>
             <Contact />
           </Suspense>
         </main>
