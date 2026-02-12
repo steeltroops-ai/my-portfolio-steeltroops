@@ -111,11 +111,6 @@ export default defineConfig({
             }
             return "shared-vendor";
           }
-          // Internal chunking for features to keep index lean
-          if (id.includes("src/features/portfolio")) return "portfolio-feature";
-          if (id.includes("src/features/blog")) return "blog-feature";
-          if (id.includes("src/features/admin")) return "admin-feature";
-          if (id.includes("src/shared/components")) return "shared-components";
         },
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
