@@ -25,13 +25,14 @@ export const IMAGES = {
 export const PERSONAL = {
   name: "Mayank Pratap Singh",
   username: "@steeltroops",
-  tagline: "Building things that matter.",
-  role: "Full Stack, Robotics & ML Dev",
+  tagline: "Production systems. Software, Intelligence & Hardware.",
+  role: "Full Stack, Robotics & Machine Learning Engineer",
   location: "India",
   university: "GLA University",
-  degree: "B.Tech in Computer Science Engineering (AI & ML)",
+  degree: "B.Tech, Computer Science (AI & ML)",
   cgpa: "8.3/10",
 };
+
 
 // =====================================================
 // SOCIAL LINKS - All social media profiles
@@ -71,14 +72,14 @@ export const SITE_META = {
 export const HERO_CONTENT = [
   "I build production systems. Full stack, ML pipelines, robotics. The kind of work where 'it mostly works' isn't good enough.",
   "I've shipped across healthcare, aerospace, and autonomous systems. I pick hard problems, figure them out, and deliver something that actually holds up.",
-  "If it needs to scale, think, not break or move, I've probably shipped it.",
+  "If it needs to move in the real world or scale in the cloud and survive production traffic, I've probably shipped it.",
 ];
 // =====================================================
 // ABOUT TEXT
 // =====================================================
 export const ABOUT_TEXT = [
   "I'm an engineer who builds across the full picture. Known across the community as @steeltroops, I work from frontend to backend to ML to hardware. I don't stop where my job title ends.",
-  "I've led teams, started a company, and worked in rooms where I was the least experienced person. The last one taught me the most.",
+  "I've led teams, founded a startup, and worked in rooms where I was the least experienced person. The last one taught me the most.",
   "I care about architecture. Not the buzzword kind. The kind where your system still works six months later when traffic doubles and nobody remembers how it was built.",
   "I learn fast, build faster, and I'm honest about what I don't know. That last part saves more time than most people realize.",
   "Most engineers pick a lane. I picked a problem space and learned whatever was needed to solve it. That's how you end up building ML pipelines on Monday and debugging ROS2 sensor nodes on Thursday.",
@@ -89,7 +90,7 @@ export const ABOUT_TEXT = [
 export const HIGHLIGHT_STATS = [
   { label: "Experience", value: "2+ Years" },
   { label: "Systems Shipped", value: "15+" },
-  { label: "Uptime", value: "99.3%" },
+  { label: "Uptime", value: "99%" },
 ];
 
 // =====================================================
