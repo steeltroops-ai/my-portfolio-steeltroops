@@ -6,7 +6,9 @@
  * Allows for real-time progress tracking and autosave.
  */
 
+import { neon } from "@neondatabase/serverless";
 import Cerebras from "@cerebras/cerebras_cloud_sdk";
+import { setCorsHeaders, verifyAuth } from "../utils.js";
 
 const STYLE_PROMPTS = {
   technical:
@@ -22,13 +24,19 @@ const STYLE_PROMPTS = {
 
 export default async function handler(req, res) {
   // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  setCorsHeaders(res, req);
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const sql = neon(process.env.DATABASE_URL);
+
+  // Authenticate Admin
+  const session = await verifyAuth(req, sql);
+  if (!session || session.role !== "admin") {
+    return res.status(401).json({ error: "Unauthorized access detected" });
   }
 
   const apiKey = process.env.CEREBRAS_API_KEY;

@@ -25,9 +25,54 @@ if (typeof window !== "undefined" && "BroadcastChannel" in window) {
 }
 
 // Cache event listeners for cross-tab sync
+// Cache event listeners for cross-tab sync
 const cacheListeners = new Set();
 
 class SmartCacheManager {
+  /**
+   * Clear Admin-specific Cache Data
+   */
+  clearAdminCache() {
+    if (typeof window === "undefined") return;
+
+    try {
+      const keys = Object.keys(localStorage);
+      const adminPatterns = [
+        "portfolio_cache_admin-", // Generic admin prefix
+        "portfolio_cache_admin-messages-", // Contact messages
+        "portfolio_cache_admin-analytics-", // Analytics stats
+        "portfolio_cache_visitor-detail-", // Detailed visitor analytics
+        "portfolio_cache_blog-all-posts-", // Admin blog list (includes drafts)
+        "portfolio_cache_ai-", // AI Generator drafts/data
+      ];
+
+      keys.forEach((key) => {
+        const isAdminData = adminPatterns.some((pattern) =>
+          key.startsWith(pattern)
+        );
+
+        if (isAdminData) {
+          localStorage.removeItem(key);
+
+          // Broadcast invalidation
+          if (broadcastChannel) {
+            try {
+              broadcastChannel.postMessage({
+                type: "CACHE_INVALIDATE",
+                key: key.replace(CACHE_PREFIX, ""), // Send original key
+              });
+            } catch (e) {
+              console.warn("Broadcast error:", e);
+            }
+          }
+        }
+      });
+      console.log("[CacheManager] Admin cache cleared.");
+    } catch (error) {
+      console.warn("Admin cache clear error:", error);
+    }
+  }
+
   constructor() {
     // Listen for cache updates from other tabs
     if (broadcastChannel) {

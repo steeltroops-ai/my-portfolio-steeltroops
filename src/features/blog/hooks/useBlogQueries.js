@@ -57,15 +57,37 @@ export const usePublishedPosts = (options = {}) => {
   });
 };
 
-// Hook for fetching all posts (admin)
+// Hook for fetching all posts (admin) - with persistent smart cache
 export const useAllPosts = (options = {}) => {
+  const cacheKey = `blog-all-posts-${JSON.stringify(options)}`;
+  const cachedData = cacheManager.get(cacheKey, "blogList");
+
   return useQuery({
     queryKey: blogQueryKeys.allPosts(options),
-    queryFn: () => getAllPosts(options),
-    staleTime: 2 * 60 * 1000, // 2 minutes (shorter for admin)
-    cacheTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-    retry: 2,
+    queryFn: async () => {
+      const data = await getAllPosts(options);
+
+      // If there's a critical error (not just a warning), throw so React Query handles it
+      if (data?.error && data.error.type === "error") {
+        throw new Error(data.error.message || "Failed to fetch posts");
+      }
+
+      // Save to smart cache ONLY if valid response
+      if (data?.data && !data.error) {
+        cacheManager.set(cacheKey, data, "blogList");
+      }
+      return data;
+    },
+    initialData: cachedData, // Load from localStorage immediately
+    staleTime: 0, // Always refresh in background to ensure data is fresh
+    cacheTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: true, // Refresh when user comes back to the tab
+    retry: 3,
+    refetchInterval: (query) => {
+      // If error (backend down), poll every 10s to recover
+      if (query.state.status === "error") return 10000;
+      return false;
+    },
     select: (data) => ({
       posts: data.data || [],
       count: data.count || 0,

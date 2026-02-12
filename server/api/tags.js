@@ -1,19 +1,20 @@
 // Vercel API Route: /api/tags
-import { neon } from '@neondatabase/serverless';
+import { neon } from "@neondatabase/serverless";
+import { setCorsHeaders } from "./utils.js";
 
-const sql = neon(process.env.DATABASE_URL || '');
+const sql = neon(process.env.DATABASE_URL || "");
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(res, req);
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  if (req.method !== "GET") {
+    return res
+      .status(405)
+      .json({ success: false, error: "Method not allowed" });
   }
 
   try {
@@ -21,12 +22,17 @@ export default async function handler(req, res) {
       SELECT tags FROM blog_posts WHERE published = true AND tags IS NOT NULL
     `;
 
-    const allTags = posts.flatMap(post => post.tags || []);
+    const allTags = posts.flatMap((post) => post.tags || []);
     const uniqueTags = [...new Set(allTags)].sort();
 
     return res.status(200).json({ success: true, data: uniqueTags });
   } catch (error) {
-    console.error('Tags API error:', error);
-    return res.status(500).json({ success: false, error: error.message || 'Internal server error' });
+    console.error("Tags API error:", error);
+    return res
+      .status(500)
+      .json({
+        success: false,
+        error: error.message || "Internal server error",
+      });
   }
 }

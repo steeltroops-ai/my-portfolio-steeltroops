@@ -11,6 +11,7 @@ import {
 } from "./NeonAuthService";
 
 import { getToken } from "@/lib/neon";
+import { cacheManager } from "@/lib/cacheManager";
 
 // Check if Neon API is available
 const isNeonAvailable = async () => {
@@ -94,6 +95,9 @@ export const signInWithCredentials = async (identifier, password) => {
 export const signOut = async () => {
   try {
     const result = await neonSignOut();
+    if (!result.error) {
+      cacheManager.clearAdminCache();
+    }
     return result;
   } catch (error) {
     console.error("Sign out error:", error);

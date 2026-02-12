@@ -1,28 +1,28 @@
 // Neon Database API Client
 // Routes to Vercel serverless functions at /api/*
 
-const API_BASE = '/api';
+const API_BASE = "/api";
 
-// Token management
-const TOKEN_KEY = 'neon_auth_token';
-
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
-export const removeToken = () => localStorage.removeItem(TOKEN_KEY);
+// Token management (DEPRECATED - Moved to HttpOnly Cookies)
+// const TOKEN_KEY = 'neon_auth_token';
+export const getToken = () => null; // localStorage.getItem(TOKEN_KEY);
+export const setToken = (token) => {}; // localStorage.setItem(TOKEN_KEY, token);
+export const removeToken = () => {}; // localStorage.removeItem(TOKEN_KEY);
 
 // API request helper
 async function apiRequest(endpoint, options = {}) {
-  const token = getToken();
-  
+  // const token = getToken();
+
   const headers = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
+    "Content-Type": "application/json",
+    // ...(token && { 'Authorization': `Bearer ${token}` }), // Cookie handles this now
     ...options.headers,
   };
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
+    credentials: "include", // vital for sending/receiving cookies
   });
 
   const data = await response.json();
@@ -40,43 +40,39 @@ async function apiRequest(endpoint, options = {}) {
 
 export const authApi = {
   async login(email, password) {
-    const result = await apiRequest('/auth?action=login', {
-      method: 'POST',
+    const result = await apiRequest("/auth?action=login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    
-    if (result.success && result.token) {
-      setToken(result.token);
-    }
-    
+
+    // Cookie is set automatically by browser
     return result;
   },
 
   async register(email, password, displayName) {
-    return apiRequest('/auth?action=register', {
-      method: 'POST',
+    return apiRequest("/auth?action=register", {
+      method: "POST",
       body: JSON.stringify({ email, password, displayName }),
     });
   },
 
   async logout() {
-    try {
-      await apiRequest('/auth?action=logout', { method: 'POST' });
-    } finally {
-      removeToken();
-    }
+    return apiRequest("/auth?action=logout", { method: "POST" });
   },
 
   async getCurrentUser() {
-    return apiRequest('/auth?action=me', { method: 'GET' });
+    return apiRequest("/auth?action=me", { method: "GET" });
   },
 
   async verifyToken() {
-    return apiRequest('/auth?action=verify', { method: 'GET' });
+    return apiRequest("/auth?action=verify", { method: "GET" });
   },
 
   isAuthenticated() {
-    return !!getToken();
+    // We can't check cookie synchronously.
+    // This method is now unreliable for initial state unless we query server.
+    // For now, return false and let the app cycle through verifyToken()
+    return false;
   },
 };
 
@@ -87,26 +83,26 @@ export const authApi = {
 export const postsApi = {
   async getPublishedPosts(options = {}) {
     const params = new URLSearchParams();
-    if (options.limit) params.set('limit', options.limit);
-    if (options.offset) params.set('offset', options.offset);
-    if (options.search) params.set('search', options.search);
-    if (options.tags) params.set('tags', options.tags.join(','));
-    
+    if (options.limit) params.set("limit", options.limit);
+    if (options.offset) params.set("offset", options.offset);
+    if (options.search) params.set("search", options.search);
+    if (options.tags) params.set("tags", options.tags.join(","));
+
     return apiRequest(`/posts?${params.toString()}`);
   },
 
   async getAllPosts(options = {}) {
-    const params = new URLSearchParams({ all: 'true' });
-    if (options.limit) params.set('limit', options.limit);
-    if (options.offset) params.set('offset', options.offset);
-    
+    const params = new URLSearchParams({ all: "true" });
+    if (options.limit) params.set("limit", options.limit);
+    if (options.offset) params.set("offset", options.offset);
+
     return apiRequest(`/posts?${params.toString()}`);
   },
 
   async getPostBySlug(slug, includeUnpublished = false) {
     const params = new URLSearchParams({ slug });
-    if (includeUnpublished) params.set('all', 'true');
-    
+    if (includeUnpublished) params.set("all", "true");
+
     return apiRequest(`/posts?${params.toString()}`);
   },
 
@@ -115,26 +111,26 @@ export const postsApi = {
   },
 
   async createPost(postData) {
-    return apiRequest('/posts', {
-      method: 'POST',
+    return apiRequest("/posts", {
+      method: "POST",
       body: JSON.stringify(postData),
     });
   },
 
   async updatePost(id, postData) {
     return apiRequest(`/posts?id=${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(postData),
     });
   },
 
   async deletePost(id) {
-    return apiRequest(`/posts?id=${id}`, { method: 'DELETE' });
+    return apiRequest(`/posts?id=${id}`, { method: "DELETE" });
   },
 
   async togglePostPublished(id, published) {
     return apiRequest(`/posts?id=${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify({ published }),
     });
   },
@@ -150,35 +146,35 @@ export const commentsApi = {
   },
 
   async getAllComments(options = {}) {
-    const params = new URLSearchParams({ all: 'true' });
-    if (options.status) params.set('status', options.status);
-    if (options.limit) params.set('limit', options.limit);
-    if (options.offset) params.set('offset', options.offset);
-    
+    const params = new URLSearchParams({ all: "true" });
+    if (options.status) params.set("status", options.status);
+    if (options.limit) params.set("limit", options.limit);
+    if (options.offset) params.set("offset", options.offset);
+
     return apiRequest(`/comments?${params.toString()}`);
   },
 
   async createComment(commentData) {
-    return apiRequest('/comments', {
-      method: 'POST',
+    return apiRequest("/comments", {
+      method: "POST",
       body: JSON.stringify(commentData),
     });
   },
 
   async approveComment(id) {
-    return apiRequest(`/comments?id=${id}&action=approve`, { method: 'PUT' });
+    return apiRequest(`/comments?id=${id}&action=approve`, { method: "PUT" });
   },
 
   async rejectComment(id) {
-    return apiRequest(`/comments?id=${id}&action=reject`, { method: 'PUT' });
+    return apiRequest(`/comments?id=${id}&action=reject`, { method: "PUT" });
   },
 
   async markAsSpam(id) {
-    return apiRequest(`/comments?id=${id}&action=spam`, { method: 'PUT' });
+    return apiRequest(`/comments?id=${id}&action=spam`, { method: "PUT" });
   },
 
   async deleteComment(id) {
-    return apiRequest(`/comments?id=${id}`, { method: 'DELETE' });
+    return apiRequest(`/comments?id=${id}`, { method: "DELETE" });
   },
 };
 
@@ -189,37 +185,37 @@ export const commentsApi = {
 export const contactApi = {
   async getMessages(options = {}) {
     const params = new URLSearchParams();
-    if (options.status) params.set('status', options.status);
-    if (options.limit) params.set('limit', options.limit);
-    if (options.offset) params.set('offset', options.offset);
-    
+    if (options.status) params.set("status", options.status);
+    if (options.limit) params.set("limit", options.limit);
+    if (options.offset) params.set("offset", options.offset);
+
     return apiRequest(`/contact?${params.toString()}`);
   },
 
   async sendMessage(messageData) {
-    return apiRequest('/contact', {
-      method: 'POST',
+    return apiRequest("/contact", {
+      method: "POST",
       body: JSON.stringify(messageData),
     });
   },
 
   async markAsRead(id) {
-    return apiRequest(`/contact?id=${id}&action=read`, { method: 'PUT' });
+    return apiRequest(`/contact?id=${id}&action=read`, { method: "PUT" });
   },
 
   async markAsReplied(id, notes = null) {
     return apiRequest(`/contact?id=${id}&action=replied`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify({ notes }),
     });
   },
 
   async archiveMessage(id) {
-    return apiRequest(`/contact?id=${id}&action=archive`, { method: 'PUT' });
+    return apiRequest(`/contact?id=${id}&action=archive`, { method: "PUT" });
   },
 
   async deleteMessage(id) {
-    return apiRequest(`/contact?id=${id}`, { method: 'DELETE' });
+    return apiRequest(`/contact?id=${id}`, { method: "DELETE" });
   },
 };
 
@@ -229,7 +225,7 @@ export const contactApi = {
 
 export const tagsApi = {
   async getAllTags() {
-    return apiRequest('/tags');
+    return apiRequest("/tags");
   },
 };
 
@@ -239,18 +235,18 @@ export const tagsApi = {
 
 export const categoriesApi = {
   async getAllCategories() {
-    return apiRequest('/categories');
+    return apiRequest("/categories");
   },
 
   async createCategory(categoryData) {
-    return apiRequest('/categories', {
-      method: 'POST',
+    return apiRequest("/categories", {
+      method: "POST",
       body: JSON.stringify(categoryData),
     });
   },
 
   async deleteCategory(id) {
-    return apiRequest(`/categories?id=${id}`, { method: 'DELETE' });
+    return apiRequest(`/categories?id=${id}`, { method: "DELETE" });
   },
 };
 
@@ -261,10 +257,10 @@ export const categoriesApi = {
 export const generateSlug = (title) => {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim('-');
+    .replace(/[^a-z0-9 -]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim("-");
 };
 
 export const estimateReadingTime = (content) => {
@@ -275,16 +271,16 @@ export const estimateReadingTime = (content) => {
 
 export const extractExcerpt = (content, maxLength = 160) => {
   const plainText = content
-    .replace(/#{1,6}\s+/g, '')
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .replace(/`(.*?)`/g, '$1')
-    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-    .replace(/\n+/g, ' ')
+    .replace(/#{1,6}\s+/g, "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/`(.*?)`/g, "$1")
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/\n+/g, " ")
     .trim();
 
   return plainText.length > maxLength
-    ? plainText.substring(0, maxLength) + '...'
+    ? plainText.substring(0, maxLength) + "..."
     : plainText;
 };
 

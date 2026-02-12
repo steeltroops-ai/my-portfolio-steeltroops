@@ -99,7 +99,10 @@ const AIBlogGenerator = () => {
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div
+        className="flex-1 overflow-y-auto custom-scrollbar"
+        data-lenis-prevent
+      >
         <div className="max-w-4xl mx-auto px-8 py-8">
           {/* Empty State / Welcome Screen */}
           {!isGenerating && !result && (

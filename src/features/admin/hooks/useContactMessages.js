@@ -1,41 +1,55 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { cacheManager } from "@/lib/cacheManager";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
-// Get auth token from localStorage - must match neon.js TOKEN_KEY
-const getAuthToken = () => {
-  return localStorage.getItem("neon_auth_token");
+// Standalone fetch function for prefetching
+export const fetchContactMessages = async (status = "all") => {
+  const params = new URLSearchParams();
+  if (status && status !== "all") {
+    params.set("status", status);
+  }
+  params.set("limit", "100");
+
+  const response = await fetch(`${API_URL}/api/contact?${params}`, {
+    credentials: "include", // Use HttpOnly Cookie
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) throw new Error("Not authenticated");
+    throw new Error("Failed to fetch messages");
+  }
+
+  const data = await response.json();
+  return data;
 };
 
 // Fetch all contact messages
 export const useContactMessages = (status = "all") => {
+  const cacheKey = `admin-messages-${status}`;
+  const cachedData = cacheManager.get(cacheKey, "default");
+
   return useQuery({
     queryKey: ["contactMessages", status],
     queryFn: async () => {
-      const token = getAuthToken();
-      if (!token) throw new Error("Not authenticated");
-
-      const params = new URLSearchParams();
-      if (status && status !== "all") {
-        params.set("status", status);
+      const data = await fetchContactMessages(status);
+      if (data) {
+        cacheManager.set(cacheKey, data, "default");
       }
-      params.set("limit", "100");
-
-      const response = await fetch(`${API_URL}/api/contact?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch messages");
-      }
-
-      const data = await response.json();
       return data;
     },
-    staleTime: 30000, // 30 seconds
+    initialData: cachedData,
+    staleTime: 0, // Always refresh in background
+    refetchOnWindowFocus: true,
+    retry: 3,
+    refetchInterval: (query) => {
+      // If error (backend down), poll every 10s to recover
+      if (query.state.status === "error") return 10000;
+      return false;
+    },
   });
 };
 
@@ -44,14 +58,11 @@ export const useUnreadCount = () => {
   return useQuery({
     queryKey: ["contactMessages", "unread", "count"],
     queryFn: async () => {
-      const token = getAuthToken();
-      if (!token) return { count: 0 };
-
       const response = await fetch(
         `${API_URL}/api/contact?status=unread&limit=100`,
         {
+          credentials: "include", // Use HttpOnly Cookie
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -64,7 +75,13 @@ export const useUnreadCount = () => {
       const data = await response.json();
       return { count: data.data?.length || 0 };
     },
-    staleTime: 60000, // 1 minute
+    staleTime: 60000,
+    retry: 3,
+    refetchInterval: (query) => {
+      // If error, poll every 10s to recover
+      if (query.state.status === "error") return 10000;
+      return false;
+    },
   });
 };
 
@@ -74,15 +91,12 @@ export const useUpdateMessageStatus = () => {
 
   return useMutation({
     mutationFn: async ({ id, action, notes }) => {
-      const token = getAuthToken();
-      if (!token) throw new Error("Not authenticated");
-
       const response = await fetch(
         `${API_URL}/api/contact?id=${id}&action=${action}`,
         {
           method: "PUT",
+          credentials: "include", // Use HttpOnly Cookie
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ notes }),
@@ -107,13 +121,10 @@ export const useDeleteMessage = () => {
 
   return useMutation({
     mutationFn: async (id) => {
-      const token = getAuthToken();
-      if (!token) throw new Error("Not authenticated");
-
       const response = await fetch(`${API_URL}/api/contact?id=${id}`, {
         method: "DELETE",
+        credentials: "include", // Use HttpOnly Cookie
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -141,13 +152,10 @@ export const useReplyMessage = () => {
       replyMessage,
       previousMessages,
     }) => {
-      const token = getAuthToken();
-      if (!token) throw new Error("Not authenticated");
-
       const response = await fetch(`${API_URL}/api/contact/reply`, {
         method: "POST",
+        credentials: "include", // Use HttpOnly Cookie
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

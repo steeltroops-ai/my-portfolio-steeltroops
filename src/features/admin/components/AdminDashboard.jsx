@@ -5,6 +5,9 @@ import {
   useDeletePost,
   useTogglePostPublished,
 } from "@/features/blog/hooks/useBlogQueries";
+import { useQueryClient } from "@tanstack/react-query";
+import { fetchStats } from "@/shared/analytics/useAnalyticsStats";
+import { fetchContactMessages } from "../hooks/useContactMessages";
 import { isAuthenticated } from "../services/HybridAuthService";
 import {
   FiPlus,
@@ -14,17 +17,20 @@ import {
   FiEyeOff,
   FiSearch,
   FiCalendar,
+  FiLoader,
 } from "react-icons/fi";
 
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all"); // all, published, draft
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Use React Query hooks
   const {
     data: postsData,
     isLoading: loading,
+    isFetching,
     error: queryError,
     refetch,
   } = useAllPosts();
@@ -32,7 +38,11 @@ const AdminDashboard = () => {
   const togglePublishedMutation = useTogglePostPublished();
 
   const posts = postsData?.posts || [];
-  const error = queryError ? "Failed to load posts" : "";
+  const error =
+    queryError?.message ||
+    (postsData?.error?.type === "error" ? postsData.error.message : "");
+  const warning =
+    postsData?.error?.type === "warning" ? postsData.error.message : "";
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,7 +52,11 @@ const AdminDashboard = () => {
       }
     };
     checkAuth();
-  }, [navigate]);
+
+    // Force a refetch on mount to ensure we have the absolute latest data
+    // This solves the "fails to load" or "stale data" issue
+    refetch();
+  }, [navigate, refetch]);
 
   const handleNewPost = () => {
     navigate("/admin/post/new");
@@ -105,8 +119,14 @@ const AdminDashboard = () => {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-4">
             Dashboard
+            {isFetching && !loading && (
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium animate-pulse">
+                <FiLoader className="animate-spin" size={12} />
+                Syncing...
+              </span>
+            )}
           </h1>
           <p className="text-neutral-400 text-sm mt-1">
             Manage your blog posts and content.
@@ -200,7 +220,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Loading State Skeleton */}
-      {loading && (
+      {(loading || (isFetching && filteredPosts.length === 0)) && (
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div
@@ -220,21 +240,34 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {/* Warning State (e.g. Neon down, showing static) */}
+      {warning && !error && (
+        <div className="mb-6 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 text-sm flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+          {warning}
+        </div>
+      )}
+
       {/* Error State */}
       {error && (
-        <div className="text-center py-20">
-          <p className="text-red-400 mb-4">{error}</p>
+        <div className="text-center py-20 bg-red-500/5 rounded-2xl border border-red-500/10 backdrop-blur-[2px]">
+          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+            <FiTrash2 className="text-red-400" size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Sync Failure</h3>
+          <p className="text-red-400 mb-6 max-w-md mx-auto">{error}</p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-all backdrop-blur-[2px]"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-all backdrop-blur-[2px] mx-auto"
           >
+            <FiLoader className={isFetching ? "animate-spin" : ""} size={18} />
             Try Again
           </button>
         </div>
       )}
 
       {/* Posts Grid */}
-      {!loading && !error && (
+      {!loading && !error && !(isFetching && filteredPosts.length === 0) && (
         <div className="space-y-4">
           {filteredPosts.length === 0 ? (
             <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/5 border-dashed backdrop-blur-[2px]">

@@ -1,38 +1,16 @@
 import { neon } from "@neondatabase/serverless";
+import { setCorsHeaders, verifyAuth } from "../utils.js";
 
 const sql = neon(process.env.DATABASE_URL || "");
 
-/**
- * Authentication check for admin stats retrieval
- */
-async function verifyAuth(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  const token = authHeader.slice(7);
-  try {
-    const sessions = await sql`
-      SELECT s.*, a.role FROM sessions s
-      JOIN admin_profiles a ON s.user_id = a.id
-      WHERE s.token = ${token} AND s.expires_at > NOW()
-    `;
-    return sessions.length > 0 ? sessions[0] : null;
-  } catch (e) {
-    console.error("[Stats] Auth Verification failed:", e.message);
-    return null;
-  }
-}
-
 export default async function handler(req, res) {
   // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  setCorsHeaders(res, req);
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    const session = await verifyAuth(req);
+    const session = await verifyAuth(req, sql);
     if (!session || session.role !== "admin") {
       return res.status(401).json({ error: "Unauthorized access detected" });
     }

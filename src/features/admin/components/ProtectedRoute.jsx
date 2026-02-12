@@ -2,16 +2,24 @@ import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import * as HybridAuthService from "../services/HybridAuthService";
+import { getToken } from "@/lib/neon"; // Optimistic check helper
 
 const ProtectedRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Optimistic Initial State: Assume authenticated if token exists
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!getToken());
+  const [isLoading, setIsLoading] = useState(!getToken()); // Only load if NO token present
   const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Double-check with full validation (async)
         const authenticated = await HybridAuthService.isAuthenticated();
+
+        // If validation fails but we optimistically allowed access, correct it now
+        if (!authenticated && isAuthenticated) {
+          console.warn("Optimistic auth failed. Redirecting...");
+        }
         setIsAuthenticated(authenticated);
       } catch (error) {
         console.error("Auth check failed:", error);
@@ -24,18 +32,12 @@ const ProtectedRoute = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Instead, if loading, we render nothing (or the optimistic content if valid token)
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p>Checking authentication...</p>
-        </div>
-      </div>
-    );
+    return null; // Render nothing during initial check if token missing
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isLoading) {
     // Redirect to login with return URL
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }

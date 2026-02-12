@@ -1,21 +1,36 @@
 import { useQuery } from "@tanstack/react-query";
+import { cacheManager } from "@/lib/cacheManager";
 
-const fetchStats = async () => {
-  const token = localStorage.getItem("neon_auth_token");
+export const fetchStats = async () => {
   const res = await fetch("/api/analytics/stats", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: "include", // Use HttpOnly Cookie
   });
   if (!res.ok) throw new Error("Failed to fetch stats");
   return res.json();
 };
 
 export const useAnalyticsStats = () => {
+  const cacheKey = "admin-analytics-stats";
+  const cachedData = cacheManager.get(cacheKey, "default");
+
   return useQuery({
     queryKey: ["analytics-stats"],
-    queryFn: fetchStats,
-    refetchInterval: 10000, // Refresh every 10s for live data
+    queryFn: async () => {
+      const data = await fetchStats();
+      if (data) {
+        cacheManager.set(cacheKey, data, "default");
+      }
+      return data;
+    },
+    initialData: cachedData,
+    staleTime: 0, // Always refresh in background
+    refetchOnWindowFocus: true,
+    retry: 3,
+    refetchInterval: (query) => {
+      // If error (backend down), poll every 10s to recover
+      if (query.state.status === "error") return 10000;
+      return false;
+    },
   });
 };
 
@@ -23,11 +38,10 @@ export const useVisitorDetail = (visitorId) => {
   return useQuery({
     queryKey: ["visitor-detail", visitorId],
     queryFn: async () => {
-      const token = localStorage.getItem("neon_auth_token");
       const res = await fetch(
         `/api/analytics/stats?action=visitor_detail&visitorId=${visitorId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include", // Use HttpOnly Cookie
         }
       );
       if (!res.ok) throw new Error("Failed to fetch visitor detail");

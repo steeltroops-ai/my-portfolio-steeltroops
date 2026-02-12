@@ -1,5 +1,5 @@
-// Vercel API Route: /api/contact
 import { neon } from "@neondatabase/serverless";
+import { setCorsHeaders, verifyAuth } from "./utils.js";
 
 const sql = neon(process.env.DATABASE_URL || "");
 
@@ -11,27 +11,8 @@ function errorResponse(res, message, status = 500) {
   res.status(status).json({ success: false, error: message });
 }
 
-async function verifyAuth(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  const token = authHeader.slice(7);
-  const sessions = await sql`
-    SELECT s.*, a.role FROM sessions s
-    JOIN admin_profiles a ON s.user_id = a.id
-    WHERE s.token = ${token} AND s.expires_at > NOW()
-  `;
-
-  return sessions.length > 0 ? sessions[0] : null;
-}
-
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  setCorsHeaders(res, req);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -106,7 +87,7 @@ export default async function handler(req, res) {
 
     // GET - Get messages (admin only)
     if (req.method === "GET") {
-      const session = await verifyAuth(req);
+      const session = await verifyAuth(req, sql);
       if (!session || session.role !== "admin") {
         return errorResponse(res, "Unauthorized", 401);
       }
@@ -142,7 +123,7 @@ export default async function handler(req, res) {
 
     // PUT - Update message status (admin only)
     if (req.method === "PUT") {
-      const session = await verifyAuth(req);
+      const session = await verifyAuth(req, sql);
       if (!session || session.role !== "admin") {
         return errorResponse(res, "Unauthorized", 401);
       }
@@ -176,7 +157,7 @@ export default async function handler(req, res) {
 
     // DELETE - Delete message (admin only)
     if (req.method === "DELETE") {
-      const session = await verifyAuth(req);
+      const session = await verifyAuth(req, sql);
       if (!session || session.role !== "admin") {
         return errorResponse(res, "Unauthorized", 401);
       }

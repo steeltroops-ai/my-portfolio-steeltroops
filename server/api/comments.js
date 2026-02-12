@@ -1,7 +1,8 @@
 // Vercel API Route: /api/comments
-import { neon } from '@neondatabase/serverless';
+import { neon } from "@neondatabase/serverless";
+import { setCorsHeaders, verifyAuth } from "./utils.js";
 
-const sql = neon(process.env.DATABASE_URL || '');
+const sql = neon(process.env.DATABASE_URL || "");
 
 function jsonResponse(res, data, status = 200) {
   res.status(status).json(data);
@@ -11,39 +12,31 @@ function errorResponse(res, message, status = 500) {
   res.status(status).json({ success: false, error: message });
 }
 
-async function verifyAuth(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) return null;
-
-  const token = authHeader.slice(7);
-  const sessions = await sql`
-    SELECT s.*, a.role FROM sessions s
-    JOIN admin_profiles a ON s.user_id = a.id
-    WHERE s.token = ${token} AND s.expires_at > NOW()
-  `;
-
-  return sessions.length > 0 ? sessions[0] : null;
-}
-
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(res, req);
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  const { id, post_id, action, all, status, limit = 20, offset = 0 } = req.query;
+  const {
+    id,
+    post_id,
+    action,
+    all,
+    status,
+    limit = 20,
+    offset = 0,
+  } = req.query;
 
   try {
     // GET - Fetch comments
-    if (req.method === 'GET') {
+    if (req.method === "GET") {
       // Get all comments (admin)
-      if (all === 'true') {
-        const session = await verifyAuth(req);
-        if (!session || session.role !== 'admin') {
-          return errorResponse(res, 'Unauthorized', 401);
+      if (all === "true") {
+        const session = await verifyAuth(req, sql);
+        if (!session || session.role !== "admin") {
+          return errorResponse(res, "Unauthorized", 401);
         }
 
         const limitNum = parseInt(limit);
@@ -78,20 +71,26 @@ export default async function handler(req, res) {
         return jsonResponse(res, { success: true, data: comments });
       }
 
-      return errorResponse(res, 'Post ID required', 400);
+      return errorResponse(res, "Post ID required", 400);
     }
 
     // POST - Submit comment (public)
-    if (req.method === 'POST') {
-      const { post_id: postId, content, author_name, author_email, parent_id } = req.body;
+    if (req.method === "POST") {
+      const {
+        post_id: postId,
+        content,
+        author_name,
+        author_email,
+        parent_id,
+      } = req.body;
 
       if (!postId || !content || !author_name || !author_email) {
-        return errorResponse(res, 'All fields are required', 400);
+        return errorResponse(res, "All fields are required", 400);
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(author_email)) {
-        return errorResponse(res, 'Invalid email format', 400);
+        return errorResponse(res, "Invalid email format", 400);
       }
 
       const comments = await sql`
@@ -100,28 +99,32 @@ export default async function handler(req, res) {
         RETURNING *
       `;
 
-      return jsonResponse(res, {
-        success: true,
-        data: comments[0],
-        message: 'Comment submitted! It will appear after moderation.',
-      }, 201);
+      return jsonResponse(
+        res,
+        {
+          success: true,
+          data: comments[0],
+          message: "Comment submitted! It will appear after moderation.",
+        },
+        201
+      );
     }
 
     // PUT - Update comment status (admin only)
-    if (req.method === 'PUT') {
-      const session = await verifyAuth(req);
-      if (!session || session.role !== 'admin') {
-        return errorResponse(res, 'Unauthorized', 401);
+    if (req.method === "PUT") {
+      const session = await verifyAuth(req, sql);
+      if (!session || session.role !== "admin") {
+        return errorResponse(res, "Unauthorized", 401);
       }
 
       if (!id) {
-        return errorResponse(res, 'Comment ID required', 400);
+        return errorResponse(res, "Comment ID required", 400);
       }
 
       let newStatus = action;
-      if (action === 'approve') newStatus = 'approved';
-      else if (action === 'reject') newStatus = 'rejected';
-      else if (action === 'spam') newStatus = 'spam';
+      if (action === "approve") newStatus = "approved";
+      else if (action === "reject") newStatus = "rejected";
+      else if (action === "spam") newStatus = "spam";
 
       const comments = await sql`
         UPDATE comments SET
@@ -132,30 +135,30 @@ export default async function handler(req, res) {
       `;
 
       if (comments.length === 0) {
-        return errorResponse(res, 'Comment not found', 404);
+        return errorResponse(res, "Comment not found", 404);
       }
 
       return jsonResponse(res, { success: true, data: comments[0] });
     }
 
     // DELETE - Delete comment (admin only)
-    if (req.method === 'DELETE') {
-      const session = await verifyAuth(req);
-      if (!session || session.role !== 'admin') {
-        return errorResponse(res, 'Unauthorized', 401);
+    if (req.method === "DELETE") {
+      const session = await verifyAuth(req, sql);
+      if (!session || session.role !== "admin") {
+        return errorResponse(res, "Unauthorized", 401);
       }
 
       if (!id) {
-        return errorResponse(res, 'Comment ID required', 400);
+        return errorResponse(res, "Comment ID required", 400);
       }
 
       await sql`DELETE FROM comments WHERE id = ${id}`;
       return jsonResponse(res, { success: true });
     }
 
-    return errorResponse(res, 'Method not allowed', 405);
+    return errorResponse(res, "Method not allowed", 405);
   } catch (error) {
-    console.error('Comments API error:', error);
-    return errorResponse(res, error.message || 'Internal server error', 500);
+    console.error("Comments API error:", error);
+    return errorResponse(res, error.message || "Internal server error", 500);
   }
 }

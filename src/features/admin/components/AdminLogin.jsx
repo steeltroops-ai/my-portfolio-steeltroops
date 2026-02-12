@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   signInWithCredentials,
   getAuthInfo,
 } from "../services/HybridAuthService";
+import { blogQueryKeys } from "@/features/blog/hooks/useBlogQueries";
+import { getAllPosts } from "@/features/blog/services/HybridBlogService";
 
 const AdminLogin = () => {
   const [identifier, setIdentifier] = useState("");
@@ -16,6 +19,8 @@ const AdminLogin = () => {
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
   const emailInputRef = useRef(null);
+  const queryClient = useQueryClient();
+  const codePrefetched = useRef(false);
 
   // Mount animation
   useEffect(() => {
@@ -25,6 +30,20 @@ const AdminLogin = () => {
     }
   }, []);
 
+  // UI PREFETCHING: Load the Dashboard JS bundle while user is typing
+  // This ensures the "Code" is ready instantly, even if Data isn't.
+  const handleCodePrefetch = () => {
+    if (codePrefetched.current) return;
+
+    console.log("⚡ Prefetching Dashboard UI Chunks...");
+    codePrefetched.current = true;
+
+    // Manually trigger dynamic imports to warm up the module cache
+    // These paths must match the lazy imports in main.jsx
+    import("../components/AdminDashboard");
+    import("../layouts/AdminLayout");
+  };
+
   // Check if already authenticated
   useEffect(() => {
     const checkAuth = async () => {
@@ -32,6 +51,12 @@ const AdminLogin = () => {
         const info = await getAuthInfo();
         setAuthInfo(info);
         if (info.isAuthenticated) {
+          // If auth exists, we can safely prefetch because we have a token
+          queryClient.prefetchQuery({
+            queryKey: blogQueryKeys.allPosts(),
+            queryFn: getAllPosts,
+            staleTime: 5 * 60 * 1000,
+          });
           navigate("/admin/dashboard");
         }
       } catch (err) {
@@ -40,7 +65,7 @@ const AdminLogin = () => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,27 +87,35 @@ const AdminLogin = () => {
     setLoading(true);
     setError("");
 
+    // Ensure code is definitely loading/loaded
+    handleCodePrefetch();
+
     try {
       console.log("=== LOGIN ATTEMPT ===");
       console.log("Username/Email:", identifier);
-      console.log("Password length:", password.length);
 
       // Use hybrid authentication service
       const result = await signInWithCredentials(identifier, password);
 
-      console.log("Login result:", JSON.stringify(result, null, 2));
-
       if (result && result.data && !result.error) {
         // Success
         console.log("✓ Login successful!");
-        console.log("✓ Redirecting to dashboard");
 
         // Disable analytics for admin session
         localStorage.setItem("portfolio_admin_bypass", "true");
 
+        // PROGRESSIVE LOADING STRATEGY:
+        // 1. Initiate the data fetch NOW (don't await it), ensuring token is ready
+        console.log("Starting background data fetch...");
+        queryClient.prefetchQuery({
+          queryKey: blogQueryKeys.allPosts(),
+          queryFn: getAllPosts,
+          staleTime: 5 * 60 * 1000,
+        });
+
+        // 2. Navigate immediately to show the Admin Shell
         navigate("/admin/dashboard");
       } else {
-        // Handle different error types
         console.error("✗ Login failed:", result.error);
         if (result.error?.type === "config_error") {
           setError(
@@ -165,6 +198,7 @@ const AdminLogin = () => {
                 setIdentifier(e.target.value);
                 if (error) setError("");
               }}
+              onFocus={handleCodePrefetch}
               placeholder="Enter your email"
               disabled={loading}
               className="w-full px-4 py-3 rounded-xl border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 focus:border-purple-400/30 focus:bg-white/10 disabled:opacity-50 transition-all duration-200"
@@ -188,6 +222,7 @@ const AdminLogin = () => {
                   setPassword(e.target.value);
                   if (error) setError("");
                 }}
+                onFocus={handleCodePrefetch}
                 placeholder="Enter your password"
                 disabled={loading}
                 className="w-full px-4 py-3 pr-12 rounded-xl border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 focus:border-purple-400/30 focus:bg-white/10 disabled:opacity-50 transition-all duration-200"
@@ -207,16 +242,10 @@ const AdminLogin = () => {
           <button
             type="submit"
             disabled={loading || !identifier.trim() || !password.trim()}
+            onMouseEnter={handleCodePrefetch}
             className="w-full py-3.5 px-4 rounded-xl border border-purple-400/30 backdrop-blur-[2px] bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-400/40 disabled:bg-white/5 disabled:text-neutral-500 disabled:border-white/10 disabled:cursor-not-allowed text-white font-semibold transition-all duration-300 flex items-center justify-center shadow-md shadow-purple-500/5 hover:shadow-purple-500/10"
           >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                Signing in...
-              </>
-            ) : (
-              "Login"
-            )}
+            {loading ? "Processing..." : "Login"}
           </button>
         </form>
       </div>

@@ -1,5 +1,6 @@
 // Vercel API Route: /api/posts
 import { neon } from "@neondatabase/serverless";
+import { setCorsHeaders, verifyAuth } from "./utils.js";
 
 const sql = neon(process.env.DATABASE_URL || "");
 
@@ -11,27 +12,8 @@ function errorResponse(res, message, status = 500) {
   res.status(status).json({ success: false, error: message });
 }
 
-async function verifyAuth(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  const token = authHeader.slice(7);
-  const sessions = await sql`
-    SELECT s.*, a.role FROM sessions s
-    JOIN admin_profiles a ON s.user_id = a.id
-    WHERE s.token = ${token} AND s.expires_at > NOW()
-  `;
-
-  return sessions.length > 0 ? sessions[0] : null;
-}
-
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  setCorsHeaders(res, req);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -44,7 +26,7 @@ export default async function handler(req, res) {
     if (req.method == "GET") {
       // Get by ID (admin)
       if (id) {
-        const session = await verifyAuth(req);
+        const session = await verifyAuth(req, sql);
         if (!session || session.role !== "admin") {
           return errorResponse(res, "Unauthorized", 401);
         }
@@ -60,7 +42,7 @@ export default async function handler(req, res) {
       if (slug) {
         let posts;
         if (all === "true") {
-          const session = await verifyAuth(req);
+          const session = await verifyAuth(req, sql);
           if (!session || session.role !== "admin") {
             // If requesting all (unpublished) by slug, must be admin
             return errorResponse(res, "Unauthorized", 401);
@@ -83,7 +65,7 @@ export default async function handler(req, res) {
       const isAdmin = all === "true";
 
       if (isAdmin) {
-        const session = await verifyAuth(req);
+        const session = await verifyAuth(req, sql);
         if (!session || session.role !== "admin") {
           return errorResponse(res, "Unauthorized", 401);
         }
@@ -106,93 +88,71 @@ export default async function handler(req, res) {
         );
       }
 
-      const whereClause =
-        conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-
-      // We need to use unsafe for dynamic queries in Neon, but since we are using
-      // template literal parameters for values, it's safer.
-      // However, Neon's template literal doesn't support dynamic WHERE clauses easily.
-      // We will perform the search using a slightly more manual approach for conditions
-      // while keeping values parameterized where possible.
+      // Columns to select for list view (excludes heavy 'content')
+      const listColumns = sql`id, title, slug, excerpt, tags, featured_image_url, meta_description, published, author, read_time, created_at, updated_at`;
 
       let posts;
       let countResult;
 
-      // Columns to select for list view (excludes heavy 'content')
-      const listColumns = sql`id, title, slug, excerpt, tags, featured_image_url, meta_description, published, author, read_time, created_at, updated_at`;
+      // Logic continues similarly...
+      // For brevity in this write (and to fix query logic slightly if needed), I'll keep the core logic
+      // But I must ensure I don't break the complex conditions logic.
 
-      // For simplicity and safety with the Neon driver, we'll handle the most common cases:
-      if (!search && !tags) {
-        if (isAdmin) {
+      const searchPattern = search ? `%${search}%` : null;
+      // Tag processing
+      const tagArray =
+        tags && tags.length > 0
+          ? tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter((t) => t !== "")
+          : null;
+      const hasTags = tagArray && tagArray.length > 0;
+
+      // Re-implementing the query logic as originally present
+      // To strictly follow the file content
+      if (isAdmin) {
+        if (search && hasTags) {
+          posts =
+            await sql`SELECT ${listColumns} FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult =
+            await sql`SELECT COUNT(*) as count FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[]`;
+        } else if (search) {
+          posts =
+            await sql`SELECT ${listColumns} FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult =
+            await sql`SELECT COUNT(*) as count FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern})`;
+        } else if (hasTags) {
+          posts =
+            await sql`SELECT ${listColumns} FROM blog_posts WHERE tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult =
+            await sql`SELECT COUNT(*) as count FROM blog_posts WHERE tags && ${tagArray}::text[]`;
+        } else {
           posts =
             await sql`SELECT ${listColumns} FROM blog_posts ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
           countResult = await sql`SELECT COUNT(*) as count FROM blog_posts`;
+        }
+      } else {
+        if (search && hasTags) {
+          posts =
+            await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult =
+            await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[]`;
+        } else if (search) {
+          posts =
+            await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult =
+            await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern})`;
+        } else if (hasTags) {
+          posts =
+            await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+          countResult =
+            await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND tags && ${tagArray}::text[]`;
         } else {
           posts =
             await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
           countResult =
             await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true`;
-        }
-      } else {
-        // Dynamic search/tag query
-        // Note: We use string interpolation for condition structure but MUST parameterize values.
-        // Neon driver doesn't support dynamic query building well, so we use a more verbose approach.
-        const searchPattern = search ? `%${search}%` : null;
-        const tagArray =
-          tags && tags.length > 0
-            ? tags
-                .split(",")
-                .map((t) => t.trim())
-                .filter((t) => t !== "")
-            : null;
-
-        // If after filtering tagArray is empty, treat as null
-        const hasTags = tagArray && tagArray.length > 0;
-
-        if (isAdmin) {
-          if (search && hasTags) {
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult =
-              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[]`;
-          } else if (search) {
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult =
-              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern})`;
-          } else if (hasTags) {
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts WHERE tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult =
-              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE tags && ${tagArray}::text[]`;
-          } else {
-            // Fallback for edge cases where code enters here but params are empty after cleaning
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult = await sql`SELECT COUNT(*) as count FROM blog_posts`;
-          }
-        } else {
-          if (search && hasTags) {
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult =
-              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) AND tags && ${tagArray}::text[]`;
-          } else if (search) {
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern}) ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult =
-              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND (title ILIKE ${searchPattern} OR content ILIKE ${searchPattern} OR excerpt ILIKE ${searchPattern})`;
-          } else if (hasTags) {
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true AND tags && ${tagArray}::text[] ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult =
-              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true AND tags && ${tagArray}::text[]`;
-          } else {
-            posts =
-              await sql`SELECT ${listColumns} FROM blog_posts WHERE published = true ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-            countResult =
-              await sql`SELECT COUNT(*) as count FROM blog_posts WHERE published = true`;
-          }
         }
       }
 
@@ -205,7 +165,7 @@ export default async function handler(req, res) {
 
     // POST - Create post
     if (req.method === "POST") {
-      const session = await verifyAuth(req);
+      const session = await verifyAuth(req, sql);
       if (!session || session.role !== "admin") {
         return errorResponse(res, "Unauthorized", 401);
       }
@@ -238,7 +198,7 @@ export default async function handler(req, res) {
 
     // PUT - Update post
     if (req.method === "PUT") {
-      const session = await verifyAuth(req);
+      const session = await verifyAuth(req, sql);
       if (!session || session.role !== "admin") {
         return errorResponse(res, "Unauthorized", 401);
       }
@@ -274,7 +234,7 @@ export default async function handler(req, res) {
 
     // DELETE - Delete post
     if (req.method === "DELETE") {
-      const session = await verifyAuth(req);
+      const session = await verifyAuth(req, sql);
       if (!session || session.role !== "admin") {
         return errorResponse(res, "Unauthorized", 401);
       }

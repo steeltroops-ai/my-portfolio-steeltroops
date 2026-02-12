@@ -11,6 +11,7 @@ import {
   FiCheckCircle,
   FiPlus,
   FiSend,
+  FiLoader,
 } from "react-icons/fi";
 import { useContactMessages } from "../hooks/useContactMessages";
 import { useUpdateMessageStatus } from "../hooks/useContactMessages";
@@ -34,12 +35,16 @@ const MessageCenter = () => {
     }
   }, [showSearch]);
 
-  const { data, isLoading, error, refetch } = useContactMessages();
+  const { data, isLoading, isFetching, error, refetch } = useContactMessages();
   const updateStatusMutation = useUpdateMessageStatus();
   const deleteMessageMutation = useDeleteMessage();
   const replyMutation = useReplyMessage();
   const [replyText, setReplyText] = useState("");
   const textareaRef = useRef(null);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -279,9 +284,17 @@ const MessageCenter = () => {
         <div className="p-6 sticky top-0 z-10 bg-transparent backdrop-blur-md border-b border-white/10">
           <div className="flex justify-between items-start mb-0">
             <div>
-              <h2 className="text-2xl font-bold text-white tracking-tight">
-                Messages
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  Messages
+                </h2>
+                {isFetching && !isLoading && (
+                  <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold animate-pulse">
+                    <FiLoader className="animate-spin" size={10} />
+                    Syncing
+                  </span>
+                )}
+              </div>
               <p className="text-neutral-400 text-xs mt-1">
                 Recent conversations
               </p>
@@ -352,7 +365,10 @@ const MessageCenter = () => {
         </div>
 
         {/* Contact List */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div
+          className="flex-1 overflow-y-auto custom-scrollbar"
+          data-lenis-prevent
+        >
           {filteredThreads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-neutral-500">
               <p className="text-sm">No conversations found</p>
@@ -438,7 +454,10 @@ const MessageCenter = () => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col bg-transparent">
+            <div
+              className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col bg-transparent"
+              data-lenis-prevent
+            >
               {/* Profile Hero Section */}
               <div className="flex flex-col items-center py-8 border-b border-white/5 mb-6 hover:bg-white/[0.02] transition-colors cursor-pointer rounded-xl">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center text-2xl font-medium text-white/80 mb-2 border border-white/10">

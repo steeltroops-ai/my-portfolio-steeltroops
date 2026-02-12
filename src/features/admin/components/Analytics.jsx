@@ -242,19 +242,25 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
 
       const visitorId = String(loc.id || "UNK").slice(0, 8);
       const popupContent = `
-        <div style="font-family:monospace;color:#fff;min-width:180px;padding:12px;background:#050505;border:1px solid rgba(255,255,255,0.1);box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-          <div style="border-bottom:1px solid #333;padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-weight:bold;color:${color};text-transform:uppercase;letter-spacing:1px;font-size:10px;">ENTITY: ${visitorId}</span>
-            <div style="display:flex;gap:4px;">
-              ${loc.is_owner ? '<span style="background:#f59e0b;color:#000;font-size:7px;padding:1px 3px;border-radius:2px;font-weight:bold;">OWNER</span>' : ""}
-              ${loc.is_bot ? '<span style="background:#ef4444;color:#fff;font-size:7px;padding:1px 3px;border-radius:2px;font-weight:bold;">BOT</span>' : ""}
+        <div class="liquid-glass relative overflow-hidden" style="font-family:monospace;color:#fff;min-width:200px;padding:16px;background:rgba(8,8,8,0.95);border:1px solid rgba(255,255,255,0.1);box-shadow:0 15px 45px rgba(0,0,0,0.8);">
+          <div class="liquid-glass-highlight"></div>
+          <div class="liquid-glass-top-line"></div>
+          <div style="position:relative;z-index:10;">
+            <div style="border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:900;color:${color};text-transform:uppercase;letter-spacing:2px;font-size:9px;">ENTITY ID: ${visitorId}</span>
+              <div style="display:flex;gap:5px;">
+                ${loc.is_owner ? '<span style="background:#f59e0b/20;color:#f59e0b;font-size:7px;padding:2px 5px;border-radius:3px;font-weight:900;border:1px solid rgba(245,158,11,0.3);letter-spacing:1px;">OWNER</span>' : ""}
+                ${loc.is_bot ? '<span style="background:rgba(239,68,68,0.1);color:#ef4444;font-size:7px;padding:2px 5px;border-radius:3px;font-weight:900;border:1px solid rgba(239,68,68,0.3);letter-spacing:1px;">BOT</span>' : ""}
+              </div>
             </div>
-          </div>
-          <div style="font-size:10px;color:#888;margin-bottom:4px;">REGION: <span style="color:#fff;">${loc.city || "PRIVATE"}, ${loc.country || "XX"}</span></div>
-          <div style="font-size:10px;color:#888;margin-bottom:4px;">SESSIONS: <span style="color:#fff;">${count}</span></div>
-          <div style="font-size:9px;margin-top:10px;color:#444;border-top:1px solid #222;padding-top:6px;display:flex;justify-content:space-between;">
-            <span>LINK SECURE</span>
-            <span>DATA LOGGED</span>
+            <div style="display:grid;gap:8px;">
+              <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;font-weight:900;">Location: <span style="color:#fff;float:right;font-weight:500;">${loc.city || "PRIVATE"}, ${loc.country || "XX"}</span></div>
+              <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;font-weight:900;">Sessions: <span style="color:#fff;float:right;font-weight:500;">${count}</span></div>
+            </div>
+            <div style="font-size:8px;margin-top:16px;color:#333;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px;display:flex;justify-content:space-between;font-weight:900;letter-spacing:1.5px;">
+              <span style="color:rgba(255,255,255,0.2);">LINK_SECURE</span>
+              <span style="color:rgba(255,255,255,0.2);">DATA_LOGGED</span>
+            </div>
           </div>
         </div>`;
 
@@ -269,7 +275,7 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
     );
 
     // 4. Finalize Viewport
-    setTimeout(() => {
+    const finalizeMap = () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
         if (bounds.length > 0) {
@@ -279,15 +285,29 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
           });
         }
       }
-    }, 800);
+    };
+
+    // Multiple resizing triggers to ensure correct rendering
+    setTimeout(finalizeMap, 200);
+    setTimeout(finalizeMap, 1000);
 
     const resizeObserver = new ResizeObserver(() => {
       if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
     });
     if (mapContainerRef.current)
       resizeObserver.observe(mapContainerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [locations]);
+
+    return () => {
+      resizeObserver.disconnect();
+      // Proper cleanup to prevent memory leaks and "map already initialized" errors
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        clusterGroupRef.current = null;
+        hubsLayerRef.current = null;
+      }
+    };
+  }, [locations, topLocations]);
 
   return (
     <div className="rounded-xl liquid-glass backdrop-blur-none relative group mb-8 border border-white/5 shadow-2xl overflow-hidden flex flex-col">
@@ -388,10 +408,9 @@ const Analytics = () => {
   const [isMapMounted, setIsMapMounted] = useState(false);
   const itemsPerPage = 15;
 
-  // Performance: Defer heavy map mounting
+  // Performance: Mount map immediately for instant feel
   useEffect(() => {
-    const timer = setTimeout(() => setIsMapMounted(true), 1500);
-    return () => clearTimeout(timer);
+    setIsMapMounted(true);
   }, []);
 
   const stats = analyticsData?.stats || {
@@ -412,7 +431,11 @@ const Analytics = () => {
   const recentActions = analyticsData?.recentActions || [];
 
   // --- PERFORMANCE: SKELETON ENGINE ---
-  if (isLoading) {
+  // Only show skeleton if we have NO data at all (first load, empty cache)
+  // If we have data (even stale), show it immediately while background validation occurs
+  const showSkeleton = isLoading && !analyticsData;
+
+  if (showSkeleton) {
     return (
       <div className="p-8 space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -659,9 +682,10 @@ const Analytics = () => {
                         <td className="px-4 py-3 sticky left-0 bg-[#050505] group-hover:bg-[#0a0a0a] transition-colors z-10 border-r border-white/5">
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-8 h-8 rounded-lg flex items-center justify-center text-white group-hover:scale-105 transition-transform border ${v.real_name ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "bg-white/5 border-white/5"}`}
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center text-white group-hover:scale-105 transition-all liquid-glass border relative overflow-hidden ${v.real_name ? "bg-purple-500/20 border-purple-500/30 text-purple-300 shadow-[0_0_15px_-3px_rgba(168,85,247,0.2)]" : "bg-white/5 border-white/10"}`}
                             >
-                              <FiUsers size={14} />
+                              <div className="liquid-glass-highlight" />
+                              <FiUsers size={14} className="relative z-10" />
                             </div>
                             <div title={v.isp}>
                               <p className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors truncate max-w-[140px] flex items-center gap-1">
@@ -820,16 +844,18 @@ const Analytics = () => {
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-black text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all uppercase tracking-widest"
+                  className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-black text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all uppercase tracking-widest liquid-glass relative overflow-hidden group"
                 >
-                  Previous
+                  <div className="liquid-glass-highlight opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative z-10">Previous</span>
                 </button>
                 <button
                   onClick={() => setCurrentPage((prev) => prev + 1)}
                   disabled={currentPage * itemsPerPage >= recentVisitors.length}
-                  className="px-4 py-2 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-[10px] font-black text-cyan-400 hover:bg-cyan-400/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all uppercase tracking-widest"
+                  className="px-4 py-2 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-[10px] font-black text-cyan-400 hover:bg-cyan-400/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all uppercase tracking-widest liquid-glass relative overflow-hidden group"
                 >
-                  Next Page
+                  <div className="liquid-glass-highlight opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative z-10">Next Page</span>
                 </button>
               </div>
             </div>
@@ -867,14 +893,16 @@ const Analytics = () => {
                 .map((action, i) => (
                   <div
                     key={i}
-                    className="flex gap-4 items-start p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group"
+                    className="relative flex gap-4 items-start p-4 rounded-2xl bg-white/[0.01] border border-white/5 hover:bg-white/[0.03] transition-all liquid-glass overflow-hidden group"
                   >
+                    <div className="liquid-glass-highlight" />
+                    <div className="liquid-glass-top-line" />
                     <div
-                      className={`mt-1 p-2 rounded-xl bg-white/5 ${getActionColor(action.event_type)} group-hover:scale-110 transition-transform`}
+                      className={`relative z-10 mt-1 p-2 rounded-xl bg-white/5 ${getActionColor(action.event_type)} group-hover:scale-110 transition-transform border border-white/5`}
                     >
                       <FiMousePointer size={16} />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 relative z-10">
                       <div className="flex justify-between items-start">
                         <p className="text-sm font-bold text-white">
                           {decodeURIComponent(action.city || "Private Cluster")}
@@ -890,7 +918,7 @@ const Analytics = () => {
                             </span>
                           )}
                         </p>
-                        <span className="text-[10px] text-neutral-500 font-mono">
+                        <span className="text-[10px] text-neutral-500 font-mono pt-0.5">
                           {action.timestamp
                             ? new Date(action.timestamp).toLocaleTimeString(
                                 [],
@@ -904,11 +932,11 @@ const Analytics = () => {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-neutral-400 font-mono">
+                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-neutral-400 font-mono border border-white/5">
                           {action.ip_address || "IP Hidden"} • {action.os} •{" "}
                           {action.browser}
                         </span>
-                        <span className="text-[10px] text-neutral-500 truncate italic">
+                        <span className="text-[10px] text-neutral-500 truncate italic opacity-60">
                           {action.event_label
                             ? `via ${action.event_label}`
                             : `at ${action.path}`}
@@ -1158,34 +1186,36 @@ const VisitorIntelligence = ({ visitorId, onClose }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex justify-end bg-black/5 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[60] flex justify-end bg-black/40 backdrop-blur-[4px]"
       onClick={onClose}
     >
       <motion.div
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="w-full max-w-[450px] h-full shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col relative overflow-hidden bg-white/[0.01] backdrop-blur-[12px] border-l border-white/20"
+        transition={{ duration: 0.2 }}
+        className="w-full max-w-[450px] h-full flex flex-col relative overflow-hidden bg-white/[0.01] backdrop-blur-[12px] border-l border-white/20 liquid-glass"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="liquid-glass-highlight" />
+        <div className="liquid-glass-top-line" />
+
         {/* Liquid Glass Global Highlights */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.05] via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-0 left-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
 
-        {/* Header - Clean & Transparent */}
+        {/* Header */}
         <div className="relative p-6 flex justify-between items-start z-10">
           <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-white/[0.03] border border-white/10 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_-3px_rgba(6,182,212,0.1)]">
+            <div className="w-10 h-10 rounded-lg bg-white/[0.03] border border-white/10 flex items-center justify-center text-cyan-400">
               <FiUsers size={18} />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-white tracking-tight drop-shadow-sm flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 {detail?.profile?.real_name || "Entity Intelligence"}
                 {detail?.profile?.real_name && (
                   <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-[9px] text-green-400 font-bold tracking-wider border border-green-500/20 uppercase">
@@ -1194,22 +1224,15 @@ const VisitorIntelligence = ({ visitorId, onClose }) => {
                 )}
               </h2>
               <div className="flex flex-col gap-0.5 mt-0.5">
-                {detail?.profile?.email && (
-                  <span className="text-xs text-neutral-300 font-medium tracking-wide">
-                    {detail?.profile?.email}
+                <span className="text-[10px] text-neutral-400 font-mono">
+                  ID: {(detail?.profile?.visitor_id || visitorId).slice(0, 12)}
+                  ...
+                </span>
+                {detail?.profile?.is_bot && (
+                  <span className="w-fit mt-1 px-1.5 py-0.5 rounded bg-red-500/10 text-[9px] text-red-400 font-bold tracking-wider border border-red-500/20">
+                    BOT DETECTED
                   </span>
                 )}
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-neutral-400 font-mono tracking-wide">
-                    ID:{" "}
-                    {(detail?.profile?.visitor_id || visitorId).slice(0, 12)}...
-                  </span>
-                  {detail?.profile?.is_bot && (
-                    <span className="px-1.5 py-0.5 rounded bg-red-500/10 text-[9px] text-red-400 font-bold tracking-wider border border-red-500/20">
-                      BOT
-                    </span>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -1226,7 +1249,7 @@ const VisitorIntelligence = ({ visitorId, onClose }) => {
           {isLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4">
               <div className="w-12 h-12 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin"></div>
-              <p className="text-cyan-400/60 font-mono text-[10px] uppercase tracking-[0.2em] animate-pulse">
+              <p className="text-cyan-400/60 font-mono text-[10px] uppercase tracking-[0.2em]">
                 Decrypting...
               </p>
             </div>
@@ -1236,207 +1259,144 @@ const VisitorIntelligence = ({ visitorId, onClose }) => {
               <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-[0.2em]">
                 Entity Profile Not Found
               </p>
-              <button
-                onClick={onClose}
-                className="mt-4 px-6 py-2 rounded-full border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-neutral-300 text-[10px] font-bold uppercase tracking-widest transition-all"
-              >
-                Close Dossier
-              </button>
             </div>
           ) : (
             <div
-              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 overscroll-contain"
+              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 overscroll-contain"
               data-lenis-prevent
             >
-              {/* Critical Stats - Floating Cards */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative p-4 rounded-xl overflow-hidden bg-white/[0.01] border border-white/10 backdrop-blur-sm group hover:bg-white/[0.02] transition-colors">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
-                  <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold mb-1">
-                    Total Visits
-                  </p>
-                  <p className="text-2xl font-medium text-white">
+              {/* Critical Stats - List Style */}
+              <div className="space-y-2">
+                <div className="relative px-4 py-3 rounded-xl flex items-center justify-between bg-white/5 border border-white/10 liquid-glass group hover:bg-white/[0.08] transition-all">
+                  <div className="liquid-glass-highlight" />
+                  <div className="flex items-center gap-3 relative z-10">
+                    <FiActivity className="text-cyan-400" size={14} />
+                    <span className="text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-black">
+                      Total Visits
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-white relative z-10">
                     {detail?.profile?.visit_count || 1}
-                  </p>
+                  </span>
                 </div>
-                <div className="relative p-4 rounded-xl overflow-hidden bg-white/[0.01] border border-white/10 backdrop-blur-sm group hover:bg-white/[0.02] transition-colors">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
-                  <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold mb-1">
-                    Engagement Score
-                  </p>
-                  <p className="text-2xl font-medium text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]">
+
+                <div className="relative px-4 py-3 rounded-xl flex items-center justify-between bg-white/5 border border-white/10 liquid-glass group hover:bg-white/[0.08] transition-all">
+                  <div className="liquid-glass-highlight" />
+                  <div className="flex items-center gap-3 relative z-10">
+                    <FiTarget className="text-purple-400" size={14} />
+                    <span className="text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-black">
+                      Engagement Score
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-cyan-400 relative z-10">
                     {(detail?.stats?.total_clicks || 0) * 5 +
                       (detail?.stats?.total_pageviews || 0) * 2}
-                  </p>
+                  </span>
                 </div>
               </div>
 
               {/* Hardware & Network DNA */}
-              <div className="space-y-3">
-                <h3 className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2 pl-1">
-                  <FiCpu className="text-purple-400/80" /> Hardware & Network
-                  DNA
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.25em] flex items-center gap-2 pl-1">
+                  <FiCpu className="text-purple-400/80" /> Hardware DNA
                 </h3>
-                <div className="relative p-5 rounded-xl overflow-hidden bg-white/[0.01] border border-white/10 backdrop-blur-sm">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-
-                  <div className="grid grid-cols-2 gap-y-5 gap-x-4 relative z-10">
-                    <div>
-                      <p className="text-[9px] text-neutral-500 uppercase mb-1 tracking-wide">
-                        Device Model
-                      </p>
-                      <p className="text-xs font-medium text-white flex items-center gap-1.5">
-                        {detail?.profile?.device_model || "Generic Device"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-neutral-500 uppercase mb-1 tracking-wide">
-                        Device Type
-                      </p>
-                      <p className="text-xs font-medium text-white capitalize">
-                        {detail?.profile?.device_type || "Desktop"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-neutral-500 uppercase mb-1 tracking-wide">
-                        Operating System
-                      </p>
-                      <p className="text-xs font-medium text-white flex items-center gap-1.5">
-                        {detail?.profile?.os === "Mac OS" && (
-                          <span className="w-1 h-1 rounded-full bg-white/60" />
-                        )}
-                        {detail?.profile?.os === "Windows" && (
-                          <span className="w-1 h-1 rounded-full bg-blue-400/60" />
-                        )}
-                        {detail?.profile?.os}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-neutral-500 uppercase mb-1 tracking-wide">
-                        Browser Engine
-                      </p>
-                      <p className="text-xs font-medium text-white">
-                        {detail?.profile?.browser}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-neutral-500 uppercase mb-1 tracking-wide">
-                        Screen Resolution
-                      </p>
-                      <p className="text-xs font-medium text-neutral-300 font-mono tracking-tight">
-                        {detail?.profile?.screen_size || "Unknown"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-neutral-500 uppercase mb-1 tracking-wide">
-                        IP Address
-                      </p>
-                      <p className="text-xs font-medium text-neutral-300 font-mono blur-[3px] hover:blur-none transition-all duration-300 cursor-crosshair select-all">
-                        {detail?.profile?.ip_address}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 mt-4 border-t border-white/5 relative z-10">
-                    <div className="flex justify-between items-center mb-2">
-                      <p className="text-[9px] text-neutral-500 uppercase tracking-wide">
-                        Hardware Fingerprint
-                      </p>
-                    </div>
-                    <p className="text-[10px] font-mono text-neutral-500 break-all bg-black/20 p-2.5 rounded border border-white/5">
-                      {detail?.profile?.fingerprint}
-                    </p>
+                <div className="relative p-2 rounded-xl bg-white/[0.02] border border-white/10 liquid-glass">
+                  <div className="liquid-glass-highlight" />
+                  <div className="space-y-1 relative z-10">
+                    {[
+                      {
+                        label: "Model",
+                        value: detail?.profile?.device_model || "Generic",
+                      },
+                      {
+                        label: "Type",
+                        value: detail?.profile?.device_type || "Desktop",
+                      },
+                      { label: "OS", value: detail?.profile?.os },
+                      { label: "Browser", value: detail?.profile?.browser },
+                      {
+                        label: "Resolution",
+                        value: detail?.profile?.screen_size || "Unknown",
+                      },
+                      {
+                        label: "IP Address",
+                        value: detail?.profile?.ip_address,
+                        mono: true,
+                      },
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex justify-between items-center py-2.5 px-3 ${idx !== 5 ? "border-b border-white/5" : ""}`}
+                      >
+                        <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
+                          {item.label}
+                        </span>
+                        <span
+                          className={`text-xs font-bold text-white ${item.mono ? "font-mono" : ""}`}
+                        >
+                          {item.value}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Geo location */}
-              <div className="space-y-3">
-                <h3 className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2 pl-1">
+              {/* Geolocation */}
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.25em] flex items-center gap-2 pl-1">
                   <FiMapPin className="text-blue-400/80" /> Geolocation
                 </h3>
-                <div className="relative p-4 rounded-xl overflow-hidden bg-white/[0.01] border border-white/10 backdrop-blur-sm flex items-center gap-4">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30" />
-
-                  <div className="w-10 h-10 rounded-full bg-blue-500/5 flex items-center justify-center text-blue-400/80 border border-blue-500/10">
-                    <FiGlobe size={16} />
+                <div className="relative p-5 rounded-xl bg-white/[0.02] border border-white/10 liquid-glass flex items-center gap-4">
+                  <div className="liquid-glass-highlight" />
+                  <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                    <FiGlobe size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white mb-0.5 truncate">
-                      {detail?.profile?.city || "Unknown City"}
-                      <span className="text-neutral-500 font-normal">
-                        , {detail?.profile?.region}
-                      </span>
+                    <p className="text-sm font-bold text-white mb-0.5">
+                      {detail?.profile?.city || "Unknown City"},{" "}
+                      {detail?.profile?.region}
                     </p>
-                    <p className="text-[10px] text-neutral-500 flex items-center gap-1.5 uppercase tracking-wide mb-1.5">
-                      {detail?.profile?.country}{" "}
-                      <span className="text-neutral-700">•</span>{" "}
-                      {detail?.profile?.isp}
+                    <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
+                      {detail?.profile?.country} • {detail?.profile?.isp}
                     </p>
-
-                    {detail?.profile?.latitude &&
-                      detail?.profile?.longitude && (
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${detail?.profile?.latitude},${detail?.profile?.longitude}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
-                        >
-                          <FiExternalLink size={10} /> View Pinpoint
-                        </a>
-                      )}
                   </div>
                 </div>
               </div>
 
-              {/* Interaction Timeline */}
-              <div className="space-y-3">
-                <h3 className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2 pl-1">
-                  <FiActivity className="text-green-400/80" /> Activity Stream
+              {/* Activity Stream */}
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.25em] flex items-center gap-2 pl-1">
+                  <FiActivity className="text-green-400/80" /> Activity
+                  Continuous
                 </h3>
-                <div className="relative border-l border-white/10 ml-3 space-y-4 pb-4 pt-1">
-                  {detail?.events?.slice(0, 20).map((event, i) => (
-                    <div key={i} className="pl-5 relative group">
-                      {/* Timeline Dot */}
-                      <div className="absolute -left-[3px] top-2 z-10">
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            event.event_type === "click"
-                              ? "bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.4)]"
-                              : event.event_type === "page_view"
-                                ? "bg-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.4)]"
-                                : "bg-neutral-500"
-                          }`}
-                        />
-                      </div>
-
-                      <div className="flex justify-between items-start py-1 hover:bg-white/[0.02] rounded px-2 -ml-2 transition-colors">
-                        <div className="flex-1 min-w-0 pr-4">
+                <div className="space-y-3">
+                  {detail?.events?.slice(0, 15).map((event, i) => (
+                    <div
+                      key={i}
+                      className="relative p-4 rounded-xl bg-white/5 border border-white/10 liquid-glass group hover:bg-white/[0.08] transition-all overflow-hidden"
+                    >
+                      <div className="liquid-glass-highlight" />
+                      <div className="flex justify-between items-start relative z-10">
+                        <div className="flex-1 pr-4">
                           <p
-                            className={`text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                            className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${
                               event.event_type === "click"
-                                ? "text-purple-300"
-                                : event.event_type === "page_view"
-                                  ? "text-blue-300"
-                                  : "text-neutral-300"
+                                ? "text-purple-400"
+                                : "text-blue-400"
                             }`}
                           >
-                            {(event.event_type || "")
-                              .replace("_", " ")
-                              .toUpperCase()}
+                            {event.event_type?.replace("_", " ")}
                           </p>
-                          <p
-                            className="text-[10px] text-neutral-500 font-mono mt-0.5 w-full truncate"
-                            title={event.path || event.event_label}
-                          >
+                          <p className="text-xs text-white font-mono break-all leading-relaxed">
                             {event.path || event.event_label}
                           </p>
                         </div>
-                        <span className="text-[9px] text-neutral-600 font-mono whitespace-nowrap">
+                        <span className="text-[9px] text-neutral-500 font-mono pt-1 whitespace-nowrap">
                           {new Date(event.timestamp).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
+                            second: "2-digit",
                           })}
                         </span>
                       </div>
