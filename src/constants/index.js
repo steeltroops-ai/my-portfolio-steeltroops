@@ -25,8 +25,8 @@ export const IMAGES = {
 export const PERSONAL = {
   name: "Mayank Pratap Singh",
   username: "@steeltroops",
-  tagline: "Production systems. Software, Intelligence & Hardware.",
-  role: "Full Stack, Robotics & Machine Learning Engineer",
+  tagline: "Builds Production Grade Systems.",
+  role: "Full Stack, Robotics & ML Engineer",
   location: "India",
   university: "GLA University",
   degree: "B.Tech, Computer Science (AI & ML)",
