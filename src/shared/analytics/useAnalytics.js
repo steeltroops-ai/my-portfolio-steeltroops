@@ -72,45 +72,54 @@ export const useAnalytics = () => {
     let heartbeatInterval;
 
     const initTracking = async () => {
-      if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
+      try {
+        if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
 
-      const { getForensicData, hashFingerprint } = await import("./forensics");
+        const { getForensicData, hashFingerprint } =
+          await import("./forensics");
 
-      const visitorId = getVisitorId();
-      const sessionId = getSessionId();
-      const forensicData = await getForensicData();
-      const fingerprint = hashFingerprint(forensicData);
+        const visitorId = getVisitorId();
+        const sessionId = getSessionId();
+        const forensicData = await getForensicData();
+        const fingerprint = hashFingerprint(forensicData);
 
-      await fetch("/api/analytics/track?action=init", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitorId,
-          sessionId,
-          userAgent: navigator.userAgent,
-          screenResolution: `${window.screen.width}x${window.screen.height}`,
-          referrer: document.referrer,
-          utm: getUTM(),
-          path: window.location.pathname,
-          forensics: {
-            ...forensicData,
-            fingerprint,
-          },
-        }),
-      });
+        await fetch("/api/analytics/track?action=init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            visitorId,
+            sessionId,
+            userAgent: navigator.userAgent,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            referrer: document.referrer,
+            utm: getUTM(),
+            path: window.location.pathname,
+            forensics: {
+              ...forensicData,
+              fingerprint,
+            },
+          }),
+        });
 
-      // Heartbeat every 45s
-      heartbeatInterval = setInterval(async () => {
-        try {
-          await fetch("/api/analytics/track?action=heartbeat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ visitorId, sessionId }),
-          });
-        } catch (err) {
-          /* ignore */
-        }
-      }, 45000);
+        // Heartbeat every 45s
+        heartbeatInterval = setInterval(async () => {
+          try {
+            await fetch("/api/analytics/track?action=heartbeat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ visitorId, sessionId }),
+            });
+          } catch (err) {
+            /* ignore */
+          }
+        }, 45000);
+      } catch (err) {
+        // Silent fail if initialization or tracking fails
+        console.warn(
+          "Analytics initialization failed (could be blocked):",
+          err
+        );
+      }
     };
 
     onIdle(() => {

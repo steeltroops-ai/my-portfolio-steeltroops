@@ -57,7 +57,8 @@ const transformStaticPost = (post) => ({
 
 // Filter and search static posts
 const filterStaticPosts = (posts, options = {}) => {
-  let filteredPosts = [...posts];
+  const safePosts = Array.isArray(posts) ? posts : [];
+  let filteredPosts = [...safePosts];
 
   // Filter by published status
   filteredPosts = filteredPosts.filter((post) => post.published);
@@ -133,10 +134,10 @@ export const getPublishedPosts = async (options = {}) => {
     }
 
     // Fallback to static content without indicating "offline"
-    return filterStaticPosts(staticBlogPosts, options);
+    return filterStaticPosts(staticBlogPosts || [], options);
   } catch (error) {
     console.error("Error in hybrid getPublishedPosts:", error);
-    return filterStaticPosts(staticBlogPosts, options);
+    return filterStaticPosts(staticBlogPosts || [], options);
   }
 };
 

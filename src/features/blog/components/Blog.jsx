@@ -88,14 +88,20 @@ const Blog = () => {
 
   const tags = tagsData || [];
 
-  // Show skeleton ONLY if:
-  // 1. We're loading initial data AND don't have any posts yet
-  // 2. AND we're not showing placeholder data from previous page
-  // Never show skeleton if we have posts (even if refetching)
-  const showSkeleton = posts.length === 0 && postsLoading && !isPlaceholderData;
+  // Show skeleton ONLY if loading and no data
+  const showSkeleton =
+    postsLoading && !postsData?.posts?.length && !isPlaceholderData;
 
-  const loading = postsLoading && !isPlaceholderData;
-  const error = postsError ? "Failed to load blog posts" : "";
+  const loading = postsLoading && !isPlaceholderData && !postsData?.posts;
+
+  // Robust error checking: check both query error and data error
+  const error = postsError
+    ? postsError.message || "Failed to load blog posts"
+    : postsData?.error && (!postsData?.posts || postsData.posts.length === 0)
+      ? typeof postsData.error === "string"
+        ? postsData.error
+        : "Unable to load content"
+      : "";
 
   const handleTagToggle = (tag) => {
     const trimmedTag = tag.trim();
@@ -376,7 +382,7 @@ const Blog = () => {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="relative group p-4 mt-4 border-0 rounded-lg bg-transparent backdrop-blur-[2px] shadow-sm overflow-hidden"
+              className="relative group p-4 mt-4 mx-4 sm:mx-0 border-0 rounded-lg bg-transparent backdrop-blur-[2px] shadow-sm overflow-hidden"
             >
               {/* Liquid Glass Outlines - Matching Projects.jsx */}
               <div className="absolute inset-0 rounded-lg border border-white/20 pointer-events-none z-30"></div>

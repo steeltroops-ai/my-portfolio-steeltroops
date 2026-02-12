@@ -32,17 +32,25 @@ const BlogPost = () => {
   const [activeId, setActiveId] = useState("");
 
   // Use React Query to fetch the post
+  // Use React Query to fetch the post
   const {
-    data: post,
+    data: postWrapper,
     isLoading: loading,
     error: queryError,
   } = usePostBySlug(slug);
 
+  const post = postWrapper?.data;
+  const apiError = postWrapper?.error;
+
   const error = queryError
     ? "Failed to load blog post"
-    : !post && !loading
-      ? "Post not found"
-      : "";
+    : apiError
+      ? typeof apiError === "string"
+        ? apiError
+        : apiError.message || "Failed to load blog post"
+      : !post && !loading
+        ? "Post not found"
+        : "";
 
   // Extract headings from markdown content for table of contents
   useEffect(() => {
@@ -250,13 +258,27 @@ const BlogPost = () => {
             transition={{ duration: 0.5 }}
             className="lg:col-span-9 p-6 sm:p-8 md:p-10 rounded-xl border backdrop-blur-[2px] border-white/10 bg-white/5 shadow-lg"
           >
+            {/* Premium Article Header */}
+            <header className="mb-6 border-b border-white/10 pb-6">
+              <h1 className="text-3xl sm:text-[40px] font-serif font-bold text-white tracking-tight leading-[1.2] mb-4">
+                {post.title}
+              </h1>
+
+              {/* Excerpt/Subtitle */}
+              {post.excerpt && (
+                <p className="text-lg sm:text-xl text-neutral-400 font-serif leading-relaxed italic opacity-80">
+                  {post.excerpt}
+                </p>
+              )}
+            </header>
+
             {/* Featured Image */}
             {post.featured_image_url && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="mb-8 overflow-hidden rounded-xl aspect-video"
+                className="mb-12 overflow-hidden rounded-xl border border-white/10 shadow-2xl aspect-video"
               >
                 <OptimizedImage
                   src={post.featured_image_url}
@@ -264,7 +286,7 @@ const BlogPost = () => {
                   className="w-full h-full object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 60vw"
                   lazy={false}
-                  priority={true} // Enable preload for LCP image
+                  priority={true}
                   webp={true}
                 />
               </motion.div>
@@ -276,7 +298,15 @@ const BlogPost = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="prose prose-lg prose-invert prose-cyan max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-neutral-300 prose-p:leading-relaxed prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-code:text-cyan-300 prose-pre:bg-neutral-900 prose-pre:border prose-pre:border-neutral-800"
+              className="prose prose-neutral prose-invert max-w-none 
+                prose-p:font-serif prose-p:text-[18px] prose-p:leading-[1.6] prose-p:text-neutral-300 prose-p:tracking-normal
+                prose-headings:font-serif prose-headings:text-white prose-headings:tracking-tight
+                prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
+                prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                prose-a:text-cyan-400 prose-a:font-normal prose-a:no-underline hover:prose-a:underline
+                prose-strong:text-white prose-strong:font-bold
+                prose-blockquote:border-l-2 prose-blockquote:border-white/20 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-neutral-400
+                prose-li:font-serif prose-li:text-[18px] prose-li:text-neutral-300 prose-li:leading-relaxed"
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -292,7 +322,7 @@ const BlogPost = () => {
                     return (
                       <h1
                         id={id}
-                        className="text-3xl font-bold text-white mt-8 mb-4 first:mt-0 scroll-mt-24"
+                        className="text-2xl sm:text-3xl font-serif font-bold text-white mt-10 mb-5 first:mt-0 scroll-mt-24"
                         {...props}
                       >
                         {children}
@@ -308,7 +338,7 @@ const BlogPost = () => {
                     return (
                       <h2
                         id={id}
-                        className="text-2xl font-bold text-white mt-8 mb-4 scroll-mt-24"
+                        className="text-xl sm:text-2xl font-serif font-bold text-white mt-8 mb-4 scroll-mt-24"
                         {...props}
                       >
                         {children}
@@ -324,7 +354,7 @@ const BlogPost = () => {
                     return (
                       <h3
                         id={id}
-                        className="text-xl font-bold text-white mt-6 mb-3 scroll-mt-24"
+                        className="text-lg sm:text-xl font-serif font-bold text-white mt-6 mb-3 scroll-mt-24"
                         {...props}
                       >
                         {children}
@@ -333,7 +363,7 @@ const BlogPost = () => {
                   },
                   h4: ({ children, ...props }) => (
                     <h4
-                      className="text-lg font-bold text-white mt-6 mb-3"
+                      className="text-base sm:text-lg font-serif font-bold text-white mt-6 mb-3"
                       {...props}
                     >
                       {children}
@@ -342,7 +372,7 @@ const BlogPost = () => {
                   // Custom paragraph styling
                   p: ({ children, ...props }) => (
                     <p
-                      className="text-lg leading-relaxed text-neutral-300 mb-6"
+                      className="text-base sm:text-[18px] leading-relaxed sm:leading-[1.6] text-neutral-300 font-serif mb-6"
                       {...props}
                     >
                       {children}
@@ -421,7 +451,7 @@ const BlogPost = () => {
                   // Custom blockquote styling
                   blockquote: ({ children, ...props }) => (
                     <blockquote
-                      className="border-l-4 border-cyan-500 pl-6 py-2 my-6 italic text-neutral-300 bg-neutral-900/30 rounded-r-lg"
+                      className="border-l-2 border-white/20 pl-6 py-1 my-8 italic text-neutral-400 font-serif text-lg leading-relaxed bg-transparent"
                       {...props}
                     >
                       {children}
@@ -430,7 +460,7 @@ const BlogPost = () => {
                   // Custom list styling
                   ul: ({ children, ...props }) => (
                     <ul
-                      className="list-disc list-inside space-y-2 text-neutral-300 mb-6"
+                      className="list-disc list-outside ml-6 space-y-3 text-neutral-300 font-serif mb-8"
                       {...props}
                     >
                       {children}
@@ -438,14 +468,17 @@ const BlogPost = () => {
                   ),
                   ol: ({ children, ...props }) => (
                     <ol
-                      className="list-decimal list-inside space-y-2 text-neutral-300 mb-6"
+                      className="list-decimal list-outside ml-6 space-y-3 text-neutral-300 font-serif mb-8"
                       {...props}
                     >
                       {children}
                     </ol>
                   ),
                   li: ({ children, ...props }) => (
-                    <li className="text-lg leading-relaxed" {...props}>
+                    <li
+                      className="text-base sm:text-[18px] leading-relaxed"
+                      {...props}
+                    >
                       {children}
                     </li>
                   ),

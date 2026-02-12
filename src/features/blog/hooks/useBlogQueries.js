@@ -37,12 +37,19 @@ export const usePublishedPosts = (options = {}) => {
   return useQuery({
     queryKey: blogQueryKeys.publishedPosts(options),
     queryFn: async () => {
-      const data = await getPublishedPosts(options);
-      // Save to smart cache (auto-syncs across tabs)
-      cacheManager.set(cacheKey, data, "blogList");
-      return data;
+      try {
+        const data = await getPublishedPosts(options);
+        // Save to smart cache (auto-syncs across tabs)
+        if (data) {
+          cacheManager.set(cacheKey, data, "blogList");
+        }
+        return data || { data: [], count: 0, error: null };
+      } catch (err) {
+        console.error("Error in usePublishedPosts queryFn:", err);
+        return { data: [], count: 0, error: err };
+      }
     },
-    initialData: cachedData, // Load from localStorage immediately
+    initialData: cachedData || undefined, // Load from localStorage immediately, but valid undefined if null
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -50,9 +57,9 @@ export const usePublishedPosts = (options = {}) => {
     placeholderData: keepPreviousData, // Keep previous data while fetching new page
     refetchInterval: 60000, // 1 minute auto-refresh
     select: (data) => ({
-      posts: data.data || [],
-      count: data.count || 0,
-      error: data.error,
+      posts: data?.data || [],
+      count: data?.count || 0,
+      error: data?.error,
     }),
   });
 };
@@ -78,7 +85,7 @@ export const useAllPosts = (options = {}) => {
       }
       return data;
     },
-    initialData: cachedData, // Load from localStorage immediately
+    initialData: cachedData || undefined, // Load from localStorage immediately
     staleTime: 0, // Always refresh in background to ensure data is fresh
     cacheTime: 24 * 60 * 60 * 1000, // 24 hours
     refetchOnWindowFocus: true, // Refresh when user comes back to the tab
@@ -89,9 +96,9 @@ export const useAllPosts = (options = {}) => {
       return false;
     },
     select: (data) => ({
-      posts: data.data || [],
-      count: data.count || 0,
-      error: data.error,
+      posts: data?.data || [],
+      count: data?.count || 0,
+      error: data?.error,
     }),
   });
 };
@@ -104,19 +111,24 @@ export const usePostBySlug = (slug, includeUnpublished = false) => {
   return useQuery({
     queryKey: blogQueryKeys.postBySlug(slug),
     queryFn: async () => {
-      const data = await getPostBySlug(slug, includeUnpublished);
-      // Save to smart cache
-      if (data?.data) {
-        cacheManager.set(cacheKey, data.data, "blogPost");
+      try {
+        const data = await getPostBySlug(slug, includeUnpublished);
+        // Save to smart cache
+        if (data?.data) {
+          cacheManager.set(cacheKey, data.data, "blogPost");
+        }
+        return data || { data: null, error: null };
+      } catch (err) {
+        console.error("Error in usePostBySlug queryFn:", err);
+        return { data: null, error: err };
       }
-      return data;
     },
     initialData: cachedData ? { data: cachedData } : undefined,
     staleTime: 10 * 60 * 1000, // 10 minutes
     cacheTime: 30 * 60 * 1000, // 30 minutes
     enabled: !!slug,
     retry: 2,
-    select: (data) => data.data,
+    select: (data) => ({ data: data?.data, error: data?.error }),
   });
 };
 
