@@ -89,7 +89,7 @@ export const ABOUT_TEXT = [
 // =====================================================
 export const HIGHLIGHT_STATS = [
   { label: "Experience", value: "2+ Years" },
-  { label: "Shipped Systems", value: "15+" },
+  { label: "Systems Shipped", value: "15+" },
   { label: "up Time", value: "99.3%" },
 ];
 
