@@ -57,11 +57,11 @@ export const CONTACT = {
 // SITE META - SEO & Branding
 // =====================================================
 export const SITE_META = {
-  title: "Mayank Pratap Singh | Full Stack & ML Engineer",
+  title: "Mayank Pratap Singh | Full Stack, ML & Robotics Engineer",
   description:
-    "Full Stack Developer specializing in React, Node.js, Next.js, and AI/ML solutions. Building modern web applications and machine learning solutions.",
+    "I build production systems. Distributed backends, ML pipelines, and autonomous robotics. If it needs to scale, think, or move, I've probably shipped it.",
   keywords:
-    "Mayank Pratap Singh, Full Stack Developer, React Developer, Node.js, Next.js, AI, Machine Learning, Web Development, JavaScript, TypeScript, Python, Robotics, ROS2, Portfolio",
+    "Mayank Pratap Singh, Full Stack Engineer, ML Systems, Production Backend, Distributed Systems, Robotics, Autonomous Navigation, RAG, MLOps, ROS2, Next.js, Python, TypeScript",
   siteUrl: "https://steeltroops.vercel.app",
   ogImage: "https://steeltroops.vercel.app/hodakaprofile.jpg",
 };
@@ -70,27 +70,27 @@ export const SITE_META = {
 // HERO CONTENT
 // =====================================================
 export const HERO_CONTENT = [
-  "Passionate Full Stack Developer and AI/ML enthusiast specializing in building robust, scalable web applications.",
-  "Expertise in React 18, Next.js 14, and Vue 3, integrated with powerful backends like Node.js, Express, and FastAPI.",
-  "Driven by a goal to leverage software engineering and machine learning to create innovative, impact-driven solutions.",
+  "I build production systems. Full stack, ML pipelines, robotics. The kind of work where 'it mostly works' isn't good enough.",
+  "I've shipped across healthcare, aerospace, and autonomous systems. I pick hard problems, figure them out, and deliver something that actually holds up.",
+  "If it needs to scale, think, not break or move, I've probably shipped it."
 ];
-
 // =====================================================
 // ABOUT TEXT
 // =====================================================
 export const ABOUT_TEXT = [
-  "Dedicated and versatile Full Stack Developer with a passion for creating efficient, user-friendly experiences. Currently pursuing B.Tech in Computer Science (AI & ML) at GLA University with a CGPA of 8.3/10.",
-  "My journey spans web development, robotics, and aerospace simulations—from co-founding a VR startup in Unreal Engine 5 to building production-ready web platforms with modern tech stacks.",
-  "I thrive in collaborative environments, having led teams of 10+ members and secured victories in over 8 hackathons. When not coding, I'm contributing to open-source or exploring the next frontier of tech.",
+  "I'm an engineer who builds across the full picture. Frontend to backend to ML to hardware. I don't stop where my job title ends.",
+  "I've led teams, started a company, and worked in rooms where I was the least experienced person. The last one taught me the most.",
+  "I care about architecture. Not the buzzword kind. The kind where your system still works six months later when traffic doubles and nobody remembers how it was built.",
+  "I learn fast, build faster, and I'm honest about what I don't know. That last part saves more time than most people realize.",
+  "Most engineers pick a lane. I picked a problem space and learned whatever was needed to solve it. That's how you end up building ML pipelines on Monday and debugging ROS2 sensor nodes on Thursday.",
 ];
-
 // =====================================================
 // STATS - Key highlights
 // =====================================================
 export const HIGHLIGHT_STATS = [
   { label: "Experience", value: "2+ Years" },
-  { label: "Projects", value: "40+" },
-  { label: "Technologies", value: "15+" },
+  { label: "Shipped Systems", value: "15+" },
+  { label: "up Time", value: "99.3%" },
 ];
 
 // =====================================================

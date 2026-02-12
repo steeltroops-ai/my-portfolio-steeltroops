@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"bun run dev:api\" \"bun run dev:vite\"",
     "dev:vite": "vite --host",
-    "dev:api": "node server/local-api.js",
+    "dev:api": "bun --watch server/local-api.js",
     "dev:vercel": "vercel dev",
     "build": "bun run sitemap && vite build",
     "preview": "vite preview",

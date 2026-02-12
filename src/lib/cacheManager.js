@@ -191,6 +191,11 @@ class SmartCacheManager {
    * @returns {object|null} Cached data or null if invalid/expired
    */
   get(key, dataType = "default") {
+    // Bypass cache in development for instant updates
+    if (import.meta.env?.DEV) {
+      return null;
+    }
+
     const cacheEntry = this._getFromStorage(key);
     const ttl = CACHE_TTL[dataType] || CACHE_TTL.default;
 
@@ -204,6 +209,7 @@ class SmartCacheManager {
       return null;
     }
 
+    console.log(`[CacheManager] Hit: ${key}`);
     return cacheEntry.data;
   }
 

@@ -45,7 +45,7 @@ const Hero = () => {
       className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl lg:py-16">
-        <div className="flex flex-wrap items-center lg:items-start">
+        <div className="flex flex-wrap items-center lg:items-center">
           <m.div
             variants={containerVariants}
             initial="hidden"
@@ -70,7 +70,7 @@ const Hero = () => {
               </m.div>
               <m.div
                 variants={itemVariants}
-                className="space-y-4 max-w-lg md:max-w-xl mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
+                className="space-y-4 w-full mx-auto lg:mx-0 px-4 sm:px-8 lg:px-0"
               >
                 {HERO_CONTENT.map((paragraph, index) => (
                   <div key={index} className="flex gap-3 group/item">
@@ -92,7 +92,7 @@ const Hero = () => {
                     <m.div key={i} className="relative group cursor-default">
                       <div className="relative px-4 py-1.5 rounded-xl overflow-hidden transition-all duration-700 bg-white/[0.02] border border-white/10 ring-1 ring-white/5 flex flex-col items-center lg:items-start min-w-[95px] sm:min-w-[115px] group-hover:bg-purple-950/30 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.08)]">
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-                        <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-tighter text-purple-400/75 group-hover:text-white transition-colors duration-500">
+                        <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-tighter text-purple-400 group-hover:text-white transition-colors duration-500">
                           {stat.value}
                         </span>
                         <span className="relative z-10 text-[8px] sm:text-[9px] text-white font-light tracking-[0.2em] uppercase leading-none transition-colors duration-500 group-hover:text-purple-100">
