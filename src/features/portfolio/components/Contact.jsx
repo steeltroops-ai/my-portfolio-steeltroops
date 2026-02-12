@@ -269,7 +269,13 @@ const Contact = () => {
                     value={formData.message}
                     onChange={handleInputChange}
                     className="w-full min-h-[160px] sm:min-h-[180px] md:min-h-[200px] lg:min-h-[220px] px-3 sm:px-4 py-2.5 sm:py-3 pb-10 transition-all duration-300 border rounded-lg bg-neutral-900/50 border-neutral-700/50 focus:outline-none focus:border-purple-400 focus:bg-neutral-900/60 text-white placeholder-neutral-600 resize-none text-sm sm:text-base"
-                    placeholder="Write your message here..."
+                    placeholder={`Write your message here...
+• Interested in working together on a project?
+• Have questions about Robotics, AI/ML or Full Stack?
+• Want to discuss a research idea or hire me for a role?
+• Just want to have a technical discussion or say hi?
+
+I will reply to you on your email as soon as possible!`}
                     disabled={isLoading}
                     required
                     aria-required="true"
@@ -302,7 +308,7 @@ const Contact = () => {
                   ? "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
                   : showSuccess
                     ? "bg-white/[0.01] text-green-400 border border-green-500/30 shadow-none"
-                    : "bg-white/[0.01] text-purple-300 border border-purple-500/30 hover:bg-white/[0.05] hover:border-purple-400 focus:outline-none shadow-none"
+                    : "bg-purple-500/10 text-purple-100 border border-purple-400/50 ring-1 ring-white/10 hover:bg-purple-500/20 hover:border-purple-400/70 focus:outline-none shadow-none"
               }`}
             >
               <span className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import {
   FiHome,
@@ -21,20 +21,36 @@ const sections = [
 const MobileNav = () => {
   const [activeSection, setActiveSection] = useState("hero");
 
+  // Ref for cleanup and state management
+  const observerRef = useRef(null);
+  const isScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef(null);
+
   // Track active section
   useEffect(() => {
     if (!("IntersectionObserver" in window)) return;
 
     const observerOptions = {
       root: null,
-      rootMargin: "-50% 0px -50% 0px",
-      threshold: 0,
+      rootMargin: "-20% 0px -20% 0px", // Tighter margin for better accuracy
+      threshold: 0.1,
     };
 
     const observerCallback = (entries) => {
-      const intersecting = entries.filter((entry) => entry.isIntersecting);
-      if (intersecting.length > 0) {
-        setActiveSection(intersecting[0].target.id);
+      // Skip if programmatically scrolling to avoid stutter
+      if (isScrollingRef.current) return;
+
+      const visibleSections = entries.filter((entry) => entry.isIntersecting);
+
+      if (visibleSections.length > 0) {
+        // Sort by intersection ratio to find the "most visible" section
+        const mostVisible = visibleSections.sort(
+          (a, b) => b.intersectionRatio - a.intersectionRatio
+        )[0];
+
+        if (mostVisible?.target?.id) {
+          setActiveSection(mostVisible.target.id);
+        }
       }
     };
 
@@ -42,6 +58,7 @@ const MobileNav = () => {
       observerCallback,
       observerOptions
     );
+    observerRef.current = observer;
 
     const observeSections = () => {
       sections.forEach((section) => {
@@ -50,13 +67,15 @@ const MobileNav = () => {
       });
     };
 
+    // Initial observation
     observeSections();
 
-    // Use MutationObserver for lazy-loaded sections - with debouncing
-    let mutationTimeout;
+    // Re-observe when DOM changes (for lazy loaded sections)
+    // Debounced to avoid performance hits
+    let timeoutId;
     const mutationObserver = new MutationObserver(() => {
-      clearTimeout(mutationTimeout);
-      mutationTimeout = setTimeout(observeSections, 250);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(observeSections, 500);
     });
 
     mutationObserver.observe(document.body, {
@@ -67,15 +86,37 @@ const MobileNav = () => {
     return () => {
       observer.disconnect();
       mutationObserver.disconnect();
+      clearTimeout(timeoutId);
+      clearTimeout(scrollTimeoutRef.current);
     };
   }, []);
 
   const handleNavClick = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-      setActiveSection(sectionId);
+    // Lock observer
+    isScrollingRef.current = true;
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+
+    setActiveSection(sectionId);
+
+    if (sectionId === "hero") {
+      // Special case for Home: Scroll to absolute top
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        // Calculate offset to account for any fixed headers if needed,
+        // but scrollIntoView is usually enough. block: 'start' aligns it to top.
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
+
+    // Unlock observer after animation
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 1000);
   };
 
   return (
@@ -103,7 +144,7 @@ const MobileNav = () => {
                       relative z-10 flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-colors duration-300
                       ${
                         isActive
-                          ? "text-purple-300"
+                          ? "text-purple-100"
                           : "text-neutral-400 hover:text-white"
                       }
                     `}
@@ -113,7 +154,7 @@ const MobileNav = () => {
                     {isActive && (
                       <m.div
                         layoutId="active-pill-mobile"
-                        className="absolute inset-0 bg-purple-500/20 border border-purple-400/50 rounded-lg shadow-lg"
+                        className="absolute inset-0 bg-purple-500/10 border border-purple-400/50 rounded-lg shadow-lg ring-1 ring-white/10"
                         transition={{
                           type: "spring",
                           stiffness: 380,

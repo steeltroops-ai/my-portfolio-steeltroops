@@ -40,16 +40,16 @@ const ExperienceCard = ({ experience, index, isLast }) => {
               top: "2.75rem",
               bottom: "0",
               background:
-                "linear-gradient(to bottom, var(--brand-purple) 0%, rgba(168,85,247,0.1) 20%, rgba(168,85,247,0.05) 100%)",
+                "linear-gradient(to bottom, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0.1) 40%, transparent 100%)",
             }}
           >
             {/* Animated Data Pulse traveling down the line */}
             {isInView && (
               <motion.div
                 initial={{ y: "-100%" }}
-                animate={{ y: "400%" }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                className="w-full h-1/4 bg-gradient-to-b from-transparent via-white/40 to-transparent"
+                animate={{ y: "600%" }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                className="w-full h-1/6 bg-gradient-to-b from-transparent via-purple-300/50 to-transparent"
               />
             )}
           </div>
@@ -60,25 +60,25 @@ const ExperienceCard = ({ experience, index, isLast }) => {
           {/* Outer Pulsing Ring - Smaller & Subtle */}
           <motion.div
             animate={
-              isInView ? { scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] } : {}
+              isInView ? { scale: [1, 1.4, 1], opacity: [0.15, 0.4, 0.15] } : {}
             }
-            transition={{ duration: 2, repeat: Infinity }}
-            className={`absolute w-5 h-5 rounded-full border border-purple-500/20 blur-[1px] ${isInView ? "block" : "hidden"}`}
+            transition={{ duration: 2.5, repeat: Infinity }}
+            className={`absolute w-6 h-6 rounded-full border border-purple-400/30 blur-[2px] ${isInView ? "block" : "hidden"}`}
           />
 
           {/* Main Node Housing - Resized to w-3 */}
           <div
-            className={`w-3 h-3 rounded-full border transition-all duration-700 relative flex items-center justify-center
+            className={`w-3 h-3 rounded-full border-2 transition-all duration-500 relative flex items-center justify-center rotate-45
              ${
                isInView
-                 ? "border-purple-400 bg-purple-600 shadow-[0_0_10px_rgba(168,85,247,0.6)]"
-                 : "bg-neutral-900 border-neutral-700"
+                 ? "border-purple-300 bg-purple-500/20 shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+                 : "bg-neutral-900 border-neutral-800"
              }
-             group-hover:scale-110 group-hover:border-white group-hover:bg-purple-500`}
+             group-hover:rotate-180 group-hover:scale-125 group-hover:border-white group-hover:bg-purple-600 group-hover:shadow-[0_0_20px_rgba(168,85,247,0.6)]`}
           >
-            {/* Inner Core - Micro Dot */}
+            {/* Inner Core - Diamond shape */}
             <div
-              className={`w-0.5 h-0.5 rounded-full ${isInView ? "bg-white" : "bg-neutral-800"}`}
+              className={`w-1 h-1 ${isInView ? "bg-white" : "bg-neutral-800"} transition-colors duration-500`}
             />
           </div>
 
@@ -86,7 +86,7 @@ const ExperienceCard = ({ experience, index, isLast }) => {
           <motion.div
             initial={{ width: 0 }}
             animate={isInView ? { width: "1.5rem" } : { width: 0 }}
-            className="absolute left-3.5 h-px bg-gradient-to-r from-purple-500/40 to-transparent pointer-events-none"
+            className="absolute left-3.5 h-[1.5px] bg-gradient-to-r from-purple-400/60 to-transparent pointer-events-none"
           />
         </div>
       </div>

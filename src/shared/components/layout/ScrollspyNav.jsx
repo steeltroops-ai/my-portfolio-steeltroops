@@ -17,29 +17,37 @@ const ScrollspyNav = () => {
 
   // Handle navigation click to scroll to target section
   const handleNavClick = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      // Disable observer during programmatic scroll
-      isScrollingRef.current = true;
+    // Disable observer during programmatic scroll
+    isScrollingRef.current = true;
 
-      // Clear any existing timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-
-      // Immediately update active section
-      setActiveSection(sectionId);
-
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-
-      // Re-enable observer after scroll completes
-      scrollTimeoutRef.current = setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 1000);
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
     }
+
+    // Immediately update active section
+    setActiveSection(sectionId);
+
+    if (sectionId === "hero") {
+      // Special case for Home: Scroll to absolute top
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }
+
+    // Re-enable observer after scroll completes
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 1000);
   };
 
   useEffect(() => {
@@ -103,7 +111,7 @@ const ScrollspyNav = () => {
     let mutationTimeout;
     const mutationObserver = new MutationObserver(() => {
       clearTimeout(mutationTimeout);
-      mutationTimeout = setTimeout(observeSections, 250);
+      mutationTimeout = setTimeout(observeSections, 500);
     });
 
     mutationObserver.observe(document.body, {
