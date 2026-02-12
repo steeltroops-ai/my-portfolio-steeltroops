@@ -63,7 +63,7 @@ const Hero = () => {
                 variants={itemVariants}
                 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-light tracking-tight leading-snug sm:leading-snug md:leading-snug lg:leading-snug text-center lg:text-left"
               >
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-slate-200 to-blue-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-slate-200 to-sky-300">
                   Full Stack, Robotics &<br className="hidden sm:block" />
                   <span className="sm:hidden"> </span>Machine Learning Engineer
                 </span>
@@ -92,7 +92,7 @@ const Hero = () => {
                     <m.div key={i} className="relative group cursor-default">
                       <div className="relative px-4 py-1.5 rounded-xl overflow-hidden transition-all duration-700 bg-white/[0.02] border border-white/10 ring-1 ring-white/5 flex flex-col items-center lg:items-start min-w-[95px] sm:min-w-[115px] group-hover:bg-purple-950/30 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.08)]">
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-                        <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-tighter text-purple-400 group-hover:text-white transition-colors duration-500">
+                        <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-tighter text-purple-300 group-hover:text-white transition-colors duration-500">
                           {stat.value}
                         </span>
                         <span className="relative z-10 text-[8px] sm:text-[9px] text-white font-light tracking-[0.2em] uppercase leading-none transition-colors duration-500 group-hover:text-purple-100">
@@ -116,8 +116,8 @@ const Hero = () => {
                     }
                     className="relative group cursor-pointer"
                   >
-                    <div className="relative px-10 py-1 sm:px-14 sm:py-1.5 rounded-2xl overflow-hidden transition-all duration-700 bg-white/[0.03] border border-white/10 ring-1 ring-white/5 flex flex-col items-center min-w-[220px] sm:min-w-[260px] group-hover:bg-purple-500/20 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)]">
-                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                    <div className="relative px-10 py-1 sm:px-14 sm:py-1.5 rounded-2xl overflow-hidden transition-all duration-700 bg-white/[0.02] border border-purple-400/50 ring-1 ring-white/10 flex flex-col items-center min-w-[220px] sm:min-w-[260px] group-hover:bg-purple-500/20 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)]">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-purple-400/5 via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                       <span className="relative z-10 text-xl sm:text-2xl font-mono tracking-widest text-purple-300 group-hover:text-white transition-colors duration-500">
                         Hire Me
                       </span>
