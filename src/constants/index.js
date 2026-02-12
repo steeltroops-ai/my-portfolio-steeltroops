@@ -54,14 +54,13 @@ export const CONTACT = {
 };
 
 // =====================================================
-// SITE META - SEO & Branding
-// =====================================================
 export const SITE_META = {
-  title: "Mayank Pratap Singh | Full Stack, ML & Robotics Engineer",
+  title:
+    "Mayank Pratap Singh (@steeltroops) | Production Engineer | Full Stack, ML & Robotics",
   description:
-    "I build production systems. Distributed backends, ML pipelines, and autonomous robotics. If it needs to scale, think, or move, I've probably shipped it.",
+    "Building high-performance production systems. Expert in distributed backends, scalable ML pipelines (RAG, MLOps), and autonomous robotics (ROS2, SLAM). Shipped systems for healthcare, aerospace, and autonomous navigation.",
   keywords:
-    "Mayank Pratap Singh, Full Stack Engineer, ML Systems, Production Backend, Distributed Systems, Robotics, Autonomous Navigation, RAG, MLOps, ROS2, Next.js, Python, TypeScript",
+    "Mayank Pratap Singh, steeltroops, Software Engineer, Production Backend, Machine Learning, Robotics Engineer, Distributed Systems, Next.js, Python, ROS2, SLAM, RAG, MLOps, Trajectory Optimization, Medical Robotics, India, Tech Lead",
   siteUrl: "https://steeltroops.vercel.app",
   ogImage: "https://steeltroops.vercel.app/hodakaprofile.jpg",
 };
@@ -72,13 +71,13 @@ export const SITE_META = {
 export const HERO_CONTENT = [
   "I build production systems. Full stack, ML pipelines, robotics. The kind of work where 'it mostly works' isn't good enough.",
   "I've shipped across healthcare, aerospace, and autonomous systems. I pick hard problems, figure them out, and deliver something that actually holds up.",
-  "If it needs to scale, think, not break or move, I've probably shipped it."
+  "If it needs to scale, think, not break or move, I've probably shipped it.",
 ];
 // =====================================================
 // ABOUT TEXT
 // =====================================================
 export const ABOUT_TEXT = [
-  "I'm an engineer who builds across the full picture. Frontend to backend to ML to hardware. I don't stop where my job title ends.",
+  "I'm an engineer who builds across the full picture. Known across the community as @steeltroops, I work from frontend to backend to ML to hardware. I don't stop where my job title ends.",
   "I've led teams, started a company, and worked in rooms where I was the least experienced person. The last one taught me the most.",
   "I care about architecture. Not the buzzword kind. The kind where your system still works six months later when traffic doubles and nobody remembers how it was built.",
   "I learn fast, build faster, and I'm honest about what I don't know. That last part saves more time than most people realize.",
@@ -90,7 +89,7 @@ export const ABOUT_TEXT = [
 export const HIGHLIGHT_STATS = [
   { label: "Experience", value: "2+ Years" },
   { label: "Systems Shipped", value: "15+" },
-  { label: "up Time", value: "99.3%" },
+  { label: "Uptime", value: "99.3%" },
 ];
 
 // =====================================================

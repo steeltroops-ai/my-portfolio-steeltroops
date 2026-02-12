@@ -54,11 +54,7 @@ const App = () => {
   return (
     <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
       {/* SEO Optimization */}
-      <SEOHead
-        title="Mayank Pratap Singh | Full Stack & ML Engineer"
-        description="Full Stack Developer specializing in React, Node.js, Next.js, and AI/ML solutions. Building modern web applications, robotics systems, and machine learning solutions."
-        type="website"
-      />
+      <SEOHead type="website" />
 
       <div className="fixed top-0 w-full h-full -z-10">
         <div className="relative w-full h-full bg-black">

@@ -231,8 +231,8 @@ const Blog = () => {
     <div className="overflow-x-hidden antialiased text-neutral-300 selection:bg-cyan-300 selection:text-cyan-900">
       {/* SEO Meta Tags */}
       <SEOHead
-        title="Blog"
-        description="Thoughts, tutorials, and insights about web development, technology, and more from Mayank's personal blog."
+        title="Engineering Blog | steeltroops"
+        description="Technical insights on Full Stack Development, Autonomous Robotics (ROS2), and Machine Learning Pipelines (MLOps) by Mayank Pratap Singh."
         url={window.location.href}
         type="website"
       />

@@ -1,31 +1,48 @@
 import { Helmet } from "react-helmet-async";
 import PropTypes from "prop-types";
+import {
+  SITE_META,
+  PROJECTS,
+  EXPERIENCES,
+  PERSONAL,
+  SOCIALS,
+} from "@/constants";
 
 const SEOHead = ({
   title,
-  description = "Full-stack developer specializing in modern web technologies",
-  image = "/hodakaprofile.jpg",
+  description = SITE_META.description,
+  image = SITE_META.ogImage,
   url = window.location.href,
   type = "website",
-  author = "Mayank Pratap Singh",
+  author = PERSONAL.name,
   publishedTime,
   modifiedTime,
   tags = [],
   canonical,
   noindex = false,
 }) => {
-  const siteTitle = "Mayank Pratap Singh";
-  const tagline = "Full Stack & ML Engineer";
-  const fullTitle = title
-    ? `${title} | ${siteTitle}`
-    : `${siteTitle} | ${tagline}`;
+  const siteTitle = SITE_META.title;
+  const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
   const canonicalUrl = canonical || url;
+
+  // Dynamic knowledge areas
+  const knowsAbout = [
+    ...new Set([
+      "Software Engineering",
+      "Robotics",
+      "Machine Learning",
+      "Full Stack Development",
+      ...PROJECTS.flatMap((p) => p.technologies),
+      ...EXPERIENCES.flatMap((e) => e.technologies),
+    ]),
+  ].slice(0, 20);
 
   return (
     <Helmet>
       {/* Basic Meta Tags */}
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      <meta name="keywords" content={SITE_META.keywords} />
       <meta name="author" content={author} />
       <meta
         name="google-site-verification"
@@ -48,8 +65,8 @@ const SEOHead = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
-      <meta name="twitter:creator" content="@steeltroops_ai" />
-      <meta name="twitter:site" content="@steeltroops_ai" />
+      <meta name="twitter:creator" content={PERSONAL.username} />
+      <meta name="twitter:site" content={PERSONAL.username} />
 
       {/* Article specific meta tags */}
       {type === "article" && (
@@ -86,55 +103,54 @@ const SEOHead = ({
           "@type": "ProfilePage",
           mainEntity: {
             "@type": "Person",
-            name: "Mayank Pratap Singh",
-            alternateName: "steeltroops",
+            name: PERSONAL.name,
+            alternateName: PERSONAL.username.replace("@", ""),
             description: description,
-            image: "https://steeltroops.vercel.app/hodakaprofile.jpg",
-            jobTitle: "Full Stack & Machine Learning Engineer",
-            url: "https://steeltroops.vercel.app",
-            knowsAbout: [
-              "React",
-              "Node.js",
-              "Next.js",
-              "TypeScript",
-              "Python",
-              "Machine Learning",
-              "Robotics",
-              "ROS2",
-              "SLAM",
-              "C++",
-              "Computer Vision",
-              "Unreal Engine 5",
-              "WebGL",
-            ],
-            sameAs: [
-              "https://github.com/steeltroops-ai",
-              "https://linkedin.com/in/steeltroops-ai",
-              "https://x.com/steeltroops_ai",
-            ],
+            image: `${SITE_META.siteUrl}/hodakaprofile.jpg`,
+            jobTitle: PERSONAL.role,
+            url: SITE_META.siteUrl,
+            email: "steeltroops.ai@gmail.com",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: PERSONAL.location,
+              addressCountry: "IN",
+            },
+            knowsAbout: knowsAbout,
+            sameAs: Object.values(SOCIALS),
+            alumniOf: {
+              "@type": "CollegeOrUniversity",
+              name: PERSONAL.university,
+              url: "https://www.gla.ac.in/",
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              contactType: "professional",
+              email: "steeltroops.ai@gmail.com",
+              url: `${SITE_META.siteUrl}/#contact`,
+            },
             hasOfferCatalog: {
               "@type": "OfferCatalog",
-              name: "Software Engineering Services",
+              name: "Engineering Solutions",
               itemListElement: [
                 {
                   "@type": "Offer",
                   itemOffered: {
                     "@type": "Service",
-                    name: "Full Stack Web Development",
+                    name: "Full Stack Development",
                   },
                 },
                 {
                   "@type": "Offer",
                   itemOffered: {
                     "@type": "Service",
-                    name: "Robotics & ROS2 Integration",
+                    name: "Robotics Systems (ROS2)",
                   },
                 },
                 {
                   "@type": "Offer",
                   itemOffered: {
                     "@type": "Service",
-                    name: "Machine Learning Solutions",
+                    name: "MLOps & AI Integration",
                   },
                 },
               ],
@@ -143,57 +159,53 @@ const SEOHead = ({
         })}
       </script>
 
-      {/* Project Catalog Schema (Rich Snippets for Projects) */}
+      {/* Project Catalog Schema (Dynamic) */}
       {type === "website" && !title && (
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "ItemList",
-            name: "Mayank Pratap Singh's Portfolio Projects",
-            description:
-              "A collection of software engineering, robotics, and machine learning projects.",
-            itemListElement: [
-              {
-                "@type": "ListItem",
-                position: 1,
-                item: {
-                  "@type": "CreativeWork",
-                  name: "MediLens Clinical Intelligence Platform",
-                  description:
-                    "Distributed clinical research platform integrating medical imaging and speech biomarkers.",
+            name: `${PERSONAL.name}'s Engineering Projects`,
+            description: `Production-ready software, robotics, and ML systems developed by ${PERSONAL.name}.`,
+            itemListElement: PROJECTS.slice(0, 10).map((project, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              item: {
+                "@type": "SoftwareApplication",
+                name: project.title,
+                description: Array.isArray(project.description)
+                  ? project.description[0]
+                  : project.description,
+                applicationCategory: "SoftwareDevelopment",
+                operatingSystem: "Web",
+                url: project.url || undefined,
+              },
+            })),
+          })}
+        </script>
+      )}
+
+      {/* Work Experience Schema (Dynamic) */}
+      {type === "website" && !title && (
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: `${PERSONAL.name}'s Professional Experience`,
+            itemListElement: EXPERIENCES.map((exp, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              item: {
+                "@type": "OrganizationRole",
+                roleName: exp.role,
+                startDate: exp.year.split(" - ")[0],
+                endDate: exp.year.split(" - ")[1] || "Present",
+                memberOf: {
+                  "@type": "Organization",
+                  name: exp.company,
                 },
               },
-              {
-                "@type": "ListItem",
-                position: 2,
-                item: {
-                  "@type": "CreativeWork",
-                  name: "RAG LLM Fact Checker",
-                  description:
-                    "Production retrieval-augmented generation system indexing research papers with semantic search.",
-                },
-              },
-              {
-                "@type": "ListItem",
-                position: 3,
-                item: {
-                  "@type": "CreativeWork",
-                  name: "Black Hole Simulation",
-                  description:
-                    "Real-time, interactive WebGL simulation of Schwarzschild/Kerr black holes.",
-                },
-              },
-              {
-                "@type": "ListItem",
-                position: 4,
-                item: {
-                  "@type": "CreativeWork",
-                  name: "Robotics Telemetry Intelligence",
-                  description:
-                    "Scalable services to analyze real-time surgical robotics telemetry.",
-                },
-              },
-            ],
+            })),
           })}
         </script>
       )}
@@ -210,12 +222,12 @@ const SEOHead = ({
             author: {
               "@type": "Person",
               name: author,
-              url: "https://github.com/steeltroops-ai",
+              url: SOCIALS.github,
             },
             publisher: {
               "@type": "Person",
               name: author,
-              url: "https://github.com/steeltroops-ai",
+              url: SOCIALS.github,
             },
             datePublished: publishedTime,
             dateModified: modifiedTime || publishedTime,
@@ -240,7 +252,7 @@ const SEOHead = ({
             author: {
               "@type": "Person",
               name: author,
-              url: "https://github.com/steeltroops-ai",
+              url: SOCIALS.github,
             },
           })}
         </script>

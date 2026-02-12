@@ -14,7 +14,7 @@ const Navbar = () => {
           <img
             className="w-15 h-auto transition-all duration-300"
             src={IMAGES.logo}
-            alt="Logo"
+            alt="steeltroops - Mayank Pratap Singh"
             width={64}
             height={40}
             loading="eager"

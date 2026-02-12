@@ -143,7 +143,7 @@ const Hero = () => {
                 srcSet={`${IMAGES.profileMobile} 480w, ${IMAGES.profile} 1024w`}
                 sizes="(max-width: 640px) 280px, 600px"
                 className="rounded-3xl w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-full h-auto"
-                alt="Mayank Pratap Singh"
+                alt="Mayank Pratap Singh (@steeltroops) - Production Engineer"
                 width={600}
                 height={600}
                 loading="eager"

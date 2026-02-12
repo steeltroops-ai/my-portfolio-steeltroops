@@ -1,11 +1,11 @@
 {
-  "name": "Mayank Pratap Singh | Full Stack & ML Engineer",
-  "short_name": "Mayank Portfolio",
-  "description": "Portfolio of Mayank Pratap Singh, a Full Stack Developer, Robotics enthusiast, and Machine Learning Engineer.",
+  "name": "Mayank Pratap Singh (@steeltroops) | Portfolio",
+  "short_name": "steeltroops",
+  "description": "Production Engineering portfolio of Mayank Pratap Singh (@steeltroops). Full Stack, ML, and Robotics.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#8b5cf6",
+  "background_color": "#0a0a0a",
+  "theme_color": "#a855f7",
   "icons": [
     {
       "src": "/favicon.png",
