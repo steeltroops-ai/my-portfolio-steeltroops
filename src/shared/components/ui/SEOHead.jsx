@@ -6,6 +6,7 @@ import {
   EXPERIENCES,
   PERSONAL,
   SOCIALS,
+  IMAGES,
 } from "@/constants";
 
 const SEOHead = ({
@@ -49,8 +50,8 @@ const SEOHead = ({
         content="vycsFH0oxZh3hYxinQ1JGOghyPymDAt4tkDFdKk-V7M"
       />
       <link rel="canonical" href={canonicalUrl} />
-      <link rel="icon" type="image/png" href="/favicon.png?v=3" />
-      <link rel="apple-touch-icon" href="/favicon.png?v=3" />
+      <link rel="icon" type="image/webp" href={IMAGES.favicon} />
+      <link rel="apple-touch-icon" href={IMAGES.favicon} />
 
       {/* Open Graph Meta Tags */}
       <meta property="og:title" content={fullTitle} />

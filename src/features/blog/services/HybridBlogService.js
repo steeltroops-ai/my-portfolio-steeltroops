@@ -14,7 +14,7 @@ import {
   deletePost as neonDeletePost,
   togglePostPublished as neonTogglePostPublished,
 } from "./NeonBlogService";
-import staticBlogPosts from "@/data/staticBlogPosts.json";
+import staticBlogPosts from "@/data/staticBlogPosts.js";
 
 // Cache for Neon availability check
 let neonAvailabilityCache = null;

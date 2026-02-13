@@ -1,4 +1,6 @@
 // Initial blog posts for portfolio
+import { IMAGES } from "@/constants";
+
 export const initialBlogPosts = [
   {
     title: "Building a VR Training Simulator with Unreal Engine 5",
@@ -160,7 +162,7 @@ The project reinforced my belief that immersive technologies like VR aren't just
       "Simulation",
       "Training",
     ],
-    featured_image_url: "/src/assets/project-5.jpg",
+    featured_image_url: IMAGES.project5,
     meta_description:
       "Learn how I developed a VR firefighting training simulator with Unreal Engine 5, featuring realistic fire physics, smoke simulation, and immersive emergency scenarios.",
     published: true,
@@ -493,7 +495,7 @@ The project's success wasn't just measured in technical metrics, but in the real
       "MongoDB",
       "Career Tech",
     ],
-    featured_image_url: "/src/assets/project-2.jpg",
+    featured_image_url: IMAGES.project2,
     meta_description:
       "Learn how I built an AI-powered placement management system using PyTorch and React that revolutionized campus recruitment with intelligent matching algorithms.",
     published: true,
@@ -868,7 +870,7 @@ The journey continues, and I'm excited to see where it leads next.
       "React",
       "Personal Journey",
     ],
-    featured_image_url: "/src/assets/about.jpg",
+    featured_image_url: IMAGES.about,
     meta_description:
       "Follow my tech journey from robotics to web development, sharing lessons learned building everything from robotic hands to full-stack applications.",
     published: true,
@@ -1432,7 +1434,7 @@ Performance optimization is an ongoing process, not a one-time task. Start with 
       "JavaScript",
       "Frontend",
     ],
-    featured_image_url: "/src/assets/project-1.jpg",
+    featured_image_url: IMAGES.project1,
     meta_description:
       "Learn modern React performance optimization techniques including code splitting, image optimization, React Query caching, and performance monitoring.",
     published: true,
@@ -2075,7 +2077,7 @@ This stack is particularly well-suited for modern web applications that need rea
       "Performance",
       "Real-time",
     ],
-    featured_image_url: "/src/assets/project-3.jpg",
+    featured_image_url: IMAGES.project3,
     meta_description:
       "Learn to build scalable full-stack applications with Bun and Supabase, featuring type-safe development, real-time subscriptions, and performance optimization.",
     published: true,

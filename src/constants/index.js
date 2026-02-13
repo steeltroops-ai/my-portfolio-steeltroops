@@ -10,13 +10,21 @@ import blackhole1 from "@/assets/projects/blackhole1.jpg";
 import logo from "@/assets/logo.webp";
 import about from "@/assets/about.jpg";
 import hodakabout from "@/assets/about1.webp";
+import mpsLogo from "@/assets/mps.png";
 
 export const IMAGES = {
   logo,
+  adminLogo: mpsLogo,
   profile: "/profile.webp", // Static path for immediate LCP discoverability (matches index.html preload)
   profileMobile: "/profile.webp",
+  favicon: "/favicon.webp",
   about,
   aboutAlt: hodakabout,
+  project1,
+  project2,
+  project3,
+  project4,
+  project5,
 };
 
 // =====================================================
@@ -63,7 +71,7 @@ export const SITE_META = {
   keywords:
     "Mayank Pratap Singh, steeltroops, Software Engineer, Production Backend, Machine Learning, Robotics Engineer, Distributed Systems, Next.js, Python, ROS2, SLAM, RAG, MLOps, Trajectory Optimization, Medical Robotics, India, Tech Lead",
   siteUrl: "https://steeltroops.vercel.app",
-  ogImage: "https://steeltroops.vercel.app/hodakaprofile.jpg",
+  ogImage: "https://steeltroops.vercel.app/profile.webp",
 };
 
 // =====================================================

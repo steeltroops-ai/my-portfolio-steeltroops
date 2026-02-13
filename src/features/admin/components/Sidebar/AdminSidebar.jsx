@@ -11,7 +11,7 @@ import {
   FiBarChart2,
 } from "react-icons/fi";
 import { signOut } from "../../services/HybridAuthService";
-import mpsLogo from "../../../../assets/mps.png";
+import { IMAGES } from "@/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchStats } from "@/shared/analytics/useAnalyticsStats";
 import { fetchContactMessages } from "../../hooks/useContactMessages";
@@ -105,7 +105,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
           <div className="w-16 shrink-0 flex items-center justify-center">
             <div className="w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 border border-white/10 bg-white/5 overflow-hidden">
               <img
-                src={mpsLogo}
+                src={IMAGES.adminLogo}
                 alt="MPS"
                 className="w-full h-full object-cover rounded-full opacity-90 group-hover:opacity-100"
               />
