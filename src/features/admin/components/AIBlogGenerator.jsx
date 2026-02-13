@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,9 +12,12 @@ import {
   FiClock,
   FiChevronUp,
   FiChevronDown,
-  FiFileText, // Replaced FiZap with FiFileText
+  FiFileText,
+  FiX,
+  FiHash,
 } from "react-icons/fi";
 import { useAIGenerator, GENERATION_STATUS } from "../hooks/useAIGenerator";
+import { useMarkdownComponents } from "@/shared/components/markdown/MarkdownComponents";
 import { useCreatePost } from "@/features/blog/hooks/useBlogQueries";
 import { generateSlug } from "@/lib/neon";
 import ReactMarkdown from "react-markdown";
@@ -22,29 +25,59 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import AICreatorInput from "./Creation/AICreatorInput";
 
-// Real-time progress indicator
 const AIBlogGenerator = () => {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const bottomRef = useRef(null);
+  const contentRef = useRef(null);
 
   const createPostMutation = useCreatePost();
 
-  const { status, progress, currentStep, result, isGenerating, generate } =
-    useAIGenerator();
+  const {
+    status,
+    progress,
+    currentStep,
+    result,
+    error,
+    isGenerating,
+    outline,
+    sections,
+    streamedContent,
+    currentSectionIndex,
+    metadata,
+    generate,
+    cancel,
+    reset,
+  } = useAIGenerator();
+
+  // Auto-scroll to bottom as content streams in
+  useEffect(() => {
+    if (streamedContent && contentRef.current) {
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+    }
+  }, [streamedContent]);
 
   const handleAIInputSubmit = async (inputData) => {
     if (!inputData.prompt.trim()) return;
 
     const params = {
       topic: inputData.prompt,
-      style: inputData.style.toLowerCase(),
-      length: inputData.length.toLowerCase(),
+      globalTone: inputData.style?.toLowerCase() || "professional",
+      toneModifier: inputData.toneModifier,
+      audience: inputData.audience?.toLowerCase() || "general",
+      length: inputData.length?.toLowerCase() || "medium",
       tags: inputData.includeCode ? ["technical", "code"] : [],
+      codeLanguage: inputData.codeLanguage || "python",
+      // Blueprint can be passed from a future BlueprintBuilder component
+      blueprint: inputData.blueprint || undefined,
     };
 
-    await generate(params);
+    try {
+      await generate(params);
+    } catch (err) {
+      // Error is already captured in the hook state
+      console.error("[AIBlogGenerator] Generation failed:", err.message);
+    }
   };
 
   const handleSavePost = async () => {
@@ -55,8 +88,8 @@ const AIBlogGenerator = () => {
         title: result.title,
         slug: generateSlug(result.title),
         content: result.content,
-        excerpt: result.excerpt,
-        tags: result.tags || [],
+        excerpt: result.excerpt || outline?.description || "",
+        tags: metadata?.tags || result.tags || [],
         published: false,
         author: "Admin",
       };
@@ -82,9 +115,18 @@ const AIBlogGenerator = () => {
     }
   };
 
+  const handleNewGeneration = () => {
+    reset();
+  };
+
+  // Check if we're in a "streaming" state (content arriving)
+  const isStreaming =
+    status === GENERATION_STATUS.WRITING ||
+    status === GENERATION_STATUS.ENRICHING;
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      {/* Header - Matching Dashboard Style */}
+      {/* Header */}
       <div className="flex-none p-8 pb-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
@@ -95,17 +137,40 @@ const AIBlogGenerator = () => {
               Create high-quality technical content powered by Llama 3.3.
             </p>
           </div>
+
+          {/* Cancel / New buttons */}
+          <div className="flex gap-3">
+            {isGenerating && (
+              <button
+                onClick={cancel}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-all text-sm font-medium"
+              >
+                <FiX size={14} />
+                Cancel
+              </button>
+            )}
+            {(result || status === GENERATION_STATUS.ERROR) && (
+              <button
+                onClick={handleNewGeneration}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all text-sm font-medium"
+              >
+                <FiFileText size={14} />
+                New Generation
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Scrollable Content Area */}
       <div
+        ref={contentRef}
         className="flex-1 overflow-y-auto custom-scrollbar"
         data-lenis-prevent
       >
         <div className="max-w-4xl mx-auto px-8 py-8">
           {/* Empty State / Welcome Screen */}
-          {!isGenerating && !result && (
+          {!isGenerating && !result && status === GENERATION_STATUS.IDLE && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -124,19 +189,79 @@ const AIBlogGenerator = () => {
             </motion.div>
           )}
 
-          {/* Progress View */}
-          {(isGenerating || status !== GENERATION_STATUS.IDLE) && !result && (
-            <ProgressIndicator
-              status={status}
-              progress={progress}
-              currentStep={currentStep}
-            />
+          {/* Error State */}
+          {status === GENERATION_STATUS.ERROR && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-2xl mx-auto mb-8 mt-8"
+            >
+              <div className="p-6 rounded-xl border border-red-500/20 bg-red-500/5">
+                <p className="text-red-400 font-medium mb-2">
+                  Generation Failed
+                </p>
+                <p className="text-red-300/70 text-sm">{error}</p>
+                {streamedContent && (
+                  <p className="text-neutral-400 text-sm mt-3">
+                    Partial content was captured. Click "New Generation" to try
+                    again, or check admin dashboard for saved partial drafts.
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Progress + Live Streaming View */}
+          {isGenerating && (
+            <div className="w-full max-w-4xl mx-auto mt-4">
+              {/* Progress Bar */}
+              <ProgressIndicator
+                status={status}
+                progress={progress}
+                currentStep={currentStep}
+                outline={outline}
+                sections={sections}
+                currentSectionIndex={currentSectionIndex}
+              />
+
+              {/* Live Streaming Content Preview */}
+              {streamedContent && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden"
+                >
+                  <div className="px-5 py-3 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                      <span className="text-sm text-neutral-300 font-medium">
+                        Live Preview
+                      </span>
+                    </div>
+                    <span className="text-xs text-neutral-500">
+                      {streamedContent.split(/\s+/).length} words
+                    </span>
+                  </div>
+                  <div className="p-6 prose prose-invert max-w-none prose-headings:text-white prose-p:text-neutral-300 prose-strong:text-white prose-code:text-purple-300 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight]}
+                    >
+                      {streamedContent}
+                    </ReactMarkdown>
+                  </div>
+                </motion.div>
+              )}
+            </div>
           )}
 
           {/* Result View */}
           {result && (
             <BlogPreviewCard
               result={result}
+              outline={outline}
+              metadata={metadata}
+              sections={sections}
               onSave={handleSavePost}
               onEdit={handleEdit}
               onCopy={() => {
@@ -151,7 +276,7 @@ const AIBlogGenerator = () => {
         </div>
       </div>
 
-      {/* ChatGPT-Style Floating Input Area */}
+      {/* Floating Input Area */}
       <div className="flex-none p-8 pt-4">
         <div className="max-w-4xl mx-auto">
           <AICreatorInput
@@ -164,8 +289,18 @@ const AIBlogGenerator = () => {
   );
 };
 
-// Real-time progress indicator
-const ProgressIndicator = ({ status, progress, currentStep }) => {
+// =========================================================================
+// PROGRESS INDICATOR (Real progress, not fake)
+// =========================================================================
+
+const ProgressIndicator = ({
+  status,
+  progress,
+  currentStep,
+  outline,
+  sections,
+  currentSectionIndex,
+}) => {
   const statusConfig = {
     [GENERATION_STATUS.IDLE]: { label: "Ready", color: "neutral" },
     [GENERATION_STATUS.PLANNING]: { label: "Planning", color: "white" },
@@ -178,33 +313,99 @@ const ProgressIndicator = ({ status, progress, currentStep }) => {
   const config = statusConfig[status] || statusConfig[GENERATION_STATUS.IDLE];
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-8 animate-fadeIn mt-8">
-      <div className="relative h-2 bg-white/5 rounded-full overflow-hidden mb-3">
+    <div className="w-full max-w-4xl mx-auto mb-4">
+      {/* Main progress bar */}
+      <div className="relative h-1.5 bg-white/5 rounded-full overflow-hidden mb-3">
         <motion.div
-          className={`absolute inset-y-0 left-0 bg-white`}
+          className="absolute inset-y-0 left-0 bg-white rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
         />
       </div>
-      <div className="flex justify-between items-center text-sm">
+
+      <div className="flex justify-between items-center text-sm mb-4">
         <span
-          className={`text-${config.color === "red" ? "red-400" : "white"} font-medium flex items-center gap-2`}
+          className={`${config.color === "red" ? "text-red-400" : "text-white"} font-medium flex items-center gap-2`}
         >
-          {status === GENERATION_STATUS.PLANNING && (
-            <FiLoader className="animate-spin" />
+          {(status === GENERATION_STATUS.PLANNING ||
+            status === GENERATION_STATUS.WRITING ||
+            status === GENERATION_STATUS.ENRICHING) && (
+            <FiLoader className="animate-spin" size={14} />
           )}
           {config.label}: {currentStep}
         </span>
-        <span className="text-white/50">{progress}%</span>
+        <span className="text-white/50 tabular-nums">{progress}%</span>
       </div>
+
+      {/* Section Progress Map */}
+      {outline && outline.sections && (
+        <div className="space-y-1.5">
+          {outline.sections.map((section, idx) => {
+            const completed = sections.some((s) => s.index === idx);
+            const isCurrent = idx === currentSectionIndex;
+            const completedSection = sections.find((s) => s.index === idx);
+
+            return (
+              <div
+                key={idx}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                  isCurrent
+                    ? "bg-white/10 border border-white/10"
+                    : completed
+                      ? "bg-white/[0.03]"
+                      : "opacity-40"
+                }`}
+              >
+                {/* Status icon */}
+                <div className="flex-none">
+                  {completed ? (
+                    <FiCheck className="text-green-400" size={14} />
+                  ) : isCurrent ? (
+                    <FiLoader className="text-white animate-spin" size={14} />
+                  ) : (
+                    <div className="w-3.5 h-3.5 rounded-full border border-white/20" />
+                  )}
+                </div>
+
+                {/* Section info */}
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={`${completed ? "text-neutral-300" : isCurrent ? "text-white" : "text-neutral-500"} truncate block`}
+                  >
+                    {section.heading}
+                  </span>
+                </div>
+
+                {/* Type badge */}
+                <span className="flex-none text-xs px-1.5 py-0.5 rounded bg-white/5 text-neutral-500">
+                  {section.type || "prose"}
+                </span>
+
+                {/* Word count */}
+                {completedSection && (
+                  <span className="flex-none text-xs text-neutral-500 tabular-nums">
+                    {completedSection.wordCount}w
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
 
-// Blog Preview Card
+// =========================================================================
+// BLOG PREVIEW CARD (Result view)
+// =========================================================================
+
 const BlogPreviewCard = ({
   result,
+  outline,
+  metadata,
+  sections,
   onEdit,
   onSave,
   onCopy,
@@ -212,6 +413,17 @@ const BlogPreviewCard = ({
   isSaving,
 }) => {
   const [showFullContent, setShowFullContent] = useState(false);
+
+  const tags = metadata?.tags || result.tags || [];
+  const totalWords =
+    result.totalWords ||
+    result.total_words ||
+    result.content?.split(/\s+/).length ||
+    0;
+  const readTime =
+    result.readTime || result.read_time || Math.ceil(totalWords / 200) || 5;
+
+  const markdownComponents = useMarkdownComponents({ title: result.title });
 
   return (
     <motion.div
@@ -224,21 +436,61 @@ const BlogPreviewCard = ({
           {result.title}
         </h2>
 
-        <div className="flex flex-wrap gap-4 text-sm text-neutral-400 mb-6">
+        <div className="flex flex-wrap gap-4 text-sm text-neutral-400 mb-4">
           <span className="flex items-center gap-1">
-            <FiCalendar /> {new Date().toLocaleDateString()}
+            <FiCalendar size={14} /> {new Date().toLocaleDateString()}
           </span>
           <span className="flex items-center gap-1">
-            <FiClock /> {result.read_time || "5"} min read
+            <FiClock size={14} /> {readTime} min read
           </span>
-          <span className="bg-white/10 text-neutral-300 px-2 py-0.5 rounded text-xs border border-white/5">
-            {result.total_words || "1200"} words
+          <span className="flex items-center gap-1 bg-white/10 text-neutral-300 px-2 py-0.5 rounded text-xs border border-white/5">
+            {totalWords} words
           </span>
+          {result.generation_time_ms && (
+            <span className="flex items-center gap-1 bg-white/10 text-neutral-300 px-2 py-0.5 rounded text-xs border border-white/5">
+              <FiCpu size={12} /> {Math.round(result.generation_time_ms / 1000)}
+              s
+            </span>
+          )}
         </div>
 
-        {result.excerpt && (
-          <div className="p-4 bg-white/5 rounded-lg border border-white/5 italic text-neutral-300 mb-6">
-            {result.excerpt}
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {tags.slice(0, 5).map((tag, i) => (
+              <span
+                key={i}
+                className="text-xs px-2 py-1 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Excerpt */}
+        {(result.excerpt || outline?.description) && (
+          <div className="p-4 bg-white/5 rounded-lg border border-white/5 italic text-neutral-300 mb-6 text-sm leading-relaxed">
+            {result.excerpt || outline?.description}
+          </div>
+        )}
+
+        {/* Section summary */}
+        {sections && sections.length > 0 && (
+          <div className="mb-6">
+            <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
+              Structure ({sections.length} sections)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sections.map((s, i) => (
+                <span
+                  key={i}
+                  className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-neutral-400"
+                >
+                  {s.heading} ({s.wordCount}w)
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -247,7 +499,11 @@ const BlogPreviewCard = ({
           <button
             onClick={onSave}
             disabled={isSaving || result.saved}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${result.saved ? "bg-white/10 text-neutral-300 border border-white/10" : "bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              result.saved
+                ? "bg-white/10 text-neutral-300 border border-white/10"
+                : "bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
+            }`}
           >
             {isSaving ? (
               <FiLoader className="animate-spin" />
@@ -292,10 +548,11 @@ const BlogPreviewCard = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden bg-black/20"
           >
-            <div className="p-8 prose prose-invert max-w-none">
+            <div className="p-8 prose prose-invert max-w-none prose-headings:text-white prose-p:text-neutral-300 prose-strong:text-white prose-code:text-purple-300">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
+                components={markdownComponents}
               >
                 {result.content}
               </ReactMarkdown>

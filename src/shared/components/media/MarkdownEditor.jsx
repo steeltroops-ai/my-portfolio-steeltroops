@@ -7,6 +7,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import "react-quill/dist/quill.snow.css";
 // Syntax highlighting styles are handled globally in index.css
+import { useMarkdownComponents } from "@/shared/components/markdown/MarkdownComponents";
 
 const MarkdownEditor = ({
   value = "",
@@ -17,6 +18,7 @@ const MarkdownEditor = ({
 }) => {
   const [activeTab, setActiveTab] = useState("markdown");
   const [content, setContent] = useState(value);
+  const markdownComponents = useMarkdownComponents({});
 
   // Quill modules configuration
   const modules = useMemo(
@@ -122,30 +124,33 @@ const MarkdownEditor = ({
         <div className="flex">
           <button
             onClick={() => setActiveTab("markdown")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "markdown"
-              ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
-              : "text-neutral-400 hover:text-neutral-200"
-              }`}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "markdown"
+                ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
+                : "text-neutral-400 hover:text-neutral-200"
+            }`}
           >
             ✍️ Write (Markdown)
           </button>
           {showPreview && (
             <button
               onClick={() => setActiveTab("preview")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "preview"
-                ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
-                : "text-neutral-400 hover:text-neutral-200"
-                }`}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === "preview"
+                  ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
+                  : "text-neutral-400 hover:text-neutral-200"
+              }`}
             >
               👁️ Preview
             </button>
           )}
           <button
             onClick={() => setActiveTab("write")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "write"
-              ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
-              : "text-neutral-400 hover:text-neutral-200"
-              }`}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "write"
+                ? "text-cyan-400 border-b-2 border-cyan-400 bg-neutral-900"
+                : "text-neutral-400 hover:text-neutral-200"
+            }`}
           >
             📝 Rich Editor
           </button>
@@ -192,55 +197,7 @@ const MarkdownEditor = ({
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight, rehypeRaw]}
-                components={{
-                  code({ node, inline, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || "");
-                    return !inline && match ? (
-                      <pre className="bg-neutral-800 rounded-lg p-4 overflow-x-auto">
-                        <code className={className} {...props}>
-                          {children}
-                        </code>
-                      </pre>
-                    ) : (
-                      <code
-                        className="bg-neutral-800 px-1 py-0.5 rounded text-sm"
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    );
-                  },
-                  blockquote({ children }) {
-                    return (
-                      <blockquote className="border-l-4 border-cyan-500 pl-4 italic text-neutral-300">
-                        {children}
-                      </blockquote>
-                    );
-                  },
-                  table({ children }) {
-                    return (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full border border-neutral-700">
-                          {children}
-                        </table>
-                      </div>
-                    );
-                  },
-                  th({ children }) {
-                    return (
-                      <th className="border border-neutral-700 px-4 py-2 bg-neutral-800 text-left">
-                        {children}
-                      </th>
-                    );
-                  },
-                  td({ children }) {
-                    return (
-                      <td className="border border-neutral-700 px-4 py-2">
-                        {children}
-                      </td>
-                    );
-                  },
-                }}
+                components={markdownComponents}
               >
                 {getMarkdownContent()}
               </ReactMarkdown>

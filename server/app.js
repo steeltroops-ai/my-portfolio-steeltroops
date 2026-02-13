@@ -10,6 +10,7 @@ import commentsHandler from "./api/comments.js";
 import categoriesHandler from "./api/categories.js";
 import tagsHandler from "./api/tags.js";
 import aiGenerateHandler from "./api/ai/generate-blog.js";
+import aiGenerateStreamHandler from "./api/ai/generate-blog-stream.js";
 import analyticsTrackHandler from "./api/analytics/track.js";
 import analyticsStatsHandler from "./api/analytics/stats.js";
 
@@ -32,6 +33,7 @@ app.all("/api/comments", commentsHandler);
 app.all("/api/categories", categoriesHandler);
 app.all("/api/tags", tagsHandler);
 app.all("/api/ai/generate-blog", aiGenerateHandler);
+app.all("/api/ai/generate-blog-stream", aiGenerateStreamHandler);
 app.all("/api/analytics/track", analyticsTrackHandler);
 app.all("/api/analytics/stats", analyticsStatsHandler);
 
