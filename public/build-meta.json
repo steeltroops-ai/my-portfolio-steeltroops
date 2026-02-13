@@ -1,7 +1,8 @@
 {
-  "version": "2.0.2",
-  "buildId": "mllecdel-saz1v9",
-  "deployedAt": "2026-02-13T21:25:20.733Z",
-  "previousVersion": "2.0.1",
-  "daysSinceLastDeploy": 0
+  "version": "2.0.3",
+  "buildId": "mllg0zvi-19csed",
+  "deployedAt": "2026-02-13T22:12:29.214Z",
+  "previousVersion": "2.0.2",
+  "daysSinceLastDeploy": 0,
+  "env": "production"
 }
