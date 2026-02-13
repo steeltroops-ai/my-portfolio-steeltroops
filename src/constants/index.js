@@ -25,14 +25,14 @@ export const IMAGES = {
 export const PERSONAL = {
   name: "Mayank Pratap Singh",
   username: "@steeltroops",
-  tagline: "Builds Production Grade Systems.",
+  tagline1: "Builds Production Grade Systems.",
+  tagline2: "Software, Intelligence & Hardware.",
   role: "Full Stack, Robotics & ML Engineer",
   location: "India",
   university: "GLA University",
   degree: "B.Tech, Computer Science (AI & ML)",
   cgpa: "8.3/10",
 };
-
 
 // =====================================================
 // SOCIAL LINKS - All social media profiles
@@ -50,7 +50,7 @@ export const SOCIALS = {
 // =====================================================
 export const CONTACT = {
   email: "steeltroops.ai@gmail.com",
-  phoneNo: "+91 82734-83469",
+  phoneNo: "+91 not-available",
   address: "India",
 };
 

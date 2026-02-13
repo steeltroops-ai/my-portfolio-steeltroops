@@ -114,10 +114,7 @@ const Contact = () => {
   };
 
   return (
-    <section
-      id="contact"
-      className="pb-8 lg:pb-12 border-b border-neutral-800 scroll-mt-20"
-    >
+    <section className="pb-8 lg:pb-12 border-b border-neutral-800 scroll-mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         {/* Section Header - Responsive & Sleek */}
         <motion.h2
@@ -189,7 +186,7 @@ const Contact = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-neutral-900/50 border-neutral-700/50 focus:outline-none focus:border-purple-400 focus:bg-neutral-900/60 placeholder-neutral-600 text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-white/[0.02] border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.05] placeholder-neutral-600 text-sm sm:text-base"
                       placeholder="Your name"
                       disabled={isLoading}
                       required
@@ -215,7 +212,7 @@ const Contact = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-neutral-900/50 border-neutral-700/50 focus:outline-none focus:border-purple-400 focus:bg-neutral-900/60 placeholder-neutral-600 text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-white/[0.02] border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.05] placeholder-neutral-600 text-sm sm:text-base"
                       placeholder="your@email.com"
                       disabled={isLoading}
                       required
@@ -242,7 +239,7 @@ const Contact = () => {
                     name="subject"
                     value={formData.subject}
                     onChange={handleInputChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-neutral-900/50 border-neutral-700/50 focus:outline-none focus:border-purple-400 focus:bg-neutral-900/60 placeholder-neutral-600 text-sm sm:text-base"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-white/[0.02] border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.05] placeholder-neutral-600 text-sm sm:text-base"
                     placeholder="What's this about?"
                     disabled={isLoading}
                     required
@@ -268,7 +265,7 @@ const Contact = () => {
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
-                    className="w-full min-h-[160px] sm:min-h-[180px] md:min-h-[200px] lg:min-h-[220px] px-3 sm:px-4 py-2.5 sm:py-3 pb-10 transition-all duration-300 border rounded-lg bg-neutral-900/50 border-neutral-700/50 focus:outline-none focus:border-purple-400 focus:bg-neutral-900/60 text-white placeholder-neutral-600 resize-none text-sm sm:text-base"
+                    className="w-full min-h-[160px] sm:min-h-[180px] md:min-h-[200px] lg:min-h-[220px] px-3 sm:px-4 py-2.5 sm:py-3 pb-10 transition-all duration-300 border rounded-lg bg-white/[0.02] border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.05] text-white placeholder-neutral-600 resize-none text-sm sm:text-base"
                     placeholder={`Write your message here...
 • Interested in working together on a project?
 • Have questions about Robotics, AI/ML or Full Stack?

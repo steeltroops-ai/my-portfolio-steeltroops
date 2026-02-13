@@ -53,10 +53,7 @@ const headingVariants = {
 
 const About = () => {
   return (
-    <section
-      id="about"
-      className="pt-12 sm:pt-16 lg:pt-24 pb-12 sm:pb-16 lg:pb-20 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
-    >
+    <section className="pt-12 sm:pt-16 lg:pt-24 pb-12 sm:pb-16 lg:pb-20 border-b border-neutral-800 lg:mb-3 scroll-mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <motion.div
           variants={containerVariants}

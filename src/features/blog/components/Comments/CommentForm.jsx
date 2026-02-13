@@ -52,7 +52,7 @@ const CommentForm = ({ postId, onSuccess }) => {
         content: content.trim(),
         post_id: postId,
         author_name: "Anonymous",
-        author_email: "anonymous@example.com"
+        author_email: "anonymous@example.com",
       },
       {
         onSuccess: (result) => {
@@ -101,9 +101,7 @@ const CommentForm = ({ postId, onSuccess }) => {
           className="mb-3 p-2 bg-green-900/20 border border-green-700/30 rounded-lg flex items-center gap-2"
         >
           <FiCheck className="text-green-400 text-xs flex-shrink-0" />
-          <p className="text-green-300 text-xs">
-            Comment posted!
-          </p>
+          <p className="text-green-300 text-xs">Comment posted!</p>
         </motion.div>
       )}
 
@@ -120,8 +118,11 @@ const CommentForm = ({ postId, onSuccess }) => {
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className={`flex gap-3 transition-all duration-300 ease-in-out ${isFocused ? "items-start" : "items-center"
-          }`}>
+        <div
+          className={`flex gap-3 transition-all duration-300 ease-in-out ${
+            isFocused ? "items-start" : "items-center"
+          }`}
+        >
           {/* Avatar with user icon */}
           <div className="flex-shrink-0">
             <motion.div
@@ -142,22 +143,22 @@ const CommentForm = ({ postId, onSuccess }) => {
                 borderRadius: isFocused ? "0.5rem" : "9999px",
               }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className={`border backdrop-blur-[2px] shadow-lg ${errors.content
-                ? "border-red-500/50 bg-red-500/5"
-                : isFocused
-                  ? "border-white/20 bg-white/10"
-                  : "border-white/10 bg-white/5 hover:border-white/20"
-                }`}
+              className={`border backdrop-blur-[2px] shadow-lg ${
+                errors.content
+                  ? "border-red-500/50 bg-red-500/5"
+                  : isFocused
+                    ? "border-white/20 bg-white/10"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
+              }`}
             >
               <textarea
                 value={content}
                 onChange={handleContentChange}
                 onFocus={() => setIsFocused(true)}
                 rows={isFocused ? 3 : 1}
-                className={`w-full text-sm bg-transparent focus:outline-none transition-all duration-300 ease-in-out resize-none text-white placeholder:text-neutral-500 ${isFocused
-                  ? "px-3 py-2"
-                  : "px-4 py-2 h-10 leading-6"
-                  }`}
+                className={`w-full text-sm bg-transparent focus:outline-none transition-all duration-300 ease-in-out resize-none text-white placeholder:text-neutral-500 ${
+                  isFocused ? "px-3 py-2" : "px-4 py-2 h-10 leading-6"
+                }`}
                 placeholder="Add a comment..."
                 disabled={isLoading}
               />
@@ -186,12 +187,17 @@ const CommentForm = ({ postId, onSuccess }) => {
                     <motion.button
                       type="submit"
                       disabled={isLoading || !content.trim()}
-                      whileHover={{ scale: isLoading || !content.trim() ? 1 : 1.02 }}
-                      whileTap={{ scale: isLoading || !content.trim() ? 1 : 0.98 }}
-                      className={`px-4 py-1.5 text-xs rounded-lg font-medium transition-all border backdrop-blur-[2px] ${isLoading || !content.trim()
-                        ? "border-white/10 bg-white/5 text-neutral-500 cursor-not-allowed"
-                        : "border-cyan-400/30 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30"
-                        }`}
+                      whileHover={{
+                        scale: isLoading || !content.trim() ? 1 : 1.02,
+                      }}
+                      whileTap={{
+                        scale: isLoading || !content.trim() ? 1 : 0.98,
+                      }}
+                      className={`px-4 py-1.5 text-xs rounded-lg font-medium transition-all border backdrop-blur-[2px] ${
+                        isLoading || !content.trim()
+                          ? "border-white/10 bg-white/5 text-neutral-500 cursor-not-allowed"
+                          : "border-cyan-400/30 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30"
+                      }`}
                     >
                       {isLoading ? "Posting..." : "Comment"}
                     </motion.button>
@@ -206,7 +212,7 @@ const CommentForm = ({ postId, onSuccess }) => {
           </div>
         </div>
       </form>
-    </motion.div >
+    </motion.div>
   );
 };
 
@@ -216,4 +222,3 @@ CommentForm.propTypes = {
 };
 
 export default CommentForm;
-

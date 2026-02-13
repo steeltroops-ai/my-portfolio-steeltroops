@@ -174,7 +174,7 @@ const ExperienceCard = ({ experience, index, isLast }) => {
 
 const Experience = () => {
   return (
-    <div id="experience" className="border-b border-neutral-900 pb-24 lg:pb-32">
+    <section className="border-b border-neutral-900 pb-24 lg:pb-32">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <motion.h2
           whileInView={{ opacity: 1, y: 0 }}
@@ -196,7 +196,7 @@ const Experience = () => {
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

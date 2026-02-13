@@ -1,5 +1,6 @@
 import { HERO_CONTENT, PERSONAL, HIGHLIGHT_STATS, IMAGES } from "@/constants";
 import { m } from "framer-motion";
+import { scrollToElement } from "@/shared/utils/scrollHelper";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -109,12 +110,10 @@ const Hero = () => {
                   className="flex justify-center lg:justify-start w-full"
                 >
                   <m.div
-                    onClick={() =>
-                      document
-                        .getElementById("contact")
-                        ?.scrollIntoView({ behavior: "smooth" })
-                    }
-                    className="relative group cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => scrollToElement("contact", { offset: 80 })}
+                    className="relative group cursor-pointer touch-manipulation"
                   >
                     <div className="relative px-10 py-1 sm:px-14 sm:py-1.5 rounded-2xl overflow-hidden transition-all duration-700 bg-white/[0.02] border border-purple-400/50 ring-1 ring-white/10 flex flex-col items-center min-w-[220px] sm:min-w-[260px] group-hover:bg-purple-500/20 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)]">
                       <div className="absolute inset-0 bg-gradient-to-tr from-purple-400/5 via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />

@@ -239,28 +239,39 @@ OptimizedImage.propTypes = {
 
 export default OptimizedImage;
 
-// Utility component for blog post images
+// Utility component for blog post images with Premium Styling
 export const BlogImage = ({
   src,
   alt,
   caption,
   priority = false,
+  className = "",
   ...props
 }) => (
-  <figure className="my-6">
-    <OptimizedImage
-      src={src}
-      alt={alt}
-      className="w-full h-auto rounded-lg"
-      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 60vw"
-      priority={priority}
-      avif={true}
-      webp={true}
-      {...props}
-    />
-    {caption && (
-      <figcaption className="text-sm text-neutral-400 text-center mt-2">
-        {caption}
+  <figure className="my-10 group relative">
+    <div className="relative rounded-xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl transition-all duration-500 hover:border-white/20 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+      {/* Glossy Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 pointer-events-none" />
+
+      <OptimizedImage
+        src={src}
+        alt={alt}
+        className={`w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-[1.02] ${className}`}
+        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 85vw, 75vw"
+        priority={priority}
+        avif={true}
+        webp={true}
+        quality={85}
+        {...props}
+      />
+    </div>
+
+    {/* Cinematic Caption */}
+    {(caption || alt) && (
+      <figcaption className="mt-4 text-center">
+        <span className="inline-block px-4 py-1.5 rounded-full border border-white/5 bg-white/[0.02] backdrop-blur-sm text-xs sm:text-sm text-neutral-400 font-light tracking-wide">
+          {caption || alt}
+        </span>
       </figcaption>
     )}
   </figure>

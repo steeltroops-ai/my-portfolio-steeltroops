@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -22,14 +22,15 @@ import SocialLinks from "@/shared/components/ui/SocialLinks";
 import SEOHead from "@/shared/components/ui/SEOHead";
 import OptimizedImage from "@/shared/components/media/OptimizedImage";
 
-// Skeleton Loader for critical initial paint
-const BlogCardSkeleton = ({ view }) => (
+// Skeleton Loader for critical initial paint - Memoized for performance
+const BlogCardSkeleton = memo(({ view }) => (
   <div
     className={`relative overflow-hidden border rounded-xl border-white/5 bg-white/[0.02] ${
       view === "grid"
         ? "h-full flex flex-col"
         : "flex flex-col sm:flex-row h-[128px] sm:h-[154px]"
     }`}
+    style={{ contentVisibility: "auto" }}
   >
     <div
       className={`animate-pulse bg-white/5 ${
@@ -51,7 +52,7 @@ const BlogCardSkeleton = ({ view }) => (
       </div>
     </div>
   </div>
-);
+));
 
 const Blog = () => {
   const navigate = useNavigate();
@@ -103,7 +104,8 @@ const Blog = () => {
         : "Unable to load content"
       : "";
 
-  const handleTagToggle = (tag) => {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleTagToggle = useCallback((tag) => {
     const trimmedTag = tag.trim();
     setSelectedTags((prev) =>
       prev.includes(trimmedTag)
@@ -111,18 +113,21 @@ const Blog = () => {
         : [...prev, trimmedTag]
     );
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    refetch();
-  };
+  const handleSearchSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      setCurrentPage(1);
+      refetch();
+    },
+    [refetch]
+  );
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = useCallback((e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
-  };
+  }, []);
 
   // Prefetch next page for instant pagination
   useEffect(() => {
@@ -251,7 +256,7 @@ const Blog = () => {
       </div>
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         {/* Navigation */}
-        <nav className="relative flex items-center justify-between min-h-[5rem] mb-4 sm:mb-6 lg:mb-8 px-4 sm:px-0">
+        <nav className="relative flex items-center justify-between min-h-[5rem] mb-2 sm:mb-4 lg:mb-6 px-4 sm:px-0">
           <div className="flex items-center flex-shrink-0">
             <button
               onClick={() => navigate("/")}
@@ -277,7 +282,7 @@ const Blog = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-8"
+          className="mb-4 sm:mb-6 lg:mb-8"
         >
           <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 lg:gap-6 px-4 sm:px-0">
             {/* Search */}
@@ -517,6 +522,11 @@ const Blog = () => {
                             ? "h-full flex flex-col hover:-translate-y-1"
                             : "flex flex-col sm:flex-row"
                         }`}
+                        style={{
+                          contentVisibility: "auto",
+                          containIntrinsicSize:
+                            layoutView === "grid" ? "400px" : "154px",
+                        }}
                       >
                         {/* Premium Purple Fade & Liquid Accents */}
                         {layoutView === "grid" && (

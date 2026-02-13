@@ -167,4 +167,3 @@ CommentList.propTypes = {
 };
 
 export default CommentList;
-

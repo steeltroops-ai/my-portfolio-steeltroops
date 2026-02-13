@@ -1,4 +1,4 @@
-import { FiArrowUp, FiMail, FiMapPin } from "react-icons/fi";
+import { FiArrowUp, FiMail, FiMapPin, FiPhone } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import SocialLinks from "@/shared/components/ui/SocialLinks";
 import { PERSONAL, CONTACT, SOCIALS } from "@/constants";
@@ -13,44 +13,57 @@ const Footer = () => {
   return (
     <footer className="py-12 sm:py-16 border-t border-neutral-800">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Main Footer Grid - Stabilized Responsive Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-10 gap-x-4 md:gap-x-8 mb-12 items-start">
-          {/* Brand Column */}
-          <div className="text-center sm:text-left">
-            <h3 className="text-lg font-light text-white mb-2 tracking-tight">
+        {/* Main Footer Grid - Optimized & Responsive */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-x-8 mb-12 items-start">
+          {/* Brand Info - Left column */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <h3 className="text-lg font-normal text-white tracking-tight leading-none mb-1">
               {PERSONAL.name}
             </h3>
-            <p className="text-sm font-light text-neutral-400 leading-relaxed max-w-xs mx-auto sm:mx-0">
-              {PERSONAL.tagline}
-              <br />
-              <span className="text-white/70">{PERSONAL.role}</span>
+            <p className="text-sm font-light text-white/80 whitespace-nowrap">
+              {PERSONAL.role}
             </p>
+            <div className="flex flex-col items-center md:items-start">
+              <p className="text-xs font-light text-neutral-300 leading-tight">
+                {PERSONAL.tagline1}
+              </p>
+              <p className="text-xs font-light text-neutral-300 leading-tight">
+                {PERSONAL.tagline2}
+              </p>
+            </div>
           </div>
 
-          {/* Connect Column */}
-          <div className="text-center">
-            <h4 className="text-[10px] font-light text-neutral-500 uppercase tracking-[0.2em] mb-4">
+          {/* Connect Column - Center column */}
+          <div className="flex flex-col items-center border-y border-white/5 py-4 md:py-0 md:border-0 w-full">
+            <h4 className="text-[10px] font-medium text-neutral-500 uppercase tracking-[0.25em] mb-4">
               Connect
             </h4>
             <SocialLinks className="justify-center" />
           </div>
 
-          {/* Contact Column */}
-          <div className="text-center sm:text-right px-4 sm:px-0 mt-4 sm:mt-0 pt-8 sm:pt-0 border-t border-neutral-800/30 sm:border-0">
-            <h4 className="text-[10px] font-light text-neutral-500 uppercase tracking-[0.2em] mb-4">
+          {/* Contact Info - Right column (Synced with Brand) */}
+          <div className="flex flex-col items-center md:items-end text-center md:text-right">
+            <h4 className="text-lg font-normal text-neutral-400 tracking-tight leading-none mb-1">
               Get in Touch
             </h4>
-            <div className="space-y-3">
-              <a
-                href={`mailto:${CONTACT.email}`}
-                className="flex items-center justify-center sm:justify-end gap-2 text-sm font-light text-neutral-400 hover:text-white transition-colors duration-200"
-              >
-                <FiMail className="w-4 h-4" />
-                <span>{CONTACT.email}</span>
-              </a>
-              <div className="flex items-center justify-center sm:justify-end gap-2 text-sm font-light text-neutral-500">
-                <FiMapPin className="w-4 h-4 transition-colors group-hover:text-purple-400" />
-                <span title="Location">{PERSONAL.location}</span>
+
+            <a
+              href={`mailto:${CONTACT.email}`}
+              className="text-sm font-light text-white/80 hover:text-purple-300 transition-colors duration-200 flex items-center gap-2 group/email"
+            >
+              <FiMail className="w-3.5 h-3.5 text-neutral-500 group-hover/email:text-purple-400 transition-all" />
+              <span>{CONTACT.email}</span>
+            </a>
+
+            <div className="flex flex-col items-center md:items-end">
+              <div className="text-xs font-light text-neutral-300 flex items-center gap-2">
+                <FiPhone className="w-3 h-3 text-neutral-500" />
+                <span>{CONTACT.phoneNo}</span>
+              </div>
+
+              <div className="text-xs font-light text-neutral-300 flex items-center gap-2">
+                <FiMapPin className="w-3 h-3 text-neutral-500" />
+                <span>{PERSONAL.location}</span>
               </div>
             </div>
           </div>

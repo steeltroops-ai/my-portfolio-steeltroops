@@ -479,10 +479,7 @@ const Projects = () => {
   };
 
   return (
-    <section
-      id="projects"
-      className="pb-16 sm:pb-24 lg:pb-32 border-b border-neutral-800 scroll-mt-20"
-    >
+    <section className="pb-16 sm:pb-24 lg:pb-32 border-b border-neutral-800 scroll-mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <h2 className="my-12 sm:my-16 lg:my-24 section-title">
           My <span>Projects</span>

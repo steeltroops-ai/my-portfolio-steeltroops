@@ -307,7 +307,6 @@ const Technologies = () => {
 
   return (
     <section
-      id="technologies"
       className="pb-8 sm:pb-12 lg:pb-24 border-b border-neutral-800 scroll-mt-20"
       aria-labelledby="technologies-heading"
     >
