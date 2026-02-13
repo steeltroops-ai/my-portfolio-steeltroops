@@ -46,7 +46,7 @@ const Hero = () => {
       className="pb-8 sm:pb-12 lg:pb-4 border-b border-neutral-800 lg:mb-3 scroll-mt-20"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl lg:py-16">
-        <div className="flex flex-wrap items-center lg:items-center">
+        <div className="flex flex-wrap items-center lg:items-start">
           <m.div
             variants={containerVariants}
             initial="hidden"
@@ -133,7 +133,7 @@ const Hero = () => {
             </div>
           </m.div>
           <div className="w-full lg:w-1/2 lg:pl-8 mt-8 sm:mt-10 lg:mt-0">
-            <div className="flex justify-center lg:justify-end">
+            <div className="flex justify-center lg:justify-end lg:mt-[1.5rem]">
               <m.img
                 variants={imageVariants}
                 initial="hidden"

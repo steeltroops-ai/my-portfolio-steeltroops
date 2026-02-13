@@ -7,14 +7,14 @@ import blackhole from "@/assets/projects/blackhole.jpg";
 import blackhole1 from "@/assets/projects/blackhole1.jpg";
 
 // Brand & Profile Images
-import logo from "@/assets/mps.png";
+import logo from "@/assets/logo.webp";
 import about from "@/assets/about.jpg";
-import hodakabout from "@/assets/hodakabout.jpg";
+import hodakabout from "@/assets/about1.webp";
 
 export const IMAGES = {
   logo,
-  profile: "/hodakaprofile.jpg", // Static path for immediate LCP discoverability (matches index.html preload)
-  profileMobile: "/hodakaprofile_mobile.jpg",
+  profile: "/profile.webp", // Static path for immediate LCP discoverability (matches index.html preload)
+  profileMobile: "/profile.webp",
   about,
   aboutAlt: hodakabout,
 };
