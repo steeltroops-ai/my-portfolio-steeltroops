@@ -1,10 +1,10 @@
 # Mayank's Portfolio
 
-[![Status](https://img.shields.io/badge/Status-Active-brightgreen)](https://github.com/steeltroops/my-portfolio-steeltroops)
+[![Status](https://img.shields.io/badge/Status-Active-brightgreen)](https://github.com/steeltroops-ai/my-portfolio-steeltroops)
 [![Deployment](https://img.shields.io/badge/Deployment-Vercel-black?logo=vercel)](https://vercel.com)
-[![Version](https://img.shields.io/badge/Version-2.0.2-blue)](https://github.com/steeltroops/my-portfolio-steeltroops)
-[![Build](https://img.shields.io/github/actions/workflow/status/steeltroops/my-portfolio-steeltroops/quality-checks.yml?branch=main&label=Build)](https://github.com/steeltroops/my-portfolio-steeltroops/actions)
-[![License](https://img.shields.io/badge/License-Private-red)](#)
+[![Version](https://img.shields.io/badge/Version-2.0.3-blue)](https://github.com/steeltroops-ai/my-portfolio-steeltroops)
+[![Build](https://img.shields.io/github/actions/workflow/status/steeltroops-ai/my-portfolio-steeltroops/quality-checks.yml?label=Build)](https://github.com/steeltroops-ai/my-portfolio-steeltroops/actions)
+[![License](https://img.shields.io/badge/License-Private-red)](./LICENSE)
 
 A modern, dynamic personal portfolio website featuring a blog, admin dashboard, and AI integration.
 
@@ -38,7 +38,7 @@ A modern, dynamic personal portfolio website featuring a blog, admin dashboard, 
 1. **Clone repository**
 
    ```bash
-   git clone https://github.com/steeltroops/my-portfolio-steeltroops.git
+   git clone https://github.com/steeltroops-ai/my-portfolio-steeltroops.git
    cd my-portfolio-steeltroops
    ```
 
