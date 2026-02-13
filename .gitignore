@@ -25,7 +25,6 @@ dist-ssr
 *.sw?
 .augment/
 .augment/rules/
-docs/
 
 
 # Netlify

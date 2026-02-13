@@ -1,0 +1,8 @@
+# Check if any codebase files changed compared to main
+# We skip the heavy build if only docs or CI configs are updated
+if git diff --name-only origin/main HEAD 2>/dev/null | grep -qvE "^(docs/|.*\.md$|\.github/|\.husky/|\.vscode/|public/build-meta\.json|package\.json|bun\.lock)"; then
+  echo "🚀 Codebase changes detected. Running build integrity check..."
+  bun run build
+else
+  echo "📄 Documentation/Metadata-only changes. Skipping pre-push build."
+fi

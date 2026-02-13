@@ -4,6 +4,13 @@ on:
   push:
     branches-ignore:
       - main
+    paths-ignore:
+      - "**/README.md"
+      - "docs/**"
+      - "CACHING.md"
+      - ".husky/**"
+      - ".vscode/**"
+      - "public/build-meta.json"
 
 jobs:
   validate_and_merge:

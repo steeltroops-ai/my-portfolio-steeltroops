@@ -74,32 +74,41 @@ bun run dev
 - `bun run lint`: Lint code.
 - `bun run init-admin`: Init database admin.
 
+## System Intelligence & Documentation
+
+For a deep-dive into the technical foundations and architectural decisions powering this platform, refer to our specialized documentation:
+
+- **[Technical Architecture](docs/ARCHITECTURE.md)**: End-to-end functional flows, message lifecycles, and color-coded system mappings.
+- **[Full-Stack System Design](docs/SYSTEM_DESIGN.md)**: Component hierarchy, database entity relationships, and infrastructure orchestration.
+- **[AI Intelligence Engine](docs/AI_SYSTEM_DESIGN.md)**: Philosophical design of "May OS", SSE streaming implementation, and persona-driven content generation.
+- **[Engineering Log & Standards](docs/ENGINEERING_LOG.md)**: Performance optimization strategies (SWR, Prefetching, Image pipeline) and current technical roadmap.
+
 ## CI/CD Workflow (Automated)
 
 This project uses an intelligent "Zero-Friction" CI/CD pipeline:
 
-1.  **Develop on a Branch**: Create a feature branch (e.g., `dev/header-fix`).
-2.  **Local Protection**: Husky runs `pre-push` build checks. You cannot push broken code.
-3.  **Ghost Merge**: When you push to your branch, GitHub Actions validates the build. If successful, it **automatically merges** the branch into `main`.
-4.  **Automatic Release**: Once merged, the system bumps version numbers and deploys to Vercel instantly.
+1. **Develop on a Branch**: Create a feature branch (e.g., `dev/header-fix`).
+2. **Local Protection**: Husky runs `pre-push` build checks. You cannot push broken code.
+3. **Ghost Merge**: When you push to your branch, GitHub Actions validates the build. If successful, it **automatically merges** the branch into `main`.
+4. **Automatic Release**: Once merged, the system bumps version numbers and deploys to Vercel instantly.
 
 ## Project Structure
 
 ```text
 my-portfolio-steeltroops/
-├── api/                # Serverless functions
-├── docs/               # Documentation
-├── public/             # Static assets
-├── scripts/            # DB utilities
-├── server/             # Local Express server
-├── src/
-│   ├── components/     # React components
-│   ├── hooks/          # Custom hooks
-│   ├── pages/          # Application routes
-│   └── styles/         # Global styles
-├── .env.example        # Env template
-├── package.json        # Manifest
-└── vite.config.js      # Vite config
+├── api/                # Vercel Serverless (Intelligence & Logic)
+├── docs/               # System Intelligence & Blueprint Repository
+│   ├── archive/        # Historical migrations & logs
+│   └── database/       # SQL Schemas & Database definitions
+├── scripts/            # Automation (Versioning, Sitemaps, Gatekeepers)
+├── server/             # Local API Development Environment
+├── src/                # Frontend Application (React 19)
+│   ├── features/       # Domain-driven modules (Admin, Blog, Portfolio)
+│   ├── shared/         # Global Layouts, UI Kits, and Contexts
+│   └── lib/            # Business Logic, Cache Managers, and Adapters
+├── public/             # PWA Assets, Webmanifests & Build Metadata
+├── .github/            # GitHub Actions (CI/CD Quality Gates)
+└── vercel.json         # Security Headers, Rewrites & Gatekeepers
 ```
 
 ---
