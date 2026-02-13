@@ -1,53 +1,128 @@
-/**
- * Self-Destructing Service Worker
- * ================================
- * This file replaces the old caching service worker.
- *
- * Purpose: If ANY user's device still has the old sw.js cached and
- * registered, this version will:
- *   1. Clear all CacheStorage buckets
- *   2. Unregister itself
- *   3. Force-reload all client pages so they get fresh content
- *
- * After this runs once, the SW is gone forever and will never
- * interfere with cache headers or deployments again.
- *
- * The app now relies on:
- *   - Vite's content-hashed filenames for immutable asset caching
- *   - Vercel's CDN headers for HTTP caching
- *   - The cacheManager.js for localStorage-based data caching
- *   - React Query for in-memory data caching
- */
+const CACHE_NAME = "steeltroops-v2-hybrid";
+const OFFLINE_URL = "/offline.html";
 
-// Skip waiting immediately -- take over from any old SW
-self.addEventListener("install", () => {
-  self.skipWaiting();
-});
+// 1. PRECACHE CRITICAL ASSETS (Offline Page UI)
+const PRECACHE_ASSETS = [
+  OFFLINE_URL,
+  "/favicon-32x32.png",
+  "/favicon.webp",
+  "/logo.webp", // Re-adding carefully - logic inside install handles failure gracefully if missing
+];
 
-self.addEventListener("activate", (event) => {
+// 2. INSTALL PHASE
+self.addEventListener("install", (event) => {
+  self.skipWaiting(); // Activate immediately
   event.waitUntil(
-    (async () => {
-      // 1. Nuke all CacheStorage buckets
-      const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map((name) => caches.delete(name)));
-
-      // 2. Take control of all clients
-      await self.clients.claim();
-
-      // 3. Tell all open tabs to reload
-      const clients = await self.clients.matchAll({ type: "window" });
-      clients.forEach((client) => {
-        client.postMessage({ type: "SW_CACHE_CLEARED" });
-      });
-
-      // 4. Unregister self -- this SW will never run again
-      await self.registration.unregister();
-    })()
+    caches.open(CACHE_NAME).then((cache) => {
+      // We use addAll but catch individual failures so one missing file doesn't break the whole install
+      return Promise.all(
+        PRECACHE_ASSETS.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn("Failed to precache:", url, err);
+          })
+        )
+      );
+    })
   );
 });
 
-// Pass through all fetch requests -- no caching
-self.addEventListener("fetch", () => {
-  // Do nothing -- let the browser handle it normally
-  return;
+// 3. ACTIVATE PHASE (Cleanup Old Caches)
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// 4. FETCH STRATEGY
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // A. NAVIGATION REQUESTS (HTML Pages)
+  // Strategy: Network First -> Cache Fallback -> Offline Page
+  // Goal: Show fresh content if online. Show cached content if offline. Only show Offline Page if neither exist.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          // Verify valid response
+          if (
+            !networkResponse ||
+            networkResponse.status !== 200 ||
+            networkResponse.type !== "basic"
+          ) {
+            return networkResponse;
+          }
+          // Clone and Cache the fresh page
+          constresponseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+          return networkResponse;
+        })
+        .catch(() => {
+          // NETWORK FAILED - Check Cache
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse; // Serve cached page (Functional Offline)
+            }
+            // No cache? Serve Custom Offline Page
+            return caches.match(OFFLINE_URL);
+          });
+        })
+    );
+    return;
+  }
+
+  // B. STATIC ASSETS (JS, CSS, Fonts, Images)
+  // Strategy: Cache First (Performance & Battery) -> Network Fallback
+  // Once an asset is cached, we use it. We assume hashed filenames (Vite) handle invalidation.
+  if (
+    request.destination === "style" ||
+    request.destination === "script" ||
+    request.destination === "image" ||
+    request.destination === "font" ||
+    url.pathname.startsWith("/assets/")
+  ) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse; // Return fast from cache
+        }
+
+        // Not in cache? Fetch and Cache
+        return fetch(request).then((networkResponse) => {
+          // Don't cache bad responses
+          if (
+            !networkResponse ||
+            networkResponse.status !== 200 ||
+            networkResponse.type === "error"
+          ) {
+            return networkResponse;
+          }
+
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // C. API / OTHER
+  // Strategy: Network Only (Don't cache dynamic API calls unless specific requirement)
+  // We leave this to default browser behavior or specific fetch handlers in app code
 });

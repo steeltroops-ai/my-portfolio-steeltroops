@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>System Offline | Steeltroops</title>
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" />
+    <style>
+      /* Reset & Base */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg-black: #000000;
+        --tex-primary: #ffffff;
+        --text-secondary: #a3a3a3;
+        --purple-500-20: rgba(168, 85, 247, 0.2);
+        --purple-500-30: rgba(168, 85, 247, 0.3);
+        --purple-300: #d8b4fe;
+        --purple-400-50: rgba(192, 132, 252, 0.5);
+        --neutral-800-50: rgba(38, 38, 38, 0.5);
+        --neutral-300: #d4d4d4;
+        --neutral-700-50: rgba(64, 64, 64, 0.5);
+        --neutral-900-50: rgba(23, 23, 23, 0.5);
+        --white-10: rgba(255, 255, 255, 0.1);
+        --red-400: #f87171;
+        --red-500-20: rgba(239, 68, 68, 0.2);
+      }
+
+      body {
+        background-color: var(--bg-black);
+        color: var(--text-secondary);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* =========================================
+         Background & Environment (Matching ErrorBoundary)
+         ========================================= */
+      .bg-fixed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background-color: #000;
+      }
+
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(
+            to right,
+            rgba(79, 79, 79, 0.18) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(128, 128, 128, 0.04) 1px,
+            transparent 1px
+          );
+        background-size: 14px 24px;
+      }
+
+      .bg-glow {
+        position: absolute;
+        top: -10%;
+        left: 0;
+        right: 0;
+        height: 1000px;
+        width: 1000px;
+        margin: 0 auto;
+        border-radius: 9999px;
+        background: radial-gradient(
+          circle closest-side,
+          rgba(251, 251, 251, 0.15),
+          rgba(0, 0, 0, 0)
+        );
+        transform: translateZ(0);
+      }
+
+      /* =========================================
+         Main Content Container
+         ========================================= */
+      .container {
+        width: 100%;
+        max-width: 80rem; /* max-w-7xl */
+        padding: 3rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        z-index: 10;
+      }
+
+      .content-wrapper {
+        max-width: 42rem; /* max-w-2xl */
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 2.5rem;
+      }
+
+      /* =========================================
+         Typography (Exact Match)
+         ========================================= */
+      .header-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      h1 {
+        font-size: clamp(3.75rem, 8vw, 6rem); /* text-6xl -> text-8xl */
+        font-weight: 700;
+        line-height: 1;
+        margin: 0;
+        /* Gradient Text */
+        background: linear-gradient(
+          to right,
+          #f87171,
+          #a855f7,
+          #f472b6
+        ); /* red-400 via purple-500 to pink-400 */
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .error-code {
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: clamp(1.875rem, 4vw, 3rem); /* text-3xl -> text-5xl */
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.2);
+        letter-spacing: 0.15em;
+        line-height: 1;
+      }
+
+      .message-box h2 {
+        color: white;
+        font-size: clamp(1.25rem, 3vw, 1.875rem); /* text-xl -> text-3xl */
+        font-weight: 300;
+        margin-bottom: 0.75rem;
+        line-height: 1.25;
+      }
+
+      .message-box p {
+        color: var(--neutral-300);
+        font-size: 1rem;
+        line-height: 1.625;
+        max-width: 32rem;
+        margin: 0 auto;
+        opacity: 0.8;
+      }
+
+      /* =========================================
+         Buttons (Exact Tailwind Reproduction)
+         ========================================= */
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      @media (min-width: 640px) {
+        .action-buttons {
+          flex-direction: row;
+        }
+      }
+
+      .btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        width: 100%;
+        max-width: 12rem;
+        padding: 0.625rem 0;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        letter-spacing: 0.025em;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        backdrop-filter: blur(12px);
+        text-decoration: none;
+        user-select: none;
+      }
+
+      .btn-primary {
+        background-color: var(--purple-500-20);
+        color: var(--purple-300);
+        border: 1px solid var(--purple-400-50);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+      .btn-primary:hover {
+        background-color: var(--purple-500-30);
+        border-color: rgba(192, 132, 252, 0.7);
+      }
+
+      .btn-secondary {
+        background-color: var(--neutral-800-50);
+        color: var(--neutral-300);
+        border: 1px solid var(--neutral-700-50);
+      }
+      .btn-secondary:hover {
+        background-color: rgba(64, 64, 64, 0.5);
+        border-color: rgba(82, 82, 82, 0.5);
+      }
+
+      /* Icons */
+      .icon {
+        width: 1rem;
+        height: 1rem;
+        fill: currentColor;
+      }
+      .icon-stroke {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* =========================================
+         Diagnostics Panel (Forensic Details)
+         ========================================= */
+      .diagnostics-toggle {
+        margin-top: 2rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #737373; /* neutral-500 */
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .diagnostics-toggle:hover {
+        color: var(--neutral-300);
+      }
+
+      .diagnostics-panel {
+        display: none; /* Hidden by default */
+        margin-top: 1.5rem;
+        width: 100%;
+        text-align: left;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
+      .diagnostics-panel.open {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .terminal-window {
+        background-color: rgba(23, 23, 23, 0.5); /* neutral-900/50 */
+        border: 1px solid var(--white-10);
+        border-radius: 1rem;
+        backdrop-filter: blur(16px);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .terminal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 1rem;
+        background-color: rgba(23, 23, 23, 0.9);
+        border-bottom: 1px solid var(--white-10);
+      }
+
+      .terminal-dots {
+        display: flex;
+        gap: 0.375rem;
+      }
+      .dot {
+        width: 0.625rem;
+        height: 0.625rem;
+        border-radius: 50%;
+      }
+      .dot-red {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
+      .dot-gray {
+        background: rgba(64, 64, 64, 0.4);
+      }
+
+      .terminal-status {
+        font-family: ui-monospace, monospace;
+        font-size: 0.625rem;
+        color: rgba(248, 113, 113, 0.8);
+        font-weight: 500;
+        margin-left: 0.5rem;
+      }
+
+      .terminal-body {
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: ui-monospace, monospace;
+        font-size: 0.75rem;
+        color: var(--neutral-300);
+      }
+
+      .log-line {
+        margin-bottom: 0.25rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+      .log-time {
+        color: #525252;
+        flex-shrink: 0;
+      }
+      .log-type {
+        text-transform: uppercase;
+        width: 40px;
+      }
+      .type-info {
+        color: #60a5fa;
+      }
+      .type-warn {
+        color: #facc15;
+      }
+      .type-err {
+        color: #f87171;
+      }
+      .log-msg {
+        color: #d4d4d4;
+      }
+
+      .blink {
+        animation: blink 1s infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      .spin {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Footer */
+      .footer-msg {
+        position: absolute;
+        bottom: 2rem;
+        font-size: 0.625rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #525252;
+        text-align: center;
+        width: 100%;
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Background Layers -->
+    <div class="bg-fixed">
+      <div class="bg-grid"></div>
+      <div class="bg-glow"></div>
+    </div>
+
+    <div class="container">
+      <div class="content-wrapper">
+        <!-- Header -->
+        <div class="header-group">
+          <h1>OFFLINE</h1>
+          <div class="error-code">NO SIGNAL</div>
+        </div>
+
+        <!-- Message -->
+        <div class="message-box">
+          <h2>Connection Lost</h2>
+          <p>
+            The neural link to the server has been severed. Please check your
+            signal reception to re-establish the uplink.
+          </p>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-buttons">
+          <button
+            id="btn-reconnect"
+            class="btn btn-primary"
+            onclick="attemptReconnect()"
+          >
+            <svg class="icon icon-stroke" id="icon-refresh" viewBox="0 0 24 24">
+              <path
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
+            </svg>
+            <span id="label-reconnect">Reconnect</span>
+          </button>
+
+          <button class="btn btn-secondary" onclick="toggleDiagnostics()">
+            <svg class="icon icon-stroke" viewBox="0 0 24 24">
+              <path
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            <span>Diagnostics</span>
+          </button>
+        </div>
+
+        <!-- Diagnostics Panel -->
+        <div id="diagnostics-panel" class="diagnostics-panel">
+          <div class="terminal-window">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <div class="dot dot-red"></div>
+                <div class="dot dot-gray"></div>
+                <div class="dot dot-gray"></div>
+              </div>
+              <div class="terminal-status">DIAGNOSTIC PROTOCOL</div>
+              <div></div>
+            </div>
+            <div class="terminal-body" id="terminal-content">
+              <div class="log-line">
+                <span class="log-time">[SYSTEM]</span>
+                <span class="log-msg"
+                  >Ready to initialize network diagnostics...</span
+                >
+              </div>
+              <!-- Logs will appear here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-msg">
+      System Offline Protocol Initiated. Integrity Stable.
+    </div>
+
+    <script>
+      let isRunning = false;
+
+      // 1. Reconnect Logic (Improved)
+      async function attemptReconnect() {
+        const btn = document.getElementById("btn-reconnect");
+        const icon = document.getElementById("icon-refresh");
+        const label = document.getElementById("label-reconnect");
+
+        // UI Loading State
+        icon.classList.add("spin");
+        label.textContent = "Pinging...";
+        btn.style.opacity = "0.7";
+
+        try {
+          // Attempt to fetch favicon as a "ping" to the server (cache-busted)
+          const response = await fetch(
+            "/favicon-32x32.png?t=" + new Date().getTime(),
+            { method: "HEAD", cache: "no-store" }
+          );
+
+          if (response.ok || navigator.onLine) {
+            label.textContent = "Signal Found";
+            icon.classList.remove("spin");
+            // Success! Reload.
+            setTimeout(() => window.location.reload(), 500);
+          } else {
+            throw new Error("Unreachable");
+          }
+        } catch (e) {
+          // Fail State
+          setTimeout(() => {
+            icon.classList.remove("spin");
+            label.textContent = "Retry Failed";
+            setTimeout(() => {
+              label.textContent = "Reconnect";
+              btn.style.opacity = "1";
+            }, 1500);
+          }, 800);
+        }
+      }
+
+      // 2. Diagnostics Logic (Refined)
+      function toggleDiagnostics() {
+        const panel = document.getElementById("diagnostics-panel");
+        const isOpen = panel.classList.contains("open");
+
+        if (isOpen) {
+          panel.classList.remove("open");
+        } else {
+          panel.classList.add("open");
+          if (!isRunning) runDiagnosticsSequence();
+        }
+      }
+
+      function log(type, msg) {
+        const term = document.getElementById("terminal-content");
+        const line = document.createElement("div");
+        line.className = "log-line";
+        const time = new Date().toLocaleTimeString("en-US", { hour12: false });
+
+        let typeHtml = "";
+        if (type === "INFO")
+          typeHtml = `<span class="log-type type-info">INFO</span>`;
+        if (type === "WARN")
+          typeHtml = `<span class="log-type type-warn">WARN</span>`;
+        if (type === "ERR")
+          typeHtml = `<span class="log-type type-err">ERR</span>`;
+
+        line.innerHTML = `<span class="log-time">[${time}]</span>${typeHtml}<span class="log-msg">${msg}</span>`;
+        term.appendChild(line);
+        term.scrollTop = term.scrollHeight;
+      }
+
+      async function runDiagnosticsSequence() {
+        isRunning = true;
+        const term = document.getElementById("terminal-content");
+        term.innerHTML = ""; // clear
+
+        const steps = [
+          {
+            t: "INFO",
+            m: "Initializing Network Diagnostic Tool v2.4.0",
+            d: 200,
+          },
+          { t: "INFO", m: "Checking local interface (wlan0)...", d: 800 },
+          { t: "INFO", m: "Local interface: UP", d: 1200 },
+          { t: "INFO", m: "Gateway ping (192.168.1.1)...", d: 1800 },
+          { t: "INFO", m: "Gateway latency: 3ms", d: 2200 },
+          { t: "INFO", m: "Resolving host steeltroops.vercel.app...", d: 3000 },
+          { t: "ERR", m: "DNS Resolution Failed: TIMEOUT", d: 4000 },
+          { t: "WARN", m: "Packet Loss: 100%", d: 4500 },
+          { t: "ERR", m: "External Uplink: DOWN", d: 5000 },
+          {
+            t: "INFO",
+            m: "Recommendation: Check device wi-fi or modem.",
+            d: 5500,
+          },
+          { t: "INFO", m: "Waiting for automatic reconnection...", d: 6000 },
+        ];
+
+        for (const step of steps) {
+          await new Promise((r) =>
+            setTimeout(r, step.d - (steps[steps.indexOf(step) - 1]?.d || 0))
+          );
+          log(step.t, step.m);
+        }
+        isRunning = false;
+      }
+
+      // 3. Auto-Online Listerner (No Auto-Reload Loop)
+      window.addEventListener("online", () => {
+        const term = document.getElementById("terminal-content");
+        if (term) {
+          log("INFO", "SIGNAL RESTORED. RELOADING...");
+        }
+        document.getElementById("label-reconnect").textContent = "Restoring...";
+        setTimeout(() => window.location.reload(), 1500);
+      });
+    </script>
+  </body>
+</html>
