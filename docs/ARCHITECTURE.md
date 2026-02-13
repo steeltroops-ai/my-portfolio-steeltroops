@@ -1,12 +1,12 @@
-# Portfolio Platform: Technical Architecture
+# Portfolio: Technical Architecture
 
-This document provides the definitive architectural blueprint for the Portfolio Platform, detailing the integration of **Autonomous AI Intelligence**, **Cloud Infrastructure**, and **DevOps Automation**.
+This document details the architectural blueprint of the Portfolio Platform, including AI integration, cloud infrastructure, and automation workflows.
 
 ---
 
-## 1. High-Performance Tech Stack (Free-Tier Optimized)
+## 1. Technical Stack
 
-The platform is engineered to deliver a premium, high-speed experience while operating entirely within the boundaries of a free-tier ecosystem.
+The platform is optimized for performance within a serverless ecosystem.
 
 | Component            | Technology               | Service        | Key Metric                               |
 | :------------------- | :----------------------- | :------------- | :--------------------------------------- |
@@ -19,9 +19,9 @@ The platform is engineered to deliver a premium, high-speed experience while ope
 
 ---
 
-## 2. Blueprint: Full Project Structure & Geometry
+## 2. Project Structure
 
-The codebase is engineered with a **Domain-Driven Architecture**, strictly isolating the high-security Admin Intelligence from the public-facing portfolio assets.
+The codebase follows a domain-driven architectural pattern to isolate administrative logic from public assets.
 
 ```text
 my-portfolio-steeltroops/
@@ -83,14 +83,14 @@ my-portfolio-steeltroops/
 
 ---
 
-## 3. Intelligence Engine: AI Content Generation
+## 3. AI Generation Engine
 
-The system utilizes a specialized **May OS** persona, optimizing for deep insight and systems-thinking rather than generic SEO.
+The system utilizes a specialized persona configuration optimized for high-density information synthesis.
 
-### 3.1 Streaming API Interface
+### 3.1 Streaming Interface
 
 **Endpoint**: `POST /api/ai/generate-blog-stream`  
-**Description**: Initiates a multi-stage SSE (Server-Sent Events) pipeline that streams the blog structure and content word-by-word.
+**Description**: Triggers a multi-stage SSE pipeline for real-time content transmission.
 
 **Request Payload:**
 
@@ -115,9 +115,9 @@ The system utilizes a specialized **May OS** persona, optimizing for deep insigh
 
 ---
 
-## 4. Smart Pulse CI/CD Filtering
+## 4. CI/CD Operations
 
-The platform implements **Intelligent Deployment Filtering** to protect build minutes and maintain release integrity.
+The platform utilizes automated deployment filtering to optimize build cycles and maintain environment integrity.
 
 ### 4.1 Implementation Logic
 
@@ -128,7 +128,7 @@ The platform implements **Intelligent Deployment Filtering** to protect build mi
 
 ---
 
-## 5. PWA & Offline Strategy
+## 5. Resilience & PWA Strategy
 
 A custom Service Worker (`sw.js`) provides a resilient offline strategy:
 
@@ -138,7 +138,7 @@ A custom Service Worker (`sw.js`) provides a resilient offline strategy:
 
 ---
 
-## Free Services Summary
+## 6. Service Infrastructure
 
 | Service            | Use For        | Free Tier        |
 | ------------------ | -------------- | ---------------- |
@@ -152,9 +152,9 @@ A custom Service Worker (`sw.js`) provides a resilient offline strategy:
 
 ---
 
-## Technical Functional Architecture (End-to-End)
+## 7. Functional Architecture (End-to-End)
 
-This diagram details how the application's features interact from the client to the database and AI providers.
+This diagram details system interactions across the client, backend, and integrated services.
 
 ```mermaid
 graph TB
@@ -274,7 +274,7 @@ graph TB
 
 ---
 
-## 6. Environment & Prerequisites
+## 8. Environment Configuration
 
 ### 6.1 Configuration (.env)
 
@@ -294,12 +294,12 @@ JWT_SECRET=your_ultra_secure_secret
 
 ### 6.2 Setup
 
-1. **Provision Neon**: Create a project and run SQL schemas found in `docs/database/`.
-2. **Install**: Run `bun install`.
-3. **Environment**: Sync `.env` with the keys above.
-4. **Dev Mode**: Run `bun run dev` to start the frontend and local API concurrently.
+1. **Provision Neon**: Execute SQL schemas in `docs/database/`.
+2. **Installation**: Execute `bun install`.
+3. **Environment**: Configure `.env` using the specifications above.
+4. **Development**: Execute `bun run dev` to initialize local services.
 
-## 7. Performance Standards
+## 9. Performance Standards
 
 - **LCP Optimization**: `vite-imagetools` generates multi-resolution, modern `.webp` formats at build time.
 - **State Efficiency**: React Query provides Stale-While-Revalidate (SWR) caching with 0ms perceived latency for returning users.
