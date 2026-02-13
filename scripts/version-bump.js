@@ -62,11 +62,11 @@ function main() {
   const gap = daysSince(lastDeployDate);
   const forceArg = process.argv[2]; // --major, --minor, --patch
 
-  // ENVIRONMENT CHECK: Only bump version in production
-  // VERCEL_ENV is set by Vercel. NODE_ENV is standard.
+  // ENVIRONMENT CHECK: Only bump version in production or if forced (CI/CD)
   const isProduction =
     process.env.VERCEL_ENV === "production" ||
-    process.env.NODE_ENV === "production";
+    process.env.NODE_ENV === "production" ||
+    process.env.FORCE_VERSION_BUMP === "true";
 
   if (!isProduction && !forceArg) {
     console.log("\n  [DEV MODE] Skipping Version Bump (Local Build)");
