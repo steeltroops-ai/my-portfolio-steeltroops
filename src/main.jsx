@@ -40,13 +40,25 @@ window.addEventListener("unhandledrejection", (event) => {
 // Fix for "This document requires 'TrustedHTML' assignment" error is now handled in index.html
 // to ensure it runs before any bundled code starts.
 
+// Listen for self-destructing service worker's cache clear signal
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type === "SW_CACHE_CLEARED") {
+      console.log(
+        "Service worker caches cleared -- reloading for fresh content."
+      );
+      window.location.reload();
+    }
+  });
+}
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 3 * 60 * 1000, // 3 minutes (aligned with cacheManager TTL)
       gcTime: 10 * 60 * 1000, // 10 minutes
     },
     mutations: {

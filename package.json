@@ -1,14 +1,15 @@
 {
   "name": "my-portfolio-steeltroops",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"bun run dev:api\" \"bun run dev:vite\"",
     "dev:vite": "vite --host",
     "dev:api": "bun --watch server/local-api.js",
     "dev:vercel": "vercel dev",
-    "build": "bun run sitemap && vite build",
+    "version-bump": "node scripts/version-bump.js",
+    "build": "bun run version-bump && bun run sitemap && vite build",
     "preview": "vite preview",
     "lint": "bunx eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "init-admin": "node scripts/init-admin.js",
