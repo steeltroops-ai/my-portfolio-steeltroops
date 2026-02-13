@@ -50,8 +50,8 @@ const SEOHead = ({
         content="vycsFH0oxZh3hYxinQ1JGOghyPymDAt4tkDFdKk-V7M"
       />
       <link rel="canonical" href={canonicalUrl} />
-      <link rel="icon" type="image/webp" href={IMAGES.favicon} />
-      <link rel="apple-touch-icon" href={IMAGES.favicon} />
+      <link rel="icon" type="image/png" href={IMAGES.favicon} />
+      <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
       {/* Open Graph Meta Tags */}
       <meta property="og:title" content={fullTitle} />
