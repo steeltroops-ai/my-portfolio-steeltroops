@@ -1,5 +1,11 @@
 # Mayank's Portfolio
 
+[![Status](https://img.shields.io/badge/Status-Active-brightgreen)](https://github.com/steeltroops/my-portfolio-steeltroops)
+[![Deployment](https://img.shields.io/badge/Deployment-Vercel-black?logo=vercel)](https://vercel.com)
+[![Version](https://img.shields.io/badge/Version-2.0.2-blue)](https://github.com/steeltroops/my-portfolio-steeltroops)
+[![Build](https://img.shields.io/github/actions/workflow/status/steeltroops/my-portfolio-steeltroops/quality-checks.yml?branch=main&label=Build)](https://github.com/steeltroops/my-portfolio-steeltroops/actions)
+[![License](https://img.shields.io/badge/License-Private-red)](#)
+
 A modern, dynamic personal portfolio website featuring a blog, admin dashboard, and AI integration.
 
 ## Features
@@ -12,13 +18,13 @@ A modern, dynamic personal portfolio website featuring a blog, admin dashboard, 
 
 ## Tech Stack
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
-![NodeJS](https://img.shields.io/badge/Node.js-5FA04E.svg?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A.svg?style=flat-square&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF.svg?style=flat-square&logo=vite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4.svg?style=flat-square&logo=tailwindcss&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-000000.svg?style=flat-square&logo=bun&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js-339933.svg?style=flat-square&logo=nodedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1.svg?style=flat-square&logo=postgresql&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000.svg?style=flat-square&logo=vercel&logoColor=white)
 
 ## Getting Started
 
@@ -74,23 +80,23 @@ bun run dev
 - `bun run lint`: Lint code.
 - `bun run init-admin`: Init database admin.
 
-## System Intelligence & Documentation
+## Documentation
 
-For a deep-dive into the technical foundations and architectural decisions powering this platform, refer to our specialized documentation:
+Refer to the following documents for technical details and architectural decisions:
 
-- **[Technical Architecture](docs/ARCHITECTURE.md)**: End-to-end functional flows, message lifecycles, and color-coded system mappings.
-- **[Full-Stack System Design](docs/SYSTEM_DESIGN.md)**: Component hierarchy, database entity relationships, and infrastructure orchestration.
-- **[AI Intelligence Engine](docs/AI_SYSTEM_DESIGN.md)**: Philosophical design of "May OS", SSE streaming implementation, and persona-driven content generation.
-- **[Engineering Log & Standards](docs/ENGINEERING_LOG.md)**: Performance optimization strategies (SWR, Prefetching, Image pipeline) and current technical roadmap.
+- **[Architecture](docs/ARCHITECTURE.md)**: Technical flows and system mapping.
+- **[System Design](docs/SYSTEM_DESIGN.md)**: Component hierarchy and database schema.
+- **[AI Systems](docs/AI_SYSTEM_DESIGN.md)**: Persona logic and streaming implementation.
+- **[Standards](docs/ENGINEERING_LOG.md)**: Performance rules and engineering logs.
 
-## CI/CD Workflow (Automated)
+## CI/CD Workflow
 
-This project uses an intelligent "Zero-Friction" CI/CD pipeline:
+The project uses an automated pipeline for quality assurance and deployment:
 
-1. **Develop on a Branch**: Create a feature branch (e.g., `dev/header-fix`).
-2. **Local Protection**: Husky runs `pre-push` build checks. You cannot push broken code.
-3. **Ghost Merge**: When you push to your branch, GitHub Actions validates the build. If successful, it **automatically merges** the branch into `main`.
-4. **Automatic Release**: Once merged, the system bumps version numbers and deploys to Vercel instantly.
+1. **Branching**: Development occurs on feature branches.
+2. **Validation**: Local pre-push checks via Husky.
+3. **Automation**: Automated branch merging upon successful CI validation.
+4. **Deployment**: Versioning and production deployment via Vercel.
 
 ## Project Structure
 
