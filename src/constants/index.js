@@ -1,10 +1,10 @@
-import project1 from "@/assets/projects/project-1.jpg";
-import project2 from "@/assets/projects/project-2.jpg";
-import project3 from "@/assets/projects/project-3.jpg";
-import project4 from "@/assets/projects/project-4.jpg";
-import project5 from "@/assets/projects/project-5.jpg";
-import blackhole from "@/assets/projects/blackhole.jpg";
-import blackhole1 from "@/assets/projects/blackhole1.jpg";
+import project1 from "@/assets/projects/project-1.jpg?as=srcset&w=800;1200;1600;2400&format=webp";
+import project2 from "@/assets/projects/project-2.jpg?as=srcset&w=800;1200;1600;2400&format=webp";
+import project3 from "@/assets/projects/project-3.jpg?as=srcset&w=800;1200;1600;2400&format=webp";
+import project4 from "@/assets/projects/project-4.jpg?as=srcset&w=800;1200;1600;2400&format=webp";
+import project5 from "@/assets/projects/project-5.jpg?as=srcset&w=800;1200;1600;2400&format=webp";
+import blackhole from "@/assets/projects/blackhole.jpg?as=srcset&w=800;1200;1600;2400&format=webp";
+import blackhole1 from "@/assets/projects/blackhole1.jpg?as=srcset&w=800;1200;1600;2400&format=webp";
 
 // Brand & Profile Images
 import logo from "@/assets/logo.webp";
@@ -12,12 +12,17 @@ import about from "@/assets/about.jpg";
 import hodakabout from "@/assets/about1.webp";
 import mpsLogo from "@/assets/mps.png";
 
+// Placeholder for missing images to prevent broken UI
+const PLACEHOLDER_PROJECT =
+  "https://images.unsplash.com/photo-1620641788421-7f1c91ade633?q=80&w=800";
+
 export const IMAGES = {
   logo,
   adminLogo: mpsLogo,
-  profile: "/profile.webp", // Static path for immediate LCP discoverability (matches index.html preload)
+  profile: "/profile.webp", // WebP for modern browsers (index.html preloads this)
+  profileJpg: "/profile.jpg", // Fallback/OG Image
   profileMobile: "/profile.webp",
-  favicon: "/favicon.webp",
+  favicon: "/favicon-32x32.png",
   about,
   aboutAlt: hodakabout,
   project1,
@@ -71,7 +76,7 @@ export const SITE_META = {
   keywords:
     "Mayank Pratap Singh, steeltroops, Software Engineer, Production Backend, Machine Learning, Robotics Engineer, Distributed Systems, Next.js, Python, ROS2, SLAM, RAG, MLOps, Trajectory Optimization, Medical Robotics, India, Tech Lead",
   siteUrl: "https://steeltroops.vercel.app",
-  ogImage: "https://steeltroops.vercel.app/profile.webp",
+  ogImage: "https://steeltroops.vercel.app/profile.jpg", // JPG for better social compatibility
 };
 
 // =====================================================
@@ -184,7 +189,7 @@ export const EXPERIENCES = [
 export const PROJECTS = [
   {
     title: "MediLens Clinical Intelligence Platform",
-    image: "",
+    image: null, // Unified structure
     imageAlt:
       "MediLens Clinical Intelligence Dashboard showing medical imaging and speech biomarker data",
     images: [
@@ -202,7 +207,7 @@ export const PROJECTS = [
   },
   {
     title: "RAG LLM Fact Checker",
-    image: "",
+    image: null,
     imageAlt:
       "RAG LLM Fact Checker interface for research paper semantic search and hallucination detection",
     images: ["https://llm-fact-checker.vercel.app/"],
@@ -225,7 +230,7 @@ export const PROJECTS = [
     image: project3,
     imageAlt:
       "AI-Powered Drug Research Platform for molecule generation and protein interaction visualization",
-    images: ["https://drug-research.vercel.app/molecule-bank"],
+    images: [project3, "https://drug-research.vercel.app/molecule-bank"],
     url: "https://drug-research.vercel.app/",
     github: "",
     description: [
@@ -236,7 +241,7 @@ export const PROJECTS = [
   },
   {
     title: "Hiregeist Job Platform",
-    image: "",
+    image: "https://hiregeist.vercel.app/",
     images: ["https://hiregeist.vercel.app/"],
     url: "https://hiregeist.vercel.app/",
     github: "https://github.com/steeltroops-ai/Hiregeist",
@@ -248,7 +253,7 @@ export const PROJECTS = [
   },
   {
     title: "Black Hole Simulation",
-    image: "",
+    image: blackhole,
     images: [blackhole, blackhole1],
     url: "https://blackhole-simulation.vercel.app/",
     github: "https://github.com/steeltroops-ai/blackhole-simulation",
@@ -262,6 +267,7 @@ export const PROJECTS = [
     title: "Robotics Telemetry Intelligence System",
     image: project4,
     images: [
+      project4,
       "https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,c_fill,w_1600/https%3A%2F%2Fubuntu.com%2Fwp-content%2Fuploads%2F587d%2Fimage-1.png",
     ],
     url: "",
@@ -307,6 +313,7 @@ export const PROJECTS = [
     title: "MDC Dataset Citation Classification",
     image: project2,
     images: [
+      project2,
       "https://t3.ftcdn.net/jpg/13/75/28/26/360_F_1375282680_4evcXpRfIBSe5Wi4ISRIPHwFuSiEqY40.jpg",
     ],
     url: "",
@@ -321,6 +328,7 @@ export const PROJECTS = [
     title: "Pytorch Transformer Implementation",
     image: project5,
     images: [
+      project5,
       "https://image.slidesharecdn.com/paperpresentationmaroua-200416144727/75/Attention-Is-All-You-Need-presented-by-Maroua-Maachou-Veepee-1-2048.jpg",
     ],
     url: "",
@@ -359,6 +367,7 @@ export const PROJECTS = [
     title: "Niryo LLM Robotic Arm Integration",
     image: project3,
     images: [
+      project3,
       "https://www.tegakari.net/wp-content/uploads/2020/05/niryo_ecosystem_img.jpg",
     ],
     url: "",
@@ -385,6 +394,7 @@ export const PROJECTS = [
     title: "Maze-Bot ROS2 Navigation Platform",
     image: project5,
     images: [
+      project5,
       "https://repository-images.githubusercontent.com/399864768/481a8c17-7750-4025-9b0d-a15ede469cf0",
     ],
     url: "",
@@ -397,7 +407,7 @@ export const PROJECTS = [
   },
   {
     title: "House Price Prediction Model with MLOps",
-    image: project1,
+    image: null,
     images: [
       "https://miro.medium.com/v2/resize:fit:1400/1*CfdC88fMxquhEFfWXlbtTA.jpeg",
       "https://miro.medium.com/1*NiK9cocmfSWmGYLmOGRwyg.png",

@@ -1,12 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
+import { imagetools } from "vite-imagetools";
 
 export default defineConfig({
   plugins: [
     react({
       jsxRuntime: "automatic",
     }),
+    imagetools(),
   ],
   define: {
     global: "globalThis",

@@ -79,8 +79,8 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
       {/* Project Image Area with Progressive Mask */}
       <m.div
         layout
-        className={`relative overflow-hidden z-10
-          ${isExpanded ? "h-[240px] sm:h-auto sm:aspect-video" : "h-[220px]"}`}
+        className={`relative overflow-hidden z-10 bg-neutral-900
+          ${isExpanded ? "aspect-video h-auto w-full" : "h-[220px] aspect-[4/3]"}`}
         style={{
           maskImage: "linear-gradient(to bottom, black 90%, transparent 100%)",
           WebkitMaskImage:
@@ -96,27 +96,52 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
             transition={{ duration: 0.5 }}
             src={(() => {
               const currentImg = images[isExpanded ? currentImageIndex : 0];
-              const isExternalUrl =
-                typeof currentImg === "string" && currentImg.startsWith("http");
-              const isDirectImage =
-                isExternalUrl &&
-                /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(currentImg);
-
               if (!currentImg && !project.image) return null;
+              // If currentImg is a string (external URL), use it directly
+              // If it's an object (from vite-imagetools not generating raw srcset string but module), handle it?
+              // Actually vite-imagetools with ?as=srcset returns a string "src 300w, src 600w..."
+              // But we still need a fallback 'src' for older browsers or if it's just a string URL.
 
-              if (project.url && !hasMultipleImages) {
-                const cleanProjectUrl = project.url.replace(/\/$/, "");
-                // Reduced resolution for faster loading
-                return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
+              if (typeof currentImg === "string") {
+                if (currentImg.startsWith("http")) {
+                  // ... logic for external URLs ...
+                  const isDirectImage =
+                    /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(currentImg);
+                  if (project.url && !hasMultipleImages && !isDirectImage) {
+                    const cleanProjectUrl = project.url.replace(/\/$/, "");
+                    return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
+                  }
+                  if (!isDirectImage) {
+                    const cleanUrl = currentImg.replace(/\/$/, "");
+                    return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
+                  }
+                  return currentImg;
+                }
+                // It's a srcset string from vite-imagetools (hopefully), or a simple path string if not processed
+                // For the 'src' attribute, we need a single source.
+                // vite-imagetools ?as=srcset returns the string. We can't easily extract one src.
+                // Actually, modern browsers ignore src if srcset is valid and matching.
+                // But we should try to give a fallback.
+                // If we use 'as=srcset', the import IS the srcset string.
+                return currentImg.split(" ")[0]; // Very naive fallback, picks first URL (300w usually)
               }
-
-              if (isExternalUrl && !isDirectImage) {
-                const cleanUrl = currentImg.replace(/\/$/, "");
-                return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
-              }
-
-              return currentImg || project.image || null;
+              return null;
             })()}
+            srcSet={(() => {
+              const currentImg = images[isExpanded ? currentImageIndex : 0];
+              if (
+                typeof currentImg === "string" &&
+                !currentImg.startsWith("http")
+              ) {
+                return currentImg; // This is our srcset string
+              }
+              return undefined;
+            })()}
+            sizes={
+              isExpanded
+                ? "(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 80vw"
+                : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            }
             fetchPriority={isExpanded ? "high" : "low"}
             loading="lazy"
             width={800}
@@ -132,11 +157,22 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
             }`}
             data-original-url={images[isExpanded ? currentImageIndex : 0]}
             onError={(e) => {
+              // ... existing error handler logic ...
               const currentSrc = e.target.src;
               const originalUrl = e.target.getAttribute("data-original-url");
 
-              if (!originalUrl || !originalUrl.startsWith("http")) {
-                e.target.src = project.image;
+              if (
+                !originalUrl ||
+                (typeof originalUrl === "string" &&
+                  !originalUrl.startsWith("http"))
+              ) {
+                if (project.image && project.image.startsWith("http")) {
+                  e.target.src = project.image;
+                } else {
+                  e.target.src =
+                    "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=800";
+                }
+                e.target.removeAttribute("srcset"); // Remove broken srcset on error
                 return;
               }
 
