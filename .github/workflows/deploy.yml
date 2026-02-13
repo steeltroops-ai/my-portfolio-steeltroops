@@ -10,6 +10,9 @@ on:
       - "**/README.md"
       - "docs/**"
 
+permissions:
+  contents: write
+
 jobs:
   version_and_deploy:
     runs-on: ubuntu-latest

@@ -31,30 +31,30 @@ A modern, dynamic personal portfolio website featuring a blog, admin dashboard, 
 
 1. **Clone repository**
 
-    ```bash
-    git clone https://github.com/steeltroops/my-portfolio-steeltroops.git
-    cd my-portfolio-steeltroops
-    ```
+   ```bash
+   git clone https://github.com/steeltroops/my-portfolio-steeltroops.git
+   cd my-portfolio-steeltroops
+   ```
 
 2. **Install dependencies**
 
-    ```bash
-    bun install
-    ```
+   ```bash
+   bun install
+   ```
 
 3. **Environment Setup**
 
-    Create `.env` using `.env.example`.
+   Create `.env` using `.env.example`.
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   cp .env.example .env
+   ```
 
 4. **Initialize Admin**
 
-    ```bash
-    bun run init-admin
-    ```
+   ```bash
+   bun run init-admin
+   ```
 
 ### Running
 
@@ -73,6 +73,15 @@ bun run dev
 - `bun run build`: Build production.
 - `bun run lint`: Lint code.
 - `bun run init-admin`: Init database admin.
+
+## CI/CD Workflow (Automated)
+
+This project uses an intelligent "Zero-Friction" CI/CD pipeline:
+
+1.  **Develop on a Branch**: Create a feature branch (e.g., `dev/header-fix`).
+2.  **Local Protection**: Husky runs `pre-push` build checks. You cannot push broken code.
+3.  **Ghost Merge**: When you push to your branch, GitHub Actions validates the build. If successful, it **automatically merges** the branch into `main`.
+4.  **Automatic Release**: Once merged, the system bumps version numbers and deploys to Vercel instantly.
 
 ## Project Structure
 

@@ -1,0 +1,48 @@
+name: "CI: Quality & Auto-Merge"
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  validate_and_merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Integrity Check
+        run: bun run build
+
+      - name: Automated Branch Promotion
+        if: success()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          echo "Build successful. Merging ${GITHUB_REF_NAME} into main..."
+
+          # Checkout main and merge the branch
+          git fetch origin main
+          git checkout main
+          git merge --no-ff "origin/${GITHUB_REF_NAME}" -m "chore: auto-merge ${GITHUB_REF_NAME} [skip ci]"
+
+          # Push the merge
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
