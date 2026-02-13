@@ -18,7 +18,8 @@ import {
 } from "../services/HybridBlogService";
 import { cacheManager } from "@/lib/cacheManager";
 
-// Query keys for consistent caching
+// ---- Query Keys ----
+
 export const blogQueryKeys = {
   all: ["blog"],
   posts: () => [...blogQueryKeys.all, "posts"],
@@ -29,7 +30,16 @@ export const blogQueryKeys = {
   tags: () => [...blogQueryKeys.all, "tags"],
 };
 
-// Hook for fetching published posts (public blog) - now with smart cache manager
+// ---- Query Hooks (Public) ----
+
+/**
+ * Published posts (public blog page).
+ *
+ * Caching strategy:
+ *   - React Query in-memory: staleTime 3 min, gcTime 10 min
+ *   - localStorage (cacheManager): 3 min TTL, used ONLY for cold-start hydration
+ *   - No refetchInterval -- useSmartSync handles background invalidation
+ */
 export const usePublishedPosts = (options = {}) => {
   const cacheKey = `blog-posts-${JSON.stringify(options)}`;
   const cachedData = cacheManager.get(cacheKey, "blogList");
@@ -39,23 +49,22 @@ export const usePublishedPosts = (options = {}) => {
     queryFn: async () => {
       try {
         const data = await getPublishedPosts(options);
-        // Save to smart cache (auto-syncs across tabs)
-        if (data) {
+        // Persist to localStorage for cold-start next visit
+        if (data && !data.error) {
           cacheManager.set(cacheKey, data, "blogList");
         }
         return data || { data: [], count: 0, error: null };
       } catch (err) {
-        console.error("Error in usePublishedPosts queryFn:", err);
+        console.error("Error in usePublishedPosts:", err);
         return { data: [], count: 0, error: err };
       }
     },
-    initialData: cachedData || undefined, // Load from localStorage immediately, but valid undefined if null
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    retry: 1, // Reduced retry for faster fallback
-    placeholderData: keepPreviousData, // Keep previous data while fetching new page
-    refetchInterval: 60000, // 1 minute auto-refresh
+    initialData: cachedData || undefined,
+    staleTime: 3 * 60 * 1000, // 3 min
+    gcTime: 10 * 60 * 1000, // 10 min (replaces deprecated cacheTime)
+    refetchOnWindowFocus: false, // useSmartSync handles this
+    retry: 1,
+    placeholderData: keepPreviousData,
     select: (data) => ({
       posts: data?.data || [],
       count: data?.count || 0,
@@ -64,34 +73,34 @@ export const usePublishedPosts = (options = {}) => {
   });
 };
 
-// Hook for fetching all posts (admin) - with persistent smart cache
+// ---- Query Hooks (Admin) ----
+
+/**
+ * All posts (admin page).
+ * staleTime: 0 so it always refetches in background when the query is used.
+ */
 export const useAllPosts = (options = {}) => {
   const cacheKey = `blog-all-posts-${JSON.stringify(options)}`;
-  const cachedData = cacheManager.get(cacheKey, "blogList");
+  const cachedData = cacheManager.get(cacheKey, "adminData");
 
   return useQuery({
     queryKey: blogQueryKeys.allPosts(options),
     queryFn: async () => {
       const data = await getAllPosts(options);
-
-      // If there's a critical error (not just a warning), throw so React Query handles it
       if (data?.error && data.error.type === "error") {
         throw new Error(data.error.message || "Failed to fetch posts");
       }
-
-      // Save to smart cache ONLY if valid response
       if (data?.data && !data.error) {
-        cacheManager.set(cacheKey, data, "blogList");
+        cacheManager.set(cacheKey, data, "adminData");
       }
       return data;
     },
-    initialData: cachedData || undefined, // Load from localStorage immediately
-    staleTime: 0, // Always refresh in background to ensure data is fresh
-    cacheTime: 24 * 60 * 60 * 1000, // 24 hours
-    refetchOnWindowFocus: true, // Refresh when user comes back to the tab
+    initialData: cachedData || undefined,
+    staleTime: 0,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: true,
     retry: 3,
     refetchInterval: (query) => {
-      // If error (backend down), poll every 10s to recover
       if (query.state.status === "error") return 10000;
       return false;
     },
@@ -103,7 +112,9 @@ export const useAllPosts = (options = {}) => {
   });
 };
 
-// Hook for fetching a single post by slug - with smart cache
+/**
+ * Single post by slug (public blog post page).
+ */
 export const usePostBySlug = (slug, includeUnpublished = false) => {
   const cacheKey = `blog-post-${slug}`;
   const cachedData = cacheManager.get(cacheKey, "blogPost");
@@ -113,39 +124,42 @@ export const usePostBySlug = (slug, includeUnpublished = false) => {
     queryFn: async () => {
       try {
         const data = await getPostBySlug(slug, includeUnpublished);
-        // Save to smart cache
         if (data?.data) {
           cacheManager.set(cacheKey, data.data, "blogPost");
         }
         return data || { data: null, error: null };
       } catch (err) {
-        console.error("Error in usePostBySlug queryFn:", err);
+        console.error("Error in usePostBySlug:", err);
         return { data: null, error: err };
       }
     },
     initialData: cachedData ? { data: cachedData } : undefined,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     enabled: !!slug,
     retry: 2,
     select: (data) => ({ data: data?.data, error: data?.error }),
   });
 };
 
-// Hook for fetching a single post by ID (admin)
+/**
+ * Single post by ID (admin editor).
+ */
 export const usePostById = (id) => {
   return useQuery({
     queryKey: blogQueryKeys.post(id),
     queryFn: () => getPostById(id),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 3 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     enabled: !!id,
     retry: 2,
     select: (data) => data.data,
   });
 };
 
-// Hook for fetching all tags - with smart cache
+/**
+ * All tags (sidebar/filter).
+ */
 export const useTags = () => {
   const cacheKey = "blog-tags";
   const cachedData = cacheManager.get(cacheKey, "tags");
@@ -154,33 +168,35 @@ export const useTags = () => {
     queryKey: blogQueryKeys.tags(),
     queryFn: async () => {
       const data = await getAllTags();
-      // Save to smart cache
       if (data?.data) {
         cacheManager.set(cacheKey, data.data, "tags");
       }
       return data;
     },
     initialData: cachedData ? { data: cachedData } : undefined,
-    staleTime: 15 * 60 * 1000, // 15 minutes (tags don't change often)
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 2,
     select: (data) => data.data || [],
   });
 };
 
-// Mutation hook for creating posts
+// ---- Mutation Hooks ----
+
+/**
+ * Create post -- invalidates all blog queries + localStorage.
+ */
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createPost,
     onSuccess: (data) => {
-      // Invalidate and refetch posts
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.tags() });
+      cacheManager.invalidatePrefix("blog-");
 
-      // Add the new post to the cache
       if (data.data) {
         queryClient.setQueryData(blogQueryKeys.post(data.data.id), {
           data: data.data,
@@ -194,25 +210,24 @@ export const useCreatePost = () => {
   });
 };
 
-// Mutation hook for updating posts
+/**
+ * Update post -- invalidates all blog queries + localStorage.
+ */
 export const useUpdatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, postData }) => updatePost(id, postData),
     onSuccess: (data, variables) => {
-      // Invalidate and refetch posts
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.tags() });
+      cacheManager.invalidatePrefix("blog-");
 
-      // Update the specific post in cache
       if (data.data) {
         queryClient.setQueryData(blogQueryKeys.post(variables.id), {
           data: data.data,
           error: null,
         });
-
-        // Also update by slug if available
         if (data.data.slug) {
           queryClient.setQueryData(blogQueryKeys.postBySlug(data.data.slug), {
             data: data.data,
@@ -227,19 +242,19 @@ export const useUpdatePost = () => {
   });
 };
 
-// Mutation hook for deleting posts
+/**
+ * Delete post -- invalidates all blog queries + localStorage.
+ */
 export const useDeletePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deletePost,
     onSuccess: (data, postId) => {
-      // Remove from cache
       queryClient.removeQueries({ queryKey: blogQueryKeys.post(postId) });
-
-      // Invalidate posts lists
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.tags() });
+      cacheManager.invalidatePrefix("blog-");
     },
     onError: (error) => {
       console.error("Error deleting post:", error);
@@ -247,43 +262,37 @@ export const useDeletePost = () => {
   });
 };
 
-// Mutation hook for toggling post published status
+/**
+ * Toggle published status.
+ */
 export const useTogglePostPublished = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (postId) => {
-      // Get the current post from cache or fetch it
       let currentPost = queryClient.getQueryData(blogQueryKeys.post(postId));
 
-      // If not in cache, check the allPosts cache
       if (!currentPost?.data) {
         const allPostsData = queryClient.getQueryData(
           blogQueryKeys.allPosts({})
         );
         if (allPostsData?.data) {
-          const foundPost = allPostsData.data.find((p) => p.id === postId);
-          if (foundPost) {
-            currentPost = { data: foundPost };
-          }
+          const found = allPostsData.data.find((p) => p.id === postId);
+          if (found) currentPost = { data: found };
         }
       }
 
-      // If still not found, fetch it
       if (!currentPost?.data) {
         currentPost = await getPostById(postId);
       }
 
       const currentPublished = currentPost?.data?.published ?? false;
-
-      // Toggle the published state
       return togglePostPublished(postId, !currentPublished);
     },
     onSuccess: (data, postId) => {
-      // Invalidate posts lists to reflect the change
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
+      cacheManager.invalidatePrefix("blog-");
 
-      // Update the specific post in cache if we have the updated data
       if (data.data) {
         queryClient.setQueryData(blogQueryKeys.post(postId), {
           data: data.data,
@@ -297,7 +306,8 @@ export const useTogglePostPublished = () => {
   });
 };
 
-// Utility hook for prefetching posts
+// ---- Utility Hooks ----
+
 export const usePrefetchPost = () => {
   const queryClient = useQueryClient();
 
@@ -312,30 +322,25 @@ export const usePrefetchPost = () => {
   return { prefetchPostBySlug };
 };
 
-// Hook for optimistic updates
 export const useOptimisticPostUpdate = () => {
   const queryClient = useQueryClient();
 
   const optimisticUpdate = (postId, updates) => {
     queryClient.setQueryData(blogQueryKeys.post(postId), (old) => {
       if (!old?.data) return old;
-      return {
-        ...old,
-        data: { ...old.data, ...updates },
-      };
+      return { ...old, data: { ...old.data, ...updates } };
     });
   };
 
   return { optimisticUpdate };
 };
 
-// Hook for getting data source information
 export const useDataSourceInfo = () => {
   return useQuery({
     queryKey: [...blogQueryKeys.all, "dataSource"],
     queryFn: getDataSourceInfo,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    cacheTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });

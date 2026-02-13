@@ -36,7 +36,7 @@ export const useContactMessages = (options = {}) => {
     queryKey: contactQueryKeys.messagesList(options),
     queryFn: () => NeonContactService.getContactMessages(options),
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
     enabled: true,
     select: (data) =>
       !data.error ? data : { data: [], count: 0, error: data.error },
@@ -51,9 +51,12 @@ export const useUpdateMessageStatus = () => {
 
   return useMutation({
     mutationFn: async ({ messageId, status, adminNotes }) => {
-      if (status === 'read') return NeonContactService.markMessageAsRead(messageId);
-      if (status === 'replied') return NeonContactService.markMessageAsReplied(messageId, adminNotes);
-      if (status === 'archived') return NeonContactService.archiveMessage(messageId);
+      if (status === "read")
+        return NeonContactService.markMessageAsRead(messageId);
+      if (status === "replied")
+        return NeonContactService.markMessageAsReplied(messageId, adminNotes);
+      if (status === "archived")
+        return NeonContactService.archiveMessage(messageId);
       throw new Error(`Unknown status: ${status}`);
     },
     onSuccess: (data, variables) => {

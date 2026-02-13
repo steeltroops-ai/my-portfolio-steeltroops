@@ -17,7 +17,7 @@ export const useComments = (postId, options = {}) => {
     queryKey: commentQueryKeys.byPost(postId),
     queryFn: () => NeonCommentsService.getPostComments(postId),
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!postId,
     select: (data) =>
       !data.error ? data : { data: [], count: 0, error: data.error },
@@ -62,9 +62,12 @@ export const useUpdateCommentStatus = () => {
 
   return useMutation({
     mutationFn: async ({ commentId, status }) => {
-      if (status === 'approved') return NeonCommentsService.approveComment(commentId);
-      if (status === 'rejected') return NeonCommentsService.rejectComment(commentId);
-      if (status === 'spam') return NeonCommentsService.markCommentAsSpam(commentId);
+      if (status === "approved")
+        return NeonCommentsService.approveComment(commentId);
+      if (status === "rejected")
+        return NeonCommentsService.rejectComment(commentId);
+      if (status === "spam")
+        return NeonCommentsService.markCommentAsSpam(commentId);
       throw new Error(`Unknown status: ${status}`);
     },
     onSuccess: (_data, _variables) => {
@@ -101,9 +104,10 @@ export const useDeleteComment = () => {
 export const usePendingComments = (options = {}) => {
   return useQuery({
     queryKey: commentQueryKeys.pending(),
-    queryFn: () => NeonCommentsService.getAllComments({ ...options, status: 'pending' }),
+    queryFn: () =>
+      NeonCommentsService.getAllComments({ ...options, status: "pending" }),
     staleTime: 1 * 60 * 1000, // 1 minute
-    cacheTime: 3 * 60 * 1000, // 3 minutes
+    gcTime: 3 * 60 * 1000, // 3 minutes
     enabled: true,
     select: (data) =>
       !data.error ? data : { data: [], count: 0, error: data.error },
@@ -119,33 +123,33 @@ const validateComment = (commentData) => {
 
   // Content validation
   if (!content || content.trim().length < 10) {
-    errors.content = 'Comment must be at least 10 characters long';
+    errors.content = "Comment must be at least 10 characters long";
   } else if (content.trim().length > 1000) {
-    errors.content = 'Comment must be less than 1000 characters';
+    errors.content = "Comment must be less than 1000 characters";
   }
 
   // Author name validation
   if (!author_name || author_name.trim().length < 2) {
-    errors.author_name = 'Name must be at least 2 characters long';
+    errors.author_name = "Name must be at least 2 characters long";
   } else if (author_name.trim().length > 100) {
-    errors.author_name = 'Name must be less than 100 characters';
+    errors.author_name = "Name must be less than 100 characters";
   }
 
   // Email validation
   if (!author_email || author_email.trim().length === 0) {
-    errors.author_email = 'Email is required';
+    errors.author_email = "Email is required";
   } else {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(author_email.trim())) {
-      errors.author_email = 'Please enter a valid email address';
+      errors.author_email = "Please enter a valid email address";
     } else if (author_email.trim().length > 255) {
-      errors.author_email = 'Email must be less than 255 characters';
+      errors.author_email = "Email must be less than 255 characters";
     }
   }
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 };
 
