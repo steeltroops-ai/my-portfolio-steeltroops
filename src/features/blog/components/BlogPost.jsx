@@ -127,62 +127,178 @@ const BlogPost = () => {
     return () => observer.disconnect();
   }, [headings]); // DEPEND ON HEADINGS, NOT POST
 
-  // Bidirectional sticky sidebar:
-  // Scroll DOWN -> sidebar slides up, stops when TOP hits top padding
-  // Scroll UP   -> sidebar slides down, stops when BOTTOM hits bottom padding
-  // Hovering over sidebar + scrolling -> page scrolls, sidebar traverses viewport
+  // Ultra-stable Sidebar Scroll Logic (PC Only)
+  // Fixes: Eliminates scroll hijacking by only mutating DOM on state/mode changes.
   const sidebarRef = useRef(null);
+  const asideRef = useRef(null);
+
   useEffect(() => {
     const sidebar = sidebarRef.current;
-    if (!sidebar) return;
+    const aside = asideRef.current;
+    if (!sidebar || !aside) return;
 
     const mql = window.matchMedia("(min-width: 1024px)");
-    const TOP_GAP = 24; // px from viewport top
-    const BOTTOM_GAP = 24; // px from viewport bottom
+    const TOP_GAP = 16; // Matches ReadingProgress (top-4)
+    const BOTTOM_GAP = 32; // Matches FloatingChatButton (bottom-8)
+    // We use a "mode" system to prevent constant style re-application
+    // modes: 'static' | 'fixed' | 'absolute'
+    let currentMode = "static";
 
-    let lastScrollY = window.scrollY;
-    let currentTop = TOP_GAP;
-    sidebar.style.top = `${currentTop}px`;
+    // Helper to apply styles based on mode - ONLY called on transition
+    const applyMode = (mode, rects) => {
+      const { asideRect, sidebarNaturalWidth, viewportHeight } = rects;
+      // We no longer subtract gaps from height; we use full viewport height and dampen with padding
+      // to ensure the scroll container captures mouse events from the very top/bottom of screen.
 
-    const onScroll = () => {
-      if (!mql.matches) return;
-
-      const scrollY = window.scrollY;
-      const delta = scrollY - lastScrollY;
-      const sidebarHeight = sidebar.offsetHeight;
-      const viewportHeight = window.innerHeight;
-
-      if (sidebarHeight + TOP_GAP + BOTTOM_GAP <= viewportHeight) {
-        // Sidebar fits in viewport -- just stick to top
-        currentTop = TOP_GAP;
+      if (mode === "fixed") {
+        sidebar.style.position = "fixed";
+        sidebar.style.top = "0"; // Start at very top
+        sidebar.style.left = `${asideRect.left}px`;
+        sidebar.style.width = `${sidebarNaturalWidth}px`;
+        sidebar.style.height = "100vh"; // Full screen height
+        sidebar.style.maxHeight = "";
+        sidebar.style.bottom = "auto";
+        sidebar.style.overflowY = "auto";
+        sidebar.style.overscrollBehavior = "auto"; // Allow chaining
+        sidebar.style.zIndex = "30"; // Lower than ReadingProgress (60)
+        sidebar.style.paddingTop = `${TOP_GAP}px`; // Visual gap via padding
+        sidebar.style.paddingBottom = `${BOTTOM_GAP}px`;
+        sidebar.style.boxSizing = "border-box";
+      } else if (mode === "absolute") {
+        sidebar.style.position = "absolute";
+        sidebar.style.top = "auto";
+        sidebar.style.bottom = "0";
+        sidebar.style.left = "0";
+        sidebar.style.width = "100%";
+        sidebar.style.height = `${viewportHeight}px`; // Match viewport height
+        sidebar.style.maxHeight = "";
+        sidebar.style.overflowY = "auto";
+        sidebar.style.overscrollBehavior = "auto";
+        sidebar.style.zIndex = "30";
+        sidebar.style.paddingTop = `${TOP_GAP}px`;
+        sidebar.style.paddingBottom = "0px"; // Align with article bottom
+        sidebar.style.boxSizing = "border-box";
       } else {
-        // Sidebar taller than viewport: bidirectional traverse
-        // minTop positions sidebar bottom at viewport bottom - padding
-        const minTop = viewportHeight - sidebarHeight - BOTTOM_GAP;
-        currentTop = Math.min(TOP_GAP, Math.max(minTop, currentTop - delta));
+        // Static
+        sidebar.style.position = "";
+        sidebar.style.top = "";
+        sidebar.style.left = "";
+        sidebar.style.width = "";
+        sidebar.style.height = "";
+        sidebar.style.maxHeight = "";
+        sidebar.style.bottom = "";
+        sidebar.style.overflowY = "";
+        sidebar.style.overscrollBehavior = "";
+        sidebar.style.zIndex = "";
+        sidebar.style.paddingTop = "";
+        sidebar.style.paddingBottom = "";
+        sidebar.style.boxSizing = "";
+      }
+    };
+
+    const checkPosition = () => {
+      if (!mql.matches) {
+        if (currentMode !== "static") {
+          currentMode = "static";
+          applyMode("static", {});
+        }
+        return;
       }
 
-      sidebar.style.top = `${currentTop}px`;
-      lastScrollY = scrollY;
+      const asideRect = aside.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // Calculate boundaries
+      const asideTop = asideRect.top;
+      const asideBottom = asideRect.bottom;
+
+      // Target Height for the fixed container
+      const targetHeight = viewportHeight - TOP_GAP - BOTTOM_GAP;
+
+      let nextMode = "static";
+
+      // 1. If we are above the top gap, be static
+      if (asideTop > TOP_GAP) {
+        nextMode = "static";
+      }
+      // 2. If the bottom of the container is still visible (and plenty of space), be fixed
+      else if (asideBottom > TOP_GAP + targetHeight) {
+        nextMode = "fixed";
+      }
+      // 3. Otherwise, we hit the bottom - pin absolute
+      else {
+        nextMode = "absolute";
+      }
+
+      // ONLY Apply changes if mode switches (or if we need to update 'fixed' left position on scroll)
+      // Note: We intentionally don't update 'left' on every scroll for performance,
+      // but 'fixed' elements normally stay put. Horizontal page scroll is the exception.
+      // For this specific bug (scroll chaining), avoiding DOM writes is priority #1.
+      if (nextMode !== currentMode) {
+        // Capture scroll before transition if we were already in a scrollable mode
+        let savedScroll = 0;
+        if (currentMode === "fixed" || currentMode === "absolute") {
+          savedScroll = sidebar.scrollTop;
+        }
+
+        const rects = {
+          asideRect,
+          sidebarNaturalWidth: aside.offsetWidth,
+          viewportHeight,
+        };
+
+        applyMode(nextMode, rects);
+
+        // Restore scroll
+        if (currentMode === "fixed" || currentMode === "absolute") {
+          sidebar.scrollTop = savedScroll;
+        }
+
+        currentMode = nextMode;
+      }
+
+      // Edge case: If window is resized horizontally or user scrolls LEFT/RIGHT,
+      // 'fixed' element 'left' property needs updating even if mode didn't change.
+      if (currentMode === "fixed") {
+        // Optimization: Only touch DOM if pixel value actually changed
+        const newLeft = `${asideRect.left}px`;
+        if (sidebar.style.left !== newLeft) {
+          sidebar.style.left = newLeft;
+        }
+      }
+    };
+
+    // Use a throttled scroll listener
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          checkPosition();
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     const onResize = () => {
-      if (!mql.matches) {
-        sidebar.style.top = "";
-      } else {
-        onScroll();
-      }
+      // Force re-evaluation
+      currentMode = "reset";
+      checkPosition();
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
     mql.addEventListener("change", onResize);
 
+    // Initial check
+    checkPosition();
+
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       mql.removeEventListener("change", onResize);
-      sidebar.style.top = "";
+      // Cleanup
+      applyMode("static", {});
     };
   }, [headings, post]);
 
@@ -615,12 +731,14 @@ const BlogPost = () => {
       </div>
 
       {/* Reading Progress Indicator */}
+      {/* Reading Progress Indicator */}
       <BlogReadingProgress
         articleRef={articleRef}
         showStats={true}
         position="top"
         color="purple"
         height={2}
+        zIndex={60} // Higher than sidebar (30)
         headings={headings}
         activeId={activeId}
         postTitle={post.title}
@@ -775,8 +893,45 @@ const BlogPost = () => {
           {/* self-stretch overrides grid's items-start for the aside only,
               making it fill the full row height. This is ESSENTIAL for position:sticky
               to work -- sticky only sticks when the parent is taller than the child. */}
-          <aside className="lg:col-span-3 lg:self-stretch">
-            <div ref={sidebarRef} className="lg:sticky space-y-4">
+          <aside
+            ref={asideRef}
+            className="lg:col-span-3 lg:self-stretch lg:relative"
+          >
+            <div
+              ref={sidebarRef}
+              className="space-y-4"
+              // SMART PROPAGATION mechanism:
+              // Effectively replicates 'overscroll-behavior: auto' properly for JavaScript.
+              // 1. If we are SCROLLING IN in the content, stop propagation (don't scroll page).
+              // 2. If we HIT THE BOUNDARY (top/bottom) and keep scrolling, allow propagation (scroll page).
+              onWheel={(e) => {
+                const el = e.currentTarget;
+                if (!el) return;
+
+                // Check if current scroll is at boundaries
+                // buffer of 2px for floating point safety
+                const isAtTop = el.scrollTop <= 0;
+                const isAtBottom =
+                  Math.abs(el.scrollHeight - el.scrollTop - el.clientHeight) <=
+                  2;
+
+                const isScrollingUp = e.deltaY < 0;
+                const isScrollingDown = e.deltaY > 0;
+
+                // Determine if we should allow bubble
+                // Allow if: (Top AND trying to go Up) OR (Bottom AND trying to go Down)
+                if (
+                  (isAtTop && isScrollingUp) ||
+                  (isAtBottom && isScrollingDown)
+                ) {
+                  return; // Allow default behavior (page scroll)
+                }
+
+                // Otherwise, strictly trap the scroll to prevent jitter
+                e.stopPropagation();
+              }}
+              // Removed onTouchMove to allow native touch overscroll chaining (controlled by CSS 'auto')
+            >
               {/* Navigation & Table of Contents */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
