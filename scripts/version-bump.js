@@ -62,6 +62,32 @@ function main() {
   const gap = daysSince(lastDeployDate);
   const forceArg = process.argv[2]; // --major, --minor, --patch
 
+  // ENVIRONMENT CHECK: Only bump version in production
+  // VERCEL_ENV is set by Vercel. NODE_ENV is standard.
+  const isProduction =
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production";
+
+  if (!isProduction && !forceArg) {
+    console.log("\n  [DEV MODE] Skipping Version Bump (Local Build)");
+    // Just update meta with CURRENT version, don't increment
+    const buildMeta = {
+      version: formatVersion(currentVersion),
+      buildId: `dev-${Date.now().toString(36)}`,
+      deployedAt: new Date().toISOString(),
+      previousVersion: formatVersion(currentVersion),
+      env: "development",
+    };
+    writeFileSync(
+      META_PATH,
+      JSON.stringify(buildMeta, null, 2) + "\n",
+      "utf-8"
+    );
+    console.log(`  Current Version: ${buildMeta.version}`);
+    console.log(`  Meta Updated: public/build-meta.json\n`);
+    return;
+  }
+
   let newVersion;
 
   if (forceArg === "--major") {

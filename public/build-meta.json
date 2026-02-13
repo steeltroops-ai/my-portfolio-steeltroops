@@ -1,7 +1,7 @@
 {
-  "version": "1.0.1",
-  "buildId": "mlla0flb-9vz6wa",
-  "deployedAt": "2026-02-13T19:24:05.231Z",
-  "previousVersion": "1.0.0",
-  "daysSinceLastDeploy": 0
+  "version": "2.0.4",
+  "buildId": "dev-mllczp00",
+  "deployedAt": "2026-02-13T20:47:29.616Z",
+  "previousVersion": "2.0.4",
+  "env": "development"
 }
