@@ -1,8 +1,8 @@
 {
-  "version": "2.0.4",
-  "buildId": "mm1fwjsm-8d6kjm",
-  "deployedAt": "2026-02-25T02:53:20.566Z",
-  "previousVersion": "2.0.3",
+  "version": "2.0.5",
+  "buildId": "mm1i11ma-az7pst",
+  "deployedAt": "2026-02-25T03:52:49.522Z",
+  "previousVersion": "2.0.4",
   "daysSinceLastDeploy": 0,
   "env": "production"
 }
