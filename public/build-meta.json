@@ -1,7 +1,8 @@
 {
-  "version": "2.0.3",
-  "buildId": "dev-mm1fgaym",
-  "deployedAt": "2026-02-25T02:40:42.622Z",
+  "version": "2.0.4",
+  "buildId": "mm1fwjsm-8d6kjm",
+  "deployedAt": "2026-02-25T02:53:20.566Z",
   "previousVersion": "2.0.3",
-  "env": "development"
+  "daysSinceLastDeploy": 0,
+  "env": "production"
 }
