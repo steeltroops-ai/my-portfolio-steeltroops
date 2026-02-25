@@ -1,8 +1,8 @@
 {
-  "name": "Mayank Pratap Singh (@steeltroops) | Portfolio",
-  "short_name": "steeltroops",
+  "name": "Admin Control | Mayank",
+  "short_name": "AdminHQ",
   "description": "Production Engineering portfolio of Mayank Pratap Singh (@steeltroops). Full Stack, ML, and Robotics.",
-  "start_url": "/",
+  "start_url": "/admin/dashboard",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#a855f7",
