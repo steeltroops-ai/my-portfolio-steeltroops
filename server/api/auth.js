@@ -33,7 +33,13 @@ function errorResponse(res, message, status = 500) {
   res.status(status).json({ success: false, error: message });
 }
 
-import { setCorsHeaders, serializeCookie, verifyAuth } from "./utils.js";
+import {
+  setCorsHeaders,
+  serializeCookie,
+  verifyAuth,
+  checkRateLimit,
+} from "./utils.js";
+import { emitToAdmins } from "../socket-hub.js";
 
 export default async function handler(req, res) {
   // Use shared CORS logic
@@ -41,6 +47,11 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
+  }
+
+  // 1. Governance: Rate Limiting
+  if (!checkRateLimit(req)) {
+    return res.status(429).json({ error: "Too many attempts. Slow down." });
   }
 
   const { action } = req.query;
@@ -121,15 +132,50 @@ export default async function handler(req, res) {
         })
       );
 
+      // System Pulse: Purge local cache on logout
+      try {
+        emitToAdmins("SYSTEM:CACHE_PURGE", {
+          reason: "admin_logout",
+          user: session?.email,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (e) {}
+
       return jsonResponse(res, { success: true });
     }
 
-    // Handle verify token (Session Check)
+    // Handle verify token (Session Check + Rotation)
     if (action === "verify" && req.method === "GET") {
       const session = await verifyAuth(req, sql);
 
       if (!session) {
         return jsonResponse(res, { authenticated: false });
+      }
+
+      // Standard 1.5/7: Rotate token if it's older than 6 hours
+      const sessionAge = Date.now() - new Date(session.created_at).getTime();
+      if (sessionAge > 6 * 60 * 60 * 1000) {
+        const newToken = generateToken();
+        const nextExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await sql`
+          UPDATE sessions 
+          SET token = ${newToken}, expires_at = ${nextExpiry.toISOString()}
+          WHERE token = ${session.token}
+        `;
+
+        const cookieOptions = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "Lax",
+          path: "/",
+          maxAge: 60 * 60 * 24,
+        };
+
+        res.setHeader(
+          "Set-Cookie",
+          serializeCookie("auth_token", newToken, cookieOptions)
+        );
       }
 
       return jsonResponse(res, {

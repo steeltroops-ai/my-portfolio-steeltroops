@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FiHome,
@@ -9,6 +9,7 @@ import {
   FiChevronLeft,
   FiFileText,
   FiBarChart2,
+  FiDownload,
 } from "react-icons/fi";
 import { signOut } from "../../services/HybridAuthService";
 import { IMAGES } from "@/constants";
@@ -21,6 +22,7 @@ import { blogQueryKeys } from "../../../blog/hooks/useBlogQueries";
 const AdminSidebar = ({ collapsed, setCollapsed }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -66,6 +68,37 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
     }
   };
 
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
+    };
+  }, []);
+
+  const handleInstallClick = async (e) => {
+    e.stopPropagation();
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        console.log("User accepted the install prompt");
+        // We no longer need the prompt. Clear it up.
+        setDeferredPrompt(null);
+      }
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/admin/login");
@@ -80,25 +113,19 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
 
   return (
     <div
-      onClick={() => setCollapsed(!collapsed)}
-      className={`h-screen fixed left-0 top-0 z-50 flex flex-col transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] rounded-none will-change-[width]
-        ${collapsed ? "w-16 cursor-pointer" : "w-64"}
-        bg-white/5 backdrop-blur-[2px] border-r border-white/10 shadow-2xl
+      onClick={(e) => {
+        if (window.innerWidth >= 1280) {
+          setCollapsed(!collapsed);
+        }
+      }}
+      className={`h-full w-full flex flex-col rounded-none border-r border-white/10 bg-white/5 backdrop-blur-[2px] 
+        ${collapsed ? "cursor-pointer" : ""}
       `}
     >
       {/* Header / Brand */}
-      <div className="h-16 flex items-center border-b border-white/5 relative">
+      <div className="h-16 flex items-center border-b border-white/5 bg-white/5 relative">
         <Link
           to="/"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (collapsed) {
-              e.preventDefault();
-              setCollapsed(false);
-            } else if (window.innerWidth < 1280) {
-              setCollapsed(true);
-            }
-          }}
           className="flex items-center w-full h-full group focus:outline-none"
         >
           {/* Icon Gutter (Fixed 64px) */}
@@ -113,7 +140,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
           </div>
           {/* Label Container */}
           <div
-            className={`overflow-hidden transition-all duration-500 ease-in-out ${collapsed ? "w-0 opacity-0 -translate-x-4" : "w-auto opacity-100 translate-x-0"}`}
+            className={`relative z-10 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] ${collapsed ? "opacity-0 -translate-x-4" : "opacity-100 translate-x-0"}`}
           >
             <span className="font-bold text-lg text-white tracking-wide whitespace-nowrap ml-1">
               Admin
@@ -121,19 +148,18 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
           </div>
         </Link>
 
-        {/* Collapse Toggle */}
+        {/* Toggle Button - Positioned exactly at the header intersection (64px) */}
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             setCollapsed(!collapsed);
           }}
-          className="absolute -right-3 top-6 bg-neutral-900 border border-white/10 rounded-full p-1 text-neutral-400 hover:text-white transition-colors shadow-lg z-[60] focus:outline-none"
+          className={`absolute -right-2.5 top-16 -translate-y-1/2 bg-neutral-900 border border-white/10 rounded-full p-1 text-neutral-400 hover:text-white transition-all shadow-md z-[100] flex items-center justify-center focus:outline-none hover:scale-125 active:scale-90
+            ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}
+          `}
         >
-          {collapsed ? (
-            <FiChevronRight size={12} />
-          ) : (
-            <FiChevronLeft size={12} />
-          )}
+          <FiChevronLeft size={10} />
         </button>
       </div>
 
@@ -155,14 +181,14 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
                 }
                 e.stopPropagation();
               }}
-              className={`flex items-center h-12 transition-all duration-300 group relative focus:outline-none overflow-hidden
+              className={`flex items-center h-12 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] group relative focus:outline-none
                 ${isActive ? "text-white" : "text-neutral-400 hover:text-white"}
               `}
               title={collapsed ? item.name : ""}
             >
               {/* Highlight Background */}
               <div
-                className={`absolute inset-y-1.5 inset-x-2 rounded-lg transition-all duration-300 
+                className={`absolute inset-y-1.5 inset-x-2 rounded-lg transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] 
                 ${isActive ? "bg-white/10" : "bg-transparent group-hover:bg-white/5"}`}
               />
 
@@ -195,6 +221,32 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
 
       {/* Footer Section */}
       <div className="border-t border-white/5 bg-white/5 py-3">
+        {/* PWA Install Button (Only visible if prompt is available) */}
+        {deferredPrompt && (
+          <button
+            onClick={handleInstallClick}
+            className="w-full flex items-center h-12 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] group relative focus:outline-none text-purple-400 hover:text-white mb-2"
+            title="Install Admin App"
+          >
+            <div className="absolute inset-y-1.5 inset-x-2 rounded-lg transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20" />
+
+            <div className="w-16 shrink-0 flex items-center justify-center relative z-10">
+              <FiDownload
+                size={18}
+                className="group-hover:scale-105 transition-transform"
+              />
+            </div>
+
+            <div
+              className={`relative z-10 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] ${collapsed ? "opacity-0 -translate-x-4" : "opacity-100 translate-x-0"}`}
+            >
+              <span className="font-bold whitespace-nowrap text-sm ml-1 tracking-wide">
+                Install App
+              </span>
+            </div>
+          </button>
+        )}
+
         {/* Settings */}
         <button
           onClick={(e) => {
@@ -206,13 +258,13 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
               setShowSettings(!showSettings);
             }
           }}
-          className={`w-full flex items-center h-12 transition-all duration-300 group relative focus:outline-none overflow-hidden
+          className={`w-full flex items-center h-12 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] group relative focus:outline-none
             ${showSettings && !collapsed ? "text-white" : "text-neutral-400 hover:text-white"}
           `}
           title="Settings"
         >
           <div
-            className={`absolute inset-y-1.5 inset-x-2 rounded-lg transition-all duration-300 
+            className={`absolute inset-y-1.5 inset-x-2 rounded-lg transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] 
             ${showSettings && !collapsed ? "bg-white/10" : "bg-transparent hover:bg-white/5"}`}
           />
 
@@ -223,7 +275,9 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
           <div
             className={`flex flex-1 items-center justify-between pr-4 relative z-10 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] ${collapsed ? "opacity-0 -translate-x-4" : "opacity-100 translate-x-0"}`}
           >
-            <span className="font-medium text-sm ml-1">Settings</span>
+            <span className="font-medium whitespace-nowrap text-sm ml-1">
+              Settings
+            </span>
             <span
               className={`text-[10px] transition-transform duration-200 ${showSettings ? "rotate-180" : ""}`}
             >
@@ -268,22 +322,24 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
             }
             handleLogout();
           }}
-          className="w-full flex items-center h-12 transition-all duration-300 group relative focus:outline-none overflow-hidden text-neutral-400 hover:text-white"
+          className="w-full flex items-center h-12 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] group relative focus:outline-none text-neutral-400 hover:text-white"
           title="Sign Out"
         >
-          <div className="absolute inset-y-1.5 inset-x-2 rounded-lg transition-all duration-300 bg-transparent hover:bg-white/5" />
+          <div className="absolute inset-y-1.5 inset-x-2 rounded-lg transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] bg-transparent hover:bg-white/5" />
 
           <div className="w-16 shrink-0 flex items-center justify-center relative z-10">
             <FiLogOut
               size={18}
-              className="group-hover:scale-105 transition-transform"
+              className="text-red-400 group-hover:scale-105 transition-transform"
             />
           </div>
 
           <div
             className={`relative z-10 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] ${collapsed ? "opacity-0 -translate-x-4" : "opacity-100 translate-x-0"}`}
           >
-            <span className="font-medium text-sm ml-1">Sign Out</span>
+            <span className="text-red-400 font-medium whitespace-nowrap text-sm ml-1">
+              Sign Out
+            </span>
           </div>
         </button>
       </div>

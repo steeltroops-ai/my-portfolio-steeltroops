@@ -44,8 +44,8 @@ const MobileNav = () => {
     // Intersection Observer
     const observerOptions = {
       root: null,
-      rootMargin: "-30% 0px -30% 0px",
-      threshold: [0.1, 0.5],
+      rootMargin: "-49% 0px -49% 0px", // Check exactly the middle of the screen
+      threshold: 0,
     };
 
     const observerCallback = (entries) => {
@@ -53,10 +53,10 @@ const MobileNav = () => {
 
       const visibleSections = entries.filter((entry) => entry.isIntersecting);
       if (visibleSections.length > 0) {
-        const mostVisible = visibleSections.sort(
-          (a, b) => b.intersectionRatio - a.intersectionRatio
-        )[0];
-        if (mostVisible?.target?.id) updateActiveSection(mostVisible.target.id);
+        // If multiple intersect the very center, pick the first one
+        if (visibleSections[0]?.target?.id) {
+          updateActiveSection(visibleSections[0].target.id);
+        }
       }
     };
 

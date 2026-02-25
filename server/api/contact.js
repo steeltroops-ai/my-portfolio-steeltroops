@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import { setCorsHeaders, verifyAuth } from "./utils.js";
+import { setCorsHeaders, verifyAuth, checkRateLimit } from "./utils.js";
 
 const sql = neon(process.env.DATABASE_URL || "");
 
@@ -14,6 +14,10 @@ function errorResponse(res, message, status = 500) {
 export default async function handler(req, res) {
   setCorsHeaders(res, req);
 
+  if (!checkRateLimit(req)) {
+    return res.status(429).json({ error: "Too many requests. Please wait." });
+  }
+
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -23,7 +27,41 @@ export default async function handler(req, res) {
   try {
     // POST - Submit contact message (public)
     if (req.method === "POST") {
-      const { name, email, subject, message, visitorId } = req.body;
+      const {
+        name,
+        email,
+        subject,
+        message,
+        visitorId,
+        _hp,
+        submissionDurationMs,
+      } = req.body;
+
+      // 0. Intelligent Bot Defense (Server-Side)
+      // A. Honeypot Check: If _hp is set, it's a bot.
+      if (_hp && _hp.length > 0) {
+        console.warn(`[Bot Defense] Honeypot triggered by ${req.ip}`);
+        // Return success to confuse the bot, but don't save anything.
+        return jsonResponse(
+          res,
+          { success: true, message: "Message sent!" },
+          200
+        );
+      }
+
+      // B. Velocity Check: If submission was inhumanly fast (< 2s), flag it.
+      // We allow a bit of buffer (e.g. 1s) for network latency variations, but < 500ms is definitely a bot.
+      // Strict mode: < 2000ms from client.
+      if (submissionDurationMs && parseInt(submissionDurationMs) < 1000) {
+        console.warn(
+          `[Bot Defense] Velocity check failed (${submissionDurationMs}ms) by ${req.ip}`
+        );
+        return errorResponse(
+          res,
+          "Suspicious activity detected. Please try again slowly.",
+          400
+        );
+      }
 
       if (!name || !email || !subject || !message) {
         return errorResponse(res, "All fields are required", 400);
@@ -41,36 +79,88 @@ export default async function handler(req, res) {
         RETURNING *
       `;
 
-      // 2. Identity Resolution (Side Effect)
-      // Link this anonymous visitor to a real identity based on email
+      // Real-time broadcast for admin
+      try {
+        const { emitToAdmins } = await import("../socket-hub.js");
+        emitToAdmins("MESSAGES:NEW_INQUIRY", {
+          name: name.trim(),
+          subject: subject.trim(),
+          timestamp: new Date().toISOString(),
+        });
+      } catch (e) {
+        // Broadcast failed, ignore
+      }
+
+      // 2. Identity Resolution (The "God Mode" Binding)
       if (visitorId) {
         try {
-          // A. Create/Update Master Identity
-          const identities = await sql`
-            INSERT INTO master_identities (real_name, email, first_reveal_timestamp, last_active_timestamp)
-            VALUES (${name.trim()}, ${email.trim().toLowerCase()}, NOW(), NOW())
-            ON CONFLICT (email) DO UPDATE SET
-              real_name = EXCLUDED.real_name,
-              last_active_timestamp = NOW()
-            RETURNING id
+          const { forensicData } = req.body;
+
+          // A. Update current profile with latest forensics if provided
+          if (forensicData) {
+            await sql`
+                UPDATE visitor_profiles SET
+                    gpu_renderer = COALESCE(${forensicData.gpu_renderer}, gpu_renderer),
+                    canvas_hash = COALESCE(${forensicData.canvas_hash}, canvas_hash),
+                    screen_size = COALESCE(${forensicData.screen_resolution}, screen_size),
+                    hardware_hash = COALESCE(${forensicData.fingerprint}, hardware_hash)
+                WHERE visitor_id = ${visitorId}
+              `;
+          }
+
+          // B. Create/Update Known Entity (Real Person)
+          // We use email as the primary key for identity resolution
+          const entities = await sql`
+              INSERT INTO known_entities (real_name, email, linkedin_url, role, notes)
+              VALUES (
+                ${name.trim()}, 
+                ${email.trim().toLowerCase()}, 
+                ${email.trim().toLowerCase()}, 
+                'Contact Inquiry', 
+                'Auto-resolved via Contact Form'
+              )
+              ON CONFLICT (email) DO UPDATE SET 
+                real_name = EXCLUDED.real_name,
+                updated_at = NOW()
+              RETURNING entity_id
           `;
 
-          if (identities.length > 0) {
-            const identityId = identities[0].id;
+          if (entities.length > 0) {
+            const entityId = entities[0].entity_id;
+            console.log(`[Identity] Resolved Entity: ${entityId} (${email})`);
 
-            // B. Link Visitor Profile to Identity
+            // C. Link Current Visitor
             await sql`
-              UPDATE visitor_profiles
-              SET identity_id = ${identityId}
-              WHERE visitor_id = ${visitorId}
+                UPDATE visitor_profiles
+                SET likely_entity_id = ${entityId}
+                WHERE visitor_id = ${visitorId}
             `;
-            console.log(
-              `[Identity] Linked visitor ${visitorId} to identity ${identityId} (${email})`
-            );
+
+            // D. Retroactive "God Mode" Linkage
+            // Find ALL profiles (past, present, future) that share the same hardware hash
+            // and link them to this entity.
+            if (forensicData?.fingerprint) {
+              const retroUpdate = await sql`
+                UPDATE visitor_profiles
+                SET likely_entity_id = ${entityId}
+                WHERE hardware_hash = ${forensicData.fingerprint}
+                AND likely_entity_id IS NULL
+                RETURNING visitor_id
+              `;
+
+              if (retroUpdate.length > 0) {
+                console.log(
+                  `[Identity] GOD MODE: Retroactively linked ${retroUpdate.length} anonymous profiles to ${email}`
+                );
+              }
+            }
           }
         } catch (identityError) {
-          console.error("[Identity] Resolution failed:", identityError);
-          // Don't fail the request, just log it
+          // Non-blocking error
+          console.warn(
+            "[Identity] Resolution check failed:",
+            identityError.message
+          );
         }
       }
 

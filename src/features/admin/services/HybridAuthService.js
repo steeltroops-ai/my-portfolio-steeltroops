@@ -10,27 +10,24 @@ import {
   getCurrentUser as neonGetCurrentUser,
 } from "./NeonAuthService";
 
-import { getToken } from "@/lib/neon";
 import { cacheManager } from "@/lib/cacheManager";
 
 // Check if Neon API is available
 const isNeonAvailable = async () => {
   try {
-    // Check if we have a token and can verify it
-    if (getToken()) {
-      const result = await neonGetCurrentUser();
+    // We try to get the current user.
+    // If we get an error, we analyze it.
+    const result = await neonGetCurrentUser();
 
-      // If we get "Unauthorized", it means the service IS available and working,
-      // just the token is invalid or expired. So we should return true.
-      if (result.error && result.error.message === "Unauthorized") {
-        return true;
-      }
-
-      // For other errors (network, 500), return false
-      return !result.error;
+    // If result is valid or "Unauthorized", Neon is "available".
+    if (
+      !result.error ||
+      (result.error && result.error.message === "Unauthorized")
+    ) {
+      return true;
     }
-    // If no token, assume Neon is available for login
-    return true;
+
+    return false;
   } catch (error) {
     console.warn("Neon auth unavailable:", error.message);
     return false;
@@ -162,7 +159,7 @@ export const getAuthInfo = async () => {
       isAuthenticated: false,
     };
 
-    if (authInfo.neonAvailable && getToken()) {
+    if (authInfo.neonAvailable) {
       const user = await neonGetCurrentUser();
       if (user.data && !user.error) {
         authInfo = {
@@ -233,16 +230,7 @@ export const onAuthStateChange = (callback) => {
     callback(authenticated ? "SIGNED_IN" : "SIGNED_OUT", null);
   });
 
-  // For token changes, use storage events
-  const handleStorageChange = (event) => {
-    if (event.key === "neon_auth_token") {
-      callback(event.newValue ? "SIGNED_IN" : "SIGNED_OUT", null);
-    }
-  };
-
-  window.addEventListener("storage", handleStorageChange);
-
-  return () => {
-    window.removeEventListener("storage", handleStorageChange);
-  };
+  // Note: We cannot listen to Cookie changes via storage events.
+  // The app relies on verifyToken/me calls to update state.
+  return () => {};
 };

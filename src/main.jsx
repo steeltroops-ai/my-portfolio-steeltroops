@@ -1,5 +1,4 @@
-import { Suspense, lazy, StrictMode } from "react";
-import * as React from "react";
+import React, { Suspense, lazy, StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -12,6 +11,7 @@ import { Toaster } from "react-hot-toast";
 import { ReactLenis } from "lenis/react";
 import App from "@/App.jsx";
 import { blogQueryKeys } from "@/features/blog/hooks/useBlogQueries";
+import { SocketProvider } from "@/shared/context/SocketContext";
 import { getPublishedPosts } from "@/features/blog/services/HybridBlogService";
 import ErrorBoundary from "@/shared/components/feedback/ErrorBoundary";
 import "@/index.css";
@@ -143,93 +143,95 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: "#333",
-              color: "#fff",
-            },
-          }}
-        />
-        <HelmetProvider>
-          <ReactLenis
-            root
-            options={{
-              lerp: 0.1,
-              duration: 1.2,
-              smoothWheel: true,
-              wheelMultiplier: 1.0,
-              touchMultiplier: 1.5,
+        <SocketProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: "#333",
+                color: "#fff",
+              },
             }}
-          >
-            <LazyMotion features={loadFeatures} strict>
-              <PrefetchBlogData>
-                <Router
-                  future={{
-                    v7_startTransition: true,
-                    v7_relativeSplatPath: true,
-                  }}
-                >
-                  <AnalyticsTracker />
-                  <Suspense fallback={null}>
-                    <Routes>
-                      <Route
-                        path="/"
-                        element={
-                          <>
-                            <App />
-                            <FloatingChatButton />
-                            <MobileNav />
-                          </>
-                        }
-                      />
-                      <Route path="/blogs" element={<Blog />} />
-                      <Route path="/blogs/:slug" element={<BlogPost />} />
-                      <Route path="/admin/login" element={<AdminLogin />} />
+          />
+          <HelmetProvider>
+            <ReactLenis
+              root
+              options={{
+                lerp: 0.1,
+                duration: 1.2,
+                smoothWheel: true,
+                wheelMultiplier: 1.0,
+                touchMultiplier: 1.5,
+              }}
+            >
+              <LazyMotion features={loadFeatures} strict>
+                <PrefetchBlogData>
+                  <Router
+                    future={{
+                      v7_startTransition: true,
+                      v7_relativeSplatPath: true,
+                    }}
+                  >
+                    <AnalyticsTracker />
+                    <Suspense fallback={null}>
+                      <Routes>
+                        <Route
+                          path="/"
+                          element={
+                            <>
+                              <App />
+                              <FloatingChatButton />
+                              <MobileNav />
+                            </>
+                          }
+                        />
+                        <Route path="/blogs" element={<Blog />} />
+                        <Route path="/blogs/:slug" element={<BlogPost />} />
+                        <Route path="/admin/login" element={<AdminLogin />} />
 
-                      {/* Admin Routes with Layout */}
-                      <Route
-                        element={
-                          <ProtectedRoute>
-                            <AdminLayout />
-                          </ProtectedRoute>
-                        }
-                      >
+                        {/* Admin Routes with Layout */}
                         <Route
-                          path="/admin/dashboard"
-                          element={<AdminDashboard />}
-                        />
-                        <Route
-                          path="/admin/post/new"
-                          element={<BlogEditor />}
-                        />
-                        <Route
-                          path="/admin/post/edit/:id"
-                          element={<BlogEditor />}
-                        />
-                        <Route
-                          path="/admin/ai-generator"
-                          element={<AIBlogGenerator />}
-                        />
-                        <Route
-                          path="/admin/messages"
-                          element={<MessageCenter />}
-                        />
-                        <Route
-                          path="/admin/analytics"
-                          element={<Analytics />}
-                        />
-                      </Route>
-                      {/* 404 Not Found - Must be last */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </Router>
-              </PrefetchBlogData>
-            </LazyMotion>
-          </ReactLenis>
-        </HelmetProvider>
+                          element={
+                            <ProtectedRoute>
+                              <AdminLayout />
+                            </ProtectedRoute>
+                          }
+                        >
+                          <Route
+                            path="/admin/dashboard"
+                            element={<AdminDashboard />}
+                          />
+                          <Route
+                            path="/admin/post/new"
+                            element={<BlogEditor />}
+                          />
+                          <Route
+                            path="/admin/post/edit/:id"
+                            element={<BlogEditor />}
+                          />
+                          <Route
+                            path="/admin/ai-generator"
+                            element={<AIBlogGenerator />}
+                          />
+                          <Route
+                            path="/admin/messages"
+                            element={<MessageCenter />}
+                          />
+                          <Route
+                            path="/admin/analytics"
+                            element={<Analytics />}
+                          />
+                        </Route>
+                        {/* 404 Not Found - Must be last */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                  </Router>
+                </PrefetchBlogData>
+              </LazyMotion>
+            </ReactLenis>
+          </HelmetProvider>
+        </SocketProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>

@@ -137,20 +137,40 @@ When changes are detected:
 
 ### User returns to tab after editing blog post in another tab
 
-1. `visibilitychange` fires
-2. useSmartSync runs a version check
-3. Detects new post content hash
-4. Invalidates blog query keys in React Query
-5. React Query refetches blog data
-6. UI updates without manual refresh
+1. `visibilitychange` fires.
+2. `useSmartSync` runs a version check (30s interval).
+3. **FAST PATH:** WebSocket signal `ADMIN:POSTS_CHANGED` received instantly.
+4. Invalidates blog query keys in React Query + `cacheManager` prefix.
+5. React Query refetches blog data immediately.
+6. UI updates without manual refresh or waiting for poll.
 
 ### User has old service worker cached on their phone
 
-1. Browser downloads new sw.js (served with no-cache)
-2. New SW activates, clears all CacheStorage
-3. New SW sends SW_CACHE_CLEARED message to page
-4. Page reloads automatically
-5. New SW unregisters itself -- never runs again
+1. Browser downloads new `sw.js` (served with `no-cache`).
+2. New SW activates, clears all `CacheStorage` buckets.
+3. New SW unregisters itself -- effectively disabling Service Worker interception.
+4. Page now relies on standard browser caching + `cacheManager.js`.
+
+### Developer makes changes on localhost
+
+1. Vite HMR triggers a reload/update.
+2. `cacheManager.js` in development mode ALWAYS hits the network (skips localStorage).
+3. React Query `staleTime` defaults allow for memory-caching, but `refetch()` on mount (Admin) or WebSocket Pulse ensures fresh data.
+4. No stale "ghost" data remains in the UI.
+
+---
+
+## The Real-Time Pulse (WebSockets)
+
+For the Admin suite, we go beyond polling. The `useAdminPulse` hook listens for the following signals:
+
+| Signal                 | Trigger                       | Action                                      |
+| ---------------------- | ----------------------------- | ------------------------------------------- |
+| `ANALYTICS:SIGNAL`     | New visitor or event          | Optimistically increments active stats      |
+| `MESSAGES:NEW_INQUIRY` | New contact form submission   | Invalidates `contactMessages` list          |
+| `ADMIN:POSTS_CHANGED`  | Post Created/Updated/Deleted  | Purges `blog-` cache and invalidates `blog` |
+| `SYSTEM:CACHE_PURGE`   | Major update or admin log-out | Complete `cacheManager.clearAll()`          |
+| `AI:GENERATION_*`      | Blog generation state change  | UI feedback and eventual list invalidation  |
 
 ---
 

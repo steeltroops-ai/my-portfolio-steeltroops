@@ -218,6 +218,8 @@ export const getAllPosts = async (options = {}) => {
     return {
       data: allPosts,
       count: allPosts.length,
+      liveCount: allPosts.filter((p) => p.published).length,
+      draftCount: allPosts.filter((p) => !p.published).length,
       error: {
         message: "Database unavailable - showing static content only",
         type: "warning",

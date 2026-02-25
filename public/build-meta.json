@@ -1,8 +1,7 @@
 {
   "version": "2.0.3",
-  "buildId": "meta-mllhjrk7",
-  "deployedAt": "2026-02-13T22:55:04.519Z",
+  "buildId": "dev-mm1fgaym",
+  "deployedAt": "2026-02-25T02:40:42.622Z",
   "previousVersion": "2.0.3",
-  "env": "production",
-  "reason": "doc-only update"
+  "env": "development"
 }

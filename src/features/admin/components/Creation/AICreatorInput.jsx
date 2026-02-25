@@ -22,11 +22,16 @@ const OptionPill = ({ label, value, options, onChange, icon: Icon }) => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm text-neutral-300 hover:text-white"
-        title={label}
+        className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs sm:text-sm text-neutral-300 hover:text-white group"
+        title={`${label}: ${value}`}
       >
-        {Icon && <Icon size={14} />}
-        <span className="font-medium">{value}</span>
+        {Icon && (
+          <Icon
+            size={14}
+            className="group-hover:text-purple-400 transition-colors"
+          />
+        )}
+        <span className="hidden md:inline font-medium">{value}</span>
       </button>
 
       {isOpen && (
@@ -153,7 +158,7 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
                 ? "Enter your blog topic..."
                 : "Describe what you want to create..."
             }
-            className={`w-full bg-transparent text-white placeholder-neutral-500 resize-none focus:outline-none custom-scrollbar leading-relaxed transition-all ${isAdvanced ? "text-xl font-medium mb-4" : "text-base max-h-48"}`}
+            className={`w-full bg-transparent text-white placeholder-neutral-500 resize-none focus:outline-none scrollbar-none leading-relaxed transition-all ${isAdvanced ? "text-lg sm:text-xl font-medium mb-2 sm:mb-4" : "text-sm sm:text-base max-h-32 sm:max-h-48"}`}
             rows={1}
             style={{ minHeight: "24px" }}
           />
@@ -184,7 +189,7 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
                 </div>
 
                 {/* 2. Global Settings */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-2">
                       <FiUser /> Target Audience
@@ -248,8 +253,8 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
 
         {/* Bottom Bar (Quick Mode vs Advanced Footer) */}
         {!isAdvanced && (
-          <div className="flex items-center justify-between px-5 pb-4 pt-2 border-t border-white/5 mt-2">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center justify-between px-3 sm:px-5 pb-3 sm:pb-4 pt-2 border-t border-white/5 mt-2 gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
               <OptionPill
                 label="Style"
                 value={quickStyle}
@@ -280,35 +285,36 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
 
               <button
                 onClick={() => setIncludeCode(!includeCode)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-sm ${
+                className={`flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl border transition-all text-xs sm:text-sm ${
                   includeCode
                     ? "bg-purple-500/20 border-purple-500/30 text-purple-200"
                     : "bg-white/5 border-white/10 text-neutral-400 hover:text-white hover:bg-white/10"
                 }`}
+                title="Include Code"
               >
                 <FiCode size={14} />
-                <span className="font-medium">Code</span>
+                <span className="hidden md:inline font-medium">Code</span>
               </button>
             </div>
 
             <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || isGenerating}
-              className={`ml-3 px-5 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 font-medium text-sm ${
+              className={`flex-none px-4 sm:px-5 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 font-medium text-xs sm:text-sm ${
                 prompt.trim() && !isGenerating
-                  ? "bg-white text-black hover:bg-neutral-200 hover:scale-105 shadow-lg"
+                  ? "bg-white text-black hover:bg-neutral-200 hover:scale-105 shadow-lg shadow-white/10"
                   : "bg-white/10 text-neutral-600 cursor-not-allowed"
               }`}
             >
               {isGenerating ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
-                  <span>Generating...</span>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
+                  <span className="hidden xs:inline">Generating</span>
                 </>
               ) : (
                 <>
                   <span>Generate</span>
-                  <FiSend size={14} />
+                  <FiSend size={14} className="hidden xs:block" />
                 </>
               )}
             </button>

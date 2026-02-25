@@ -36,11 +36,11 @@ The system follows a two-stage sequential process:
 1. **Blueprint Generation**: Output of a structural JSON schema defining sections, headings, and technical angles.
 2. **Section Synthesis**: Individual tuning of section parameters (Tone, Depth, Technicality) followed by parallelized or sequential writing.
 
-### 2.2 Communication Protocol (SSE)
+### 2.2 Communication Protocol (SSE & WebSockets)
 
-- **Transmission**: Utilizes Server-Sent Events (SSE) via the Cerebras Llama 3.3 adapter.
-- **Client Experience**: Real-time word-by-word content flushing.
-- **Timeout Management**: Persistent connections bypass serverless execution limits (e.g., Vercel's 30s cap).
+- **Transmission (Standard)**: Utilizes Server-Sent Events (SSE) via the Cerebras Llama 3.3 adapter for single-tab streaming.
+- **Orchestration (Enhanced)**: Moving to **WebSockets (WS)** for decoupled generation. This allows the admin to initiate a job and receive updates via the global `SocketHub` even if the dedicated generation tab is closed.
+- **Timeout Management**: Persistent connections (SSE or WS) bypass serverless execution limits (e.g., Vercel's 30s cap).
 
 ### 2.3 System Data Flow
 
@@ -48,22 +48,26 @@ The system follows a two-stage sequential process:
 sequenceDiagram
     participant UI as Client Orchestrator
     participant API as Vercel Edge API
+    participant Hub as WebSocket SocketHub
     participant AI as Cerebras Llama 3.3
     participant DB as Neon Database
 
     UI->>API: POST /api/ai/generate-blog-stream
     API->>AI: Trigger Stage 1: Structure Blueprint
     AI-->>API: JSON Outline
-    API-->>UI: Event: outline_complete
+    API-->>Hub: Webhook: { stage: 'OUTLINE_COMPLETE', data: {...} }
+    Hub-->>UI: WS Emit: 'AI:OUTLINE_READY'
 
     loop Each Section
         API->>AI: Write Section Content (with Context)
         AI-->>API: Streamed Markdown Chunks
-        API-->>UI: Event: section_chunk
+        API-->>Hub: Webhook: { stage: 'CHUNK', chunk: '...' }
+        Hub-->>UI: WS Emit: 'AI:CHUNK_READY'
     end
 
     API->>DB: Persist Final Post (Draft)
-    API-->>UI: Event: generation_complete
+    API-->>Hub: Webhook: { stage: 'COMPLETE', postId: '...' }
+    Hub-->>UI: WS Emit: 'AI:GENERATION_FINISHED'
 ```
 
 ---

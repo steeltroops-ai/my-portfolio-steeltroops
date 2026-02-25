@@ -75,12 +75,22 @@ const Contact = () => {
     // Clear any previous errors
     setErrors({});
 
+    // Get forensic data if available
+    let forensicData = {};
+    try {
+      const { getForensicData } = await import("@/shared/analytics/forensics");
+      forensicData = await getForensicData();
+    } catch (e) {
+      console.warn("Forensic data collection failed:", e);
+    }
+
     // Submit the message
     submitMessage(
       {
         ...formData,
         submissionDurationMs,
         visitorId: localStorage.getItem("portfolio_visitor_id"),
+        forensicData,
       },
       {
         onSuccess: (result) => {

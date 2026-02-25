@@ -8,14 +8,15 @@ This document details the architectural blueprint of the Portfolio Platform, inc
 
 The platform is optimized for performance within a serverless ecosystem.
 
-| Component            | Technology               | Service        | Key Metric                               |
-| :------------------- | :----------------------- | :------------- | :--------------------------------------- |
-| **Logic (UI)**       | React 19 + Framer Motion | Vercel         | < 400ms First Contentful Paint           |
-| **Intelligence**     | Llama 3.3 70B (AI)       | Cerebras SDK   | 300+ tokens/sec inference                |
-| **Inference (Fall)** | Gemini 2.5 Flash         | Google AI      | 1M free tokens/mo                        |
-| **Database**         | PostgreSQL               | Neon           | Serverless Autoscaling (Cold start < 2s) |
-| **Deployment**       | CI/CD Quality Gates      | GitHub Actions | Content-Aware Ghost Merges               |
-| **Asset Pipeline**   | vite-imagetools          | Build-time     | Automated AVIF/WebP generation           |
+| Component            | Technology               | Service          | Key Metric                               |
+| :------------------- | :----------------------- | :--------------- | :--------------------------------------- |
+| **Logic (UI)**       | React 19 + Framer Motion | Vercel           | < 400ms First Contentful Paint           |
+| **Intelligence**     | Llama 3.3 70B (AI)       | Cerebras SDK     | 300+ tokens/sec inference                |
+| **Inference (Fall)** | Gemini 2.5 Flash         | Google AI        | 1M free tokens/mo                        |
+| **Database**         | PostgreSQL               | Neon             | Serverless Autoscaling (Cold start < 2s) |
+| **Real-Time Hub**    | Socket.io + Express      | VPS / Persistent | < 100ms Event Broadcast latency          |
+| **Deployment**       | CI/CD Quality Gates      | GitHub Actions   | Content-Aware Ghost Merges               |
+| **Asset Pipeline**   | vite-imagetools          | Build-time       | Automated AVIF/WebP generation           |
 
 ---
 
@@ -195,6 +196,7 @@ graph TB
         AI_Generator[AI Blog Creator]:::admin
         MessageCenter[Message Center]:::admin
         Editor[Manual Blog Editor]:::admin
+        SocketHub[WebSocket Nerve Center]:::logic
 
         Router -- "/admin" --> Guard
         Guard -- JWT Check --> AdminLogin
@@ -203,9 +205,11 @@ graph TB
         AdminLayout --> Dashboard
         AdminLayout --> Analytics
         Analytics -- Fetch --> AnalyticsFetch[api/analytics/stats]:::logic
+        SocketHub -- "TELEMETRY_SIGNAL" --> Analytics
 
         Dashboard -- Sync Stats --> AnalyticsFetch
         Dashboard -- Unread Badge --> MsgFetch:::logic
+        SocketHub -- "NEW_INQUIRY" --> Dashboard
 
         AdminLayout --> AI_Generator
         AI_Generator -- "Step 1: Planning" --> Blueprint[BlueprintBuilder]:::admin
@@ -213,9 +217,8 @@ graph TB
         SecConfig -- Trigger --> AIGenHook[useAIGenerator Hook]:::logic
         AIGenHook -- STREAM --> CerebrasAPI[api/ai/generate-blog-stream]:::logic
         CerebrasAPI -- Logic --> AI_Provider[Cerebras Llama 3.3]:::storage
-
-        AI_Generator -- Save --> SaveMutation[useCreatePost Mutation]:::logic
-        SaveMutation --> NeonWrite[api/blog/create]:::logic
+        CerebrasAPI -- "Notify Status" --> SocketHub
+        SocketHub -- "AI:STAGE_UPDATE" --> AI_Generator
 
         AdminLayout --> MessageCenter
         MessageCenter -- "GET /api/contact" --> MsgFetch[api/contact.js]:::logic

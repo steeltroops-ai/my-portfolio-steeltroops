@@ -3,11 +3,10 @@
 
 const API_BASE = "/api";
 
-// Token management (DEPRECATED - Moved to HttpOnly Cookies)
-// const TOKEN_KEY = 'neon_auth_token';
-export const getToken = () => null; // localStorage.getItem(TOKEN_KEY);
-export const setToken = (token) => {}; // localStorage.setItem(TOKEN_KEY, token);
-export const removeToken = () => {}; // localStorage.removeItem(TOKEN_KEY);
+// Token management (REMOVED - Now using strict HttpOnly Cookies)
+export const getToken = () => null;
+export const setToken = () => {};
+export const removeToken = () => {};
 
 // API request helper
 async function apiRequest(endpoint, options = {}) {

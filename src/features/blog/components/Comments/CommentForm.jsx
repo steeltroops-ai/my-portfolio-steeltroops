@@ -19,6 +19,7 @@ const CommentForm = ({ postId, onSuccess }) => {
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [hp, setHp] = useState("");
 
   const { mutate: addComment, isLoading } = useAddComment();
 
@@ -33,6 +34,11 @@ const CommentForm = ({ postId, onSuccess }) => {
     e.preventDefault();
 
     // Simple validation
+    if (hp && hp.trim() !== "") {
+      setErrors({ submit: "Spam detected. Please try again." });
+      return;
+    }
+
     if (!content.trim()) {
       setErrors({ content: "Comment cannot be empty" });
       return;
@@ -134,6 +140,20 @@ const CommentForm = ({ postId, onSuccess }) => {
             >
               <FiUser className="text-neutral-400 text-sm" />
             </motion.div>
+          </div>
+
+          {/* Honeypot field for spam bots - should remain empty */}
+          <div className="hidden" aria-hidden="true">
+            <label htmlFor="_hp_comment">Leave this field empty</label>
+            <input
+              type="text"
+              id="_hp_comment"
+              name="_hp_comment"
+              value={hp}
+              onChange={(e) => setHp(e.target.value)}
+              autoComplete="off"
+              tabIndex="-1"
+            />
           </div>
 
           {/* Comment input area */}

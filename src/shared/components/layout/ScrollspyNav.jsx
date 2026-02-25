@@ -42,8 +42,8 @@ const ScrollspyNav = () => {
     // Intersection Observer for scroll-based updates
     const observerOptions = {
       root: null,
-      rootMargin: "-45% 0px -45% 0px",
-      threshold: [0.1, 0.5, 0.9],
+      rootMargin: "-49% 0px -49% 0px", // Check exactly the middle of the screen
+      threshold: 0,
     };
 
     const observerCallback = (entries) => {
@@ -53,10 +53,8 @@ const ScrollspyNav = () => {
         (entry) => entry.isIntersecting
       );
       if (intersectingEntries.length > 0) {
-        const mostVisible = intersectingEntries.sort(
-          (a, b) => b.intersectionRatio - a.intersectionRatio
-        )[0];
-        updateActiveSection(mostVisible.target.id);
+        // If multiple intersect the very center, pick the first one
+        updateActiveSection(intersectingEntries[0].target.id);
       }
     };
 

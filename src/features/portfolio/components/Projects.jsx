@@ -97,33 +97,27 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
             src={(() => {
               const currentImg = images[isExpanded ? currentImageIndex : 0];
               if (!currentImg && !project.image) return null;
-              // If currentImg is a string (external URL), use it directly
-              // If it's an object (from vite-imagetools not generating raw srcset string but module), handle it?
-              // Actually vite-imagetools with ?as=srcset returns a string "src 300w, src 600w..."
-              // But we still need a fallback 'src' for older browsers or if it's just a string URL.
 
+              // If currentImg is a string (external URL or processed srcset)
               if (typeof currentImg === "string") {
                 if (currentImg.startsWith("http")) {
-                  // ... logic for external URLs ...
                   const isDirectImage =
                     /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(currentImg);
                   if (project.url && !hasMultipleImages && !isDirectImage) {
                     const cleanProjectUrl = project.url.replace(/\/$/, "");
                     return `https://api.microlink.io/?url=${encodeURIComponent(cleanProjectUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
                   }
-                  if (!isDirectImage) {
-                    const cleanUrl = currentImg.replace(/\/$/, "");
-                    return `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
-                  }
                   return currentImg;
                 }
-                // It's a srcset string from vite-imagetools (hopefully), or a simple path string if not processed
-                // For the 'src' attribute, we need a single source.
-                // vite-imagetools ?as=srcset returns the string. We can't easily extract one src.
-                // Actually, modern browsers ignore src if srcset is valid and matching.
-                // But we should try to give a fallback.
-                // If we use 'as=srcset', the import IS the srcset string.
-                return currentImg.split(" ")[0]; // Very naive fallback, picks first URL (300w usually)
+
+                // If it's a srcset string (contains " w," or similar), extract first source
+                if (
+                  currentImg.includes(".webp") ||
+                  currentImg.includes(".jpg")
+                ) {
+                  return currentImg.split(" ")[0];
+                }
+                return currentImg;
               }
               return null;
             })()}
@@ -131,9 +125,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               const currentImg = images[isExpanded ? currentImageIndex : 0];
               if (
                 typeof currentImg === "string" &&
-                !currentImg.startsWith("http")
+                !currentImg.startsWith("http") &&
+                currentImg.includes(" ")
               ) {
-                return currentImg; // This is our srcset string
+                return currentImg; // Valid srcset string
               }
               return undefined;
             })()}
@@ -155,36 +150,27 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
                 ? "object-cover object-top"
                 : "object-cover object-top group-hover:scale-110"
             }`}
-            data-original-url={images[isExpanded ? currentImageIndex : 0]}
+            data-original-url={(() => {
+              const raw = images[isExpanded ? currentImageIndex : 0];
+              if (typeof raw === "string") {
+                return raw.split(" ")[0]; // Just store the base URL
+              }
+              return raw;
+            })()}
             onError={(e) => {
-              // ... existing error handler logic ...
-              const currentSrc = e.target.src;
               const originalUrl = e.target.getAttribute("data-original-url");
 
-              if (
-                !originalUrl ||
-                (typeof originalUrl === "string" &&
-                  !originalUrl.startsWith("http"))
-              ) {
-                if (project.image && project.image.startsWith("http")) {
-                  e.target.src = project.image;
-                } else {
-                  e.target.src =
-                    "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=800";
-                }
-                e.target.removeAttribute("srcset"); // Remove broken srcset on error
+              // If it's a local asset or missing, use placeholder
+              if (!originalUrl || !originalUrl.startsWith("http")) {
+                e.target.src =
+                  "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=800";
+                e.target.removeAttribute("srcset");
                 return;
               }
 
+              // Only try screenshot service for HTTP links
               const cleanUrl = originalUrl.replace(/\/$/, "");
-
-              if (currentSrc.includes("microlink.io")) {
-                e.target.src = `https://image.thum.io/get/width/1280/crop/720/noanimate/${cleanUrl}`;
-              } else {
-                e.target.src =
-                  project.image ||
-                  "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=800";
-              }
+              e.target.src = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
             }}
           />
         </AnimatePresence>

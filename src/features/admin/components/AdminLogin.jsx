@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,19 +30,47 @@ const AdminLogin = () => {
     }
   }, []);
 
-  // UI PREFETCHING: Load the Dashboard JS bundle while user is typing
-  // This ensures the "Code" is ready instantly, even if Data isn't.
-  const handleCodePrefetch = () => {
+  // UI & DATA PREFETCHING: Load the Dashboard resources while user is typing
+  // This ensures the "Code" and "Data" are ready before they sogar click login.
+  const handleIntelligencePreheat = useCallback(() => {
     if (codePrefetched.current) return;
 
-    console.log("⚡ Prefetching Dashboard UI Chunks...");
+    console.log("⚡ Initiating Intelligence Preheating (UI + Data)...");
     codePrefetched.current = true;
 
-    // Manually trigger dynamic imports to warm up the module cache
-    // These paths must match the lazy imports in main.jsx
+    // 1. Warm up the JS bundles (Lazy Components)
     import("../components/AdminDashboard");
     import("../layouts/AdminLayout");
-  };
+    import("../components/Analytics");
+    import("../components/MessageCenter");
+
+    // 2. Warm up the Data Caches (Optimistic Fetching)
+    // We fetch these in the background. Even if they fail due to no token,
+    // they'll be ready the moment login succeeds and the token is set.
+    queryClient.prefetchQuery({
+      queryKey: blogQueryKeys.allPosts({ limit: 100 }),
+      queryFn: () => getAllPosts({ limit: 100 }),
+      staleTime: 5 * 60 * 1000,
+    });
+
+    // Prefetch critical stats
+    import("@/shared/analytics/useAnalyticsStats").then(({ fetchStats }) => {
+      queryClient.prefetchQuery({
+        queryKey: ["analytics-stats"],
+        queryFn: fetchStats,
+        staleTime: 5 * 60 * 1000,
+      });
+    });
+
+    // Prefetch unread messages
+    import("../hooks/useContactMessages").then(({ fetchContactMessages }) => {
+      queryClient.prefetchQuery({
+        queryKey: ["contactMessages", "all"],
+        queryFn: () => fetchContactMessages("all"),
+        staleTime: 5 * 60 * 1000,
+      });
+    });
+  }, [queryClient]);
 
   // Check if already authenticated
   useEffect(() => {
@@ -51,12 +79,7 @@ const AdminLogin = () => {
         const info = await getAuthInfo();
         setAuthInfo(info);
         if (info.isAuthenticated) {
-          // If auth exists, we can safely prefetch because we have a token
-          queryClient.prefetchQuery({
-            queryKey: blogQueryKeys.allPosts(),
-            queryFn: getAllPosts,
-            staleTime: 5 * 60 * 1000,
-          });
+          handleIntelligencePreheat();
           navigate("/admin/dashboard");
         }
       } catch (err) {
@@ -65,7 +88,7 @@ const AdminLogin = () => {
     };
 
     checkAuth();
-  }, [navigate, queryClient]);
+  }, [navigate, handleIntelligencePreheat]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,8 +110,8 @@ const AdminLogin = () => {
     setLoading(true);
     setError("");
 
-    // Ensure code is definitely loading/loaded
-    handleCodePrefetch();
+    // Ensure preheating is definitely active
+    handleIntelligencePreheat();
 
     try {
       console.log("=== LOGIN ATTEMPT ===");
@@ -98,22 +121,12 @@ const AdminLogin = () => {
       const result = await signInWithCredentials(identifier, password);
 
       if (result && result.data && !result.error) {
-        // Success
         console.log("✓ Login successful!");
 
         // Disable analytics for admin session
         localStorage.setItem("portfolio_admin_bypass", "true");
 
-        // PROGRESSIVE LOADING STRATEGY:
-        // 1. Initiate the data fetch NOW (don't await it), ensuring token is ready
-        console.log("Starting background data fetch...");
-        queryClient.prefetchQuery({
-          queryKey: blogQueryKeys.allPosts(),
-          queryFn: getAllPosts,
-          staleTime: 5 * 60 * 1000,
-        });
-
-        // 2. Navigate immediately to show the Admin Shell
+        // Navigate immediately to the pre-heated dashboard
         navigate("/admin/dashboard");
       } else {
         console.error("✗ Login failed:", result.error);
@@ -138,12 +151,12 @@ const AdminLogin = () => {
       <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
       <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-[radial-gradient(circle_400px_at_50%_300px,#fbfbfb36,#000)]"></div>
       <div
-        className={`relative p-8 w-96 rounded-2xl border border-white/10 backdrop-blur-[2px] bg-white/5 shadow-2xl transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        className={`relative p-6 w-11/12 max-w-xs rounded-2xl border border-white/10 backdrop-blur-[2px] bg-white/5 shadow-2xl transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
       >
-        <h2 className="text-3xl font-bold text-white mb-2 text-center">
+        <h2 className="text-2xl font-bold text-white mb-1.5 text-center">
           Admin Login
         </h2>
-        <p className="text-neutral-400 text-sm text-center mb-6">
+        <p className="text-neutral-400 text-xs text-center mb-5">
           Sign in to access your dashboard
         </p>
 
@@ -181,11 +194,11 @@ const AdminLogin = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="identifier"
-              className="block text-sm font-medium text-neutral-300 mb-2"
+              className="block text-xs font-medium text-neutral-300 mb-1.5"
             >
               Email
             </label>
@@ -198,10 +211,10 @@ const AdminLogin = () => {
                 setIdentifier(e.target.value);
                 if (error) setError("");
               }}
-              onFocus={handleCodePrefetch}
+              onFocus={handleIntelligencePreheat}
               placeholder="Enter your email"
               disabled={loading}
-              className="w-full px-4 py-3 rounded-xl border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 focus:border-purple-400/30 focus:bg-white/10 disabled:opacity-50 transition-all duration-200"
+              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 focus:border-purple-400/30 focus:bg-white/10 disabled:opacity-50 transition-all duration-200"
               autoComplete="username"
             />
           </div>
@@ -209,7 +222,7 @@ const AdminLogin = () => {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-neutral-300 mb-2"
+              className="block text-xs font-medium text-neutral-300 mb-1.5"
             >
               Password
             </label>
@@ -222,19 +235,19 @@ const AdminLogin = () => {
                   setPassword(e.target.value);
                   if (error) setError("");
                 }}
-                onFocus={handleCodePrefetch}
+                onFocus={handleIntelligencePreheat}
                 placeholder="Enter your password"
                 disabled={loading}
-                className="w-full px-4 py-3 pr-12 rounded-xl border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 focus:border-purple-400/30 focus:bg-white/10 disabled:opacity-50 transition-all duration-200"
+                className="w-full px-3.5 py-2.5 pr-10 text-sm rounded-xl border border-white/10 backdrop-blur-md bg-white/5 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 focus:border-purple-400/30 focus:bg-white/10 disabled:opacity-50 transition-all duration-200"
                 autoComplete="current-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-all"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-all"
                 tabIndex={-1}
               >
-                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
               </button>
             </div>
           </div>
@@ -242,8 +255,8 @@ const AdminLogin = () => {
           <button
             type="submit"
             disabled={loading || !identifier.trim() || !password.trim()}
-            onMouseEnter={handleCodePrefetch}
-            className="w-full py-3.5 px-4 rounded-xl border border-purple-400/30 backdrop-blur-[2px] bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-400/40 disabled:bg-white/5 disabled:text-neutral-500 disabled:border-white/10 disabled:cursor-not-allowed text-white font-semibold transition-all duration-300 flex items-center justify-center shadow-md shadow-purple-500/5 hover:shadow-purple-500/10"
+            onMouseEnter={handleIntelligencePreheat}
+            className="w-full py-2.5 px-4 text-sm rounded-xl border border-purple-400/30 backdrop-blur-[2px] bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-400/40 disabled:bg-white/5 disabled:text-neutral-500 disabled:border-white/10 disabled:cursor-not-allowed text-white font-semibold transition-all duration-300 flex items-center justify-center shadow-md shadow-purple-500/5 hover:shadow-purple-500/10"
           >
             {loading ? "Processing..." : "Login"}
           </button>

@@ -85,20 +85,20 @@ const BlueprintBuilder = ({ sections, onSectionsChange }) => {
   const estimatedReadTime = Math.ceil(totalWords / 200);
 
   return (
-    <div className="w-full bg-black/20 rounded-xl border border-white/10 overflow-hidden">
+    <div className="w-full bg-white/5 backdrop-blur-[4px] border border-white/5 rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)]">
       {/* Header */}
-      <div className="px-5 py-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-500/10 text-purple-300 rounded-lg">
+      <div className="px-6 py-5 bg-white/5 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-white/5 text-neutral-400 rounded-xl border border-white/5 shadow-xl">
             <FiLayers />
           </div>
           <div>
-            <h3 className="font-bold text-white text-sm">
-              Structure Blueprint
+            <h3 className="font-black text-white text-[10px] uppercase tracking-[0.2em]">
+              STRUCTURE_BLUEPRINT
             </h3>
-            <p className="text-xs text-neutral-500">
-              {sections?.length} sections • ~{totalWords} words •{" "}
-              {estimatedReadTime} min read
+            <p className="text-[9px] text-neutral-500 font-mono mt-1">
+              {sections?.length} NODES • ~{totalWords} WORDS •{" "}
+              {estimatedReadTime} MIN_READ
             </p>
           </div>
         </div>

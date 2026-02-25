@@ -77,37 +77,31 @@ const SectionConfigurator = ({
 
   if (!isEditing) {
     return (
-      <div className="group relative border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl p-4 transition-all hover:border-white/10">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 overflow-hidden">
+      <div className="group relative border border-white/5 bg-transparent hover:bg-white/5 rounded-2xl p-4 transition-all duration-500 cubic-bezier-[0.4,0,0.2,1]">
+        <div className="flex items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-4 overflow-hidden">
             <div
-              className={`p-2 rounded-lg bg-white/5 text-neutral-400 shrink-0`}
+              className={`p-2.5 rounded-xl bg-white/5 border border-white/5 text-neutral-400 shrink-0 transition-transform group-hover:scale-110`}
             >
               <currentType.icon size={16} />
             </div>
             <div className="min-w-0">
-              <h4 className="font-medium text-neutral-200 truncate pr-2">
+              <h4 className="font-black text-white text-[10px] uppercase tracking-wider truncate pr-2 group-hover:text-cyan-400 transition-colors">
                 {localSection.heading || (
                   <span className="italic text-neutral-500">
-                    Untitled Section
+                    Untitled_Section
                   </span>
                 )}
               </h4>
-              <div className="flex items-center gap-2 text-xs text-neutral-500 mt-0.5">
-                <span className="capitalize">{currentType.label}</span>
-                <span>•</span>
-                <span>~{localSection.targetWords} words</span>
-                {localSection.subsections > 0 && (
-                  <>
-                    <span>•</span>
-                    <span>{localSection.subsections} subsections</span>
-                  </>
-                )}
+              <div className="flex items-center gap-3 text-[9px] text-neutral-500 font-mono mt-1 uppercase tracking-widest">
+                <span>{currentType.label}</span>
+                <span className="w-1 h-1 rounded-full bg-white/10" />
+                <span>~{localSection.targetWords} WORDS</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
             <button
               onClick={() => setEditing(true)}
               className="p-2 rounded-lg hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"

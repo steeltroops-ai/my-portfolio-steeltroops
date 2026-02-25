@@ -22,9 +22,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "visitorId required" });
 
       const profile = await sql`
-        SELECT p.*, m.real_name, m.email, m.phone, m.linkedin_url
+        SELECT p.*, k.real_name, k.email, k.role, k.linkedin_url
         FROM visitor_profiles p
-        LEFT JOIN master_identities m ON p.identity_id = m.id
+        LEFT JOIN known_entities k ON p.likely_entity_id = k.entity_id
         WHERE p.id = ${visitorId}
       `;
 
@@ -64,72 +64,133 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Parallel Core Dashboard Aggregation (High Speed Mode)
-    const [
-      liveNowResult,
-      uniqueVisitorsResult,
-      totalSessionsResult,
-      pageViews7dResult,
-      botSessionsResult,
-      deviceBreakdown,
-      browserBreakdown,
-      topLocations,
-      topReferrers,
-      topUTMs,
-      topPages,
-      recentVisitors,
-      recentActions,
-      mapNodes,
-    ] = await Promise.all([
-      sql`SELECT COUNT(DISTINCT visitor_id) as count FROM visitor_profiles WHERE last_seen > NOW() - INTERVAL '2 minutes' AND is_owner = FALSE`,
-      sql`SELECT COUNT(DISTINCT ip_address) as count FROM visitor_profiles WHERE is_owner = FALSE`,
-      sql`SELECT COUNT(*) as count FROM visitor_sessions`,
-      sql`SELECT COUNT(*) as count FROM visitor_events WHERE event_type = 'page_view' AND timestamp > NOW() - INTERVAL '7 days'`,
-      sql`SELECT COUNT(*) as count FROM visitor_sessions s JOIN visitor_profiles v ON s.visitor_uuid = v.id WHERE v.is_bot = TRUE`,
-      sql`SELECT COALESCE(device_model, device_type) as device_type, COUNT(*) as count FROM visitor_profiles WHERE is_owner = FALSE GROUP BY COALESCE(device_model, device_type) ORDER BY count DESC LIMIT 8`,
-      sql`SELECT browser, COUNT(*) as count FROM visitor_profiles WHERE is_owner = FALSE GROUP BY browser LIMIT 12`,
-      sql`SELECT country, city, region, MAX(latitude) as lat, MAX(longitude) as lon, COUNT(*) as count, MAX(last_seen) as last_active FROM visitor_profiles WHERE is_owner = FALSE GROUP BY country, city, region ORDER BY count DESC LIMIT 50`,
-      sql`SELECT referrer, COUNT(*) as count FROM visitor_sessions WHERE referrer IS NOT NULL AND referrer != '' AND referrer NOT LIKE '%localhost%' GROUP BY referrer ORDER BY count DESC LIMIT 10`,
-      sql`SELECT utm_source, COUNT(*) as count FROM visitor_sessions WHERE utm_source IS NOT NULL AND utm_source != '' GROUP BY utm_source ORDER BY count DESC LIMIT 10`,
-      sql`SELECT path, COUNT(*) as count FROM visitor_events WHERE event_type = 'page_view' GROUP BY path ORDER BY count DESC LIMIT 15`,
-      sql`
-        WITH visitor_stats AS (
-          SELECT s.visitor_uuid, COUNT(CASE WHEN e.event_type = 'click' THEN 1 END) as total_clicks, COUNT(CASE WHEN e.event_type = 'page_view' THEN 1 END) as total_pageviews, (ARRAY_AGG(s.referrer ORDER BY s.last_heartbeat DESC) FILTER (WHERE s.referrer IS NOT NULL AND s.referrer != ''))[1] as last_referrer, STRING_AGG(DISTINCT e.path, ', ') as visited_paths
-          FROM visitor_sessions s LEFT JOIN visitor_events e ON e.session_uuid = s.id GROUP BY s.visitor_uuid
-        )
-        SELECT p.id, p.visitor_id, p.ip_address, p.browser, p.os, p.device_type, p.country, p.city, p.region, p.isp, p.last_seen, p.visit_count, p.screen_size, p.fingerprint, p.device_model, p.is_bot, m.real_name, m.email, COALESCE(vs.total_clicks, 0) as total_clicks, COALESCE(vs.total_pageviews, 0) as total_pageviews, COALESCE(vs.last_referrer, 'Direct') as last_referrer, COALESCE(vs.visited_paths, 'Main') as visited_paths
-        FROM visitor_profiles p LEFT JOIN master_identities m ON p.identity_id = m.id LEFT JOIN visitor_stats vs ON vs.visitor_uuid = p.id WHERE p.is_owner = FALSE ORDER BY p.last_seen DESC LIMIT 100`,
-      sql`
-        SELECT e.timestamp, e.event_type, e.event_label, e.path, v.city, v.country, v.os, v.browser, v.ip_address, v.is_bot
-        FROM visitor_events e JOIN visitor_sessions s ON e.session_uuid = s.id JOIN visitor_profiles v ON s.visitor_uuid = v.id WHERE v.is_owner = FALSE ORDER BY e.timestamp DESC LIMIT 100`,
-      sql`SELECT id, city, country, latitude as lat, longitude as lon, last_seen as last_active, visit_count as count, is_bot, is_owner FROM visitor_profiles WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND (latitude != 0 OR longitude != 0) ORDER BY last_seen DESC LIMIT 1000`,
-    ]);
+    // 2. Parallel Core Dashboard Aggregation (High Speed Mode - Split into two batches for stability)
+    console.log(
+      "[Stats] Starting localized aggregation for session:",
+      session.userId
+    );
 
-    return res.status(200).json({
-      success: true,
-      stats: {
-        liveNow: parseInt(liveNowResult[0]?.count) || 0,
-        totalVisitors: parseInt(uniqueVisitorsResult[0]?.count) || 0,
-        totalSessions: parseInt(totalSessionsResult[0]?.count) || 0,
-        pageViews7d: parseInt(pageViews7dResult[0]?.count) || 0,
-        botSessions: parseInt(botSessionsResult[0]?.count) || 0,
-      },
-      deviceBreakdown,
-      browserBreakdown,
-      topLocations,
-      mapNodes,
-      topReferrers,
-      topUTMs,
-      topPages,
-      recentVisitors,
-      recentActions,
-    });
+    try {
+      // BATCH 1: Lightweight Counts
+      const [
+        liveNowResult,
+        uniqueVisitorsResult,
+        totalSessionsResult,
+        pageViews7dResult,
+        botSessionsResult,
+        deviceBreakdown,
+        browserBreakdown,
+      ] = await Promise.all([
+        sql`SELECT COUNT(DISTINCT visitor_id) as count FROM visitor_profiles WHERE last_seen > NOW() - INTERVAL '2 minutes' AND is_owner = FALSE`,
+        sql`SELECT COUNT(DISTINCT ip_address) as count FROM visitor_profiles WHERE is_owner = FALSE`,
+        sql`SELECT COUNT(*) as count FROM visitor_sessions`,
+        sql`SELECT COUNT(*) as count FROM visitor_events WHERE event_type = 'page_view' AND timestamp > NOW() - INTERVAL '7 days'`,
+        sql`SELECT COUNT(*) as count FROM visitor_sessions s JOIN visitor_profiles v ON s.visitor_uuid = v.id WHERE v.is_bot = TRUE`,
+        sql`SELECT COALESCE(device_model, device_type) as device_type, COUNT(*) as count FROM visitor_profiles WHERE is_owner = FALSE GROUP BY COALESCE(device_model, device_type) ORDER BY count DESC LIMIT 8`,
+        sql`SELECT browser, COUNT(*) as count FROM visitor_profiles WHERE is_owner = FALSE GROUP BY browser LIMIT 12`,
+      ]);
+
+      // BATCH 2: Heavy Lifting (Lists & Maps)
+      const [
+        topLocations,
+        topReferrers,
+        topUTMs,
+        topPages,
+        recentVisitors,
+        recentActions,
+        mapNodes,
+      ] = await Promise.all([
+        sql`SELECT country, city, region, MAX(latitude) as lat, MAX(longitude) as lon, COUNT(*) as count, MAX(last_seen) as last_active FROM visitor_profiles WHERE is_owner = FALSE GROUP BY country, city, region ORDER BY count DESC LIMIT 50`,
+        sql`SELECT referrer, COUNT(*) as count FROM visitor_sessions WHERE referrer IS NOT NULL AND referrer != '' AND referrer NOT LIKE '%localhost%' GROUP BY referrer ORDER BY count DESC LIMIT 10`,
+        sql`SELECT utm_source, COUNT(*) as count FROM visitor_sessions WHERE utm_source IS NOT NULL AND utm_source != '' GROUP BY utm_source ORDER BY count DESC LIMIT 10`,
+        sql`SELECT path, COUNT(*) as count FROM visitor_events WHERE event_type = 'page_view' GROUP BY path ORDER BY count DESC LIMIT 15`,
+        // Recent Visitors (Complex Join)
+        sql`
+          WITH visitor_stats AS (
+            SELECT
+              s.visitor_uuid,
+              COUNT(CASE WHEN e.event_type = 'click' THEN 1 END) as total_clicks,
+              COUNT(CASE WHEN e.event_type = 'page_view' THEN 1 END) as total_pageviews,
+              (ARRAY_AGG(s.referrer ORDER BY s.last_heartbeat DESC) FILTER (WHERE s.referrer IS NOT NULL AND s.referrer != ''))[1] as last_referrer,
+              (ARRAY_AGG(e.path ORDER BY e.timestamp DESC))[1] as last_path,
+              EXTRACT(EPOCH FROM (MAX(e.timestamp) - MIN(e.timestamp))) as duration_seconds
+            FROM visitor_sessions s
+            LEFT JOIN visitor_events e ON e.session_uuid = s.id
+            GROUP BY s.visitor_uuid
+          )
+          SELECT 
+            p.id, 
+            p.visitor_id, 
+            p.ip_address, 
+            p.browser, 
+            p.os, 
+            p.device_type, 
+            p.country, 
+            p.city, 
+            p.region, 
+            p.isp, 
+            p.last_seen, 
+            p.visit_count, 
+            p.screen_size, 
+            p.fingerprint, 
+            p.device_model, 
+            p.is_bot, 
+            k.real_name, 
+            k.email,
+            k.role,
+            COALESCE(vs.total_clicks, 0) as total_clicks,
+            COALESCE(vs.total_pageviews, 0) as total_pageviews,
+            COALESCE(vs.last_referrer, 'Direct') as last_referrer,
+            COALESCE(vs.last_path, '/') as last_path,
+            COALESCE(vs.duration_seconds, 0) as duration_seconds
+          FROM visitor_profiles p
+          LEFT JOIN known_entities k ON p.likely_entity_id = k.entity_id
+          LEFT JOIN visitor_stats vs ON vs.visitor_uuid = p.id
+          WHERE p.is_owner = FALSE
+          ORDER BY p.last_seen DESC
+          LIMIT 100`,
+        // Recent Actions
+        sql`
+          SELECT e.timestamp, e.event_type, e.event_label, e.path, v.city, v.country, v.os, v.browser, v.ip_address, v.is_bot
+          FROM visitor_events e 
+          JOIN visitor_sessions s ON e.session_uuid = s.id 
+          JOIN visitor_profiles v ON s.visitor_uuid = v.id 
+          WHERE v.is_owner = FALSE 
+          ORDER BY e.timestamp DESC LIMIT 100`,
+        // Map Nodes
+        sql`SELECT id, city, country, latitude as lat, longitude as lon, last_seen as last_active, visit_count as count, is_bot, is_owner FROM visitor_profiles WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND (latitude != 0 OR longitude != 0) ORDER BY last_seen DESC LIMIT 1000`,
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        stats: {
+          liveNow: parseInt(liveNowResult[0]?.count) || 0,
+          totalVisitors: parseInt(uniqueVisitorsResult[0]?.count) || 0,
+          totalSessions: parseInt(totalSessionsResult[0]?.count) || 0,
+          pageViews7d: parseInt(pageViews7dResult[0]?.count) || 0,
+          botSessions: parseInt(botSessionsResult[0]?.count) || 0,
+        },
+        deviceBreakdown,
+        browserBreakdown,
+        topLocations,
+        mapNodes,
+        topReferrers,
+        topUTMs,
+        topPages,
+        recentVisitors,
+        recentActions,
+      });
+    } catch (batchError) {
+      console.error("[Stats] Batch Query Failed:", batchError);
+      throw batchError; // Re-throw to be caught by outer catch
+    }
   } catch (error) {
-    console.error("[Stats] API Aggregate Error:", error);
+    console.error("[Stats] API Aggregate Error (Final Catch):", error);
     return res.status(500).json({
       success: false,
       error: "Data Aggregation Failed",
       details: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 }

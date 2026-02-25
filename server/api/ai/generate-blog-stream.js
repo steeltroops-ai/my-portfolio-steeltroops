@@ -21,6 +21,7 @@
 import { neon } from "@neondatabase/serverless";
 import Cerebras from "@cerebras/cerebras_cloud_sdk";
 import { setCorsHeaders, verifyAuth } from "../utils.js";
+import { emitToAdmins } from "../../socket-hub.js";
 
 import { buildIdentity } from "./prompts/system-identities.js";
 import {
@@ -140,6 +141,13 @@ export default async function handler(req, res) {
     );
 
   try {
+    // STAGE 0: INITIALIZATION NOTIFY
+    // =====================================================================
+    emitToAdmins("AI:GENERATION_STARTED", {
+      topic,
+      timestamp: new Date().toISOString(),
+    });
+
     // =====================================================================
     // STAGE 1: OUTLINE GENERATION
     // =====================================================================
@@ -177,6 +185,12 @@ export default async function handler(req, res) {
     });
 
     outline = JSON.parse(outlineResponse.choices[0].message.content);
+
+    emitToAdmins("AI:STAGE_COMPLETE", {
+      stage: "outline",
+      topic: outline.title || topic,
+      totalSections: outline.sections?.length || 0,
+    });
     console.log(
       `[AI Stream] Outline: "${outline.title}" -- ${outline.sections.length} sections`
     );
@@ -417,6 +431,13 @@ export default async function handler(req, res) {
       totalWords,
       timeMs: generationTime,
       readTime,
+    });
+
+    emitToAdmins("AI:GENERATION_FINISHED", {
+      postId: savedPost.id,
+      title: savedPost.title,
+      slug: savedPost.slug,
+      totalWords,
     });
 
     console.log(

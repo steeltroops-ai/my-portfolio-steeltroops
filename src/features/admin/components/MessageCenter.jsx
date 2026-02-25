@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useRef, useEffect, memo } from "react";
 import {
   FiMail,
   FiCheck,
@@ -12,7 +12,12 @@ import {
   FiPlus,
   FiSend,
   FiLoader,
+  FiChevronLeft,
+  FiMoreVertical,
+  FiMenu,
+  FiFilter,
 } from "react-icons/fi";
+import { useAdmin } from "../context/AdminContext";
 import { useContactMessages } from "../hooks/useContactMessages";
 import { useUpdateMessageStatus } from "../hooks/useContactMessages";
 import { useDeleteMessage } from "../hooks/useContactMessages";
@@ -20,10 +25,13 @@ import { useReplyMessage } from "../hooks/useContactMessages";
 import { toast } from "react-hot-toast";
 
 const MessageCenter = () => {
+  const { isSidebarCollapsed, setIsSidebarCollapsed } = useAdmin();
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const chatEndRef = useRef(null);
+  const parentRef = useRef(null);
+
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef(null);
   const [replyDepth, setReplyDepth] = useState(1); // 1 or 2 messages context
@@ -110,11 +118,19 @@ const MessageCenter = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // Select first thread by default
+  // Select first thread by default on Desktop
   useEffect(() => {
-    if (!selectedEmail && filteredThreads.length > 0 && !isLoading) {
-      setSelectedEmail(filteredThreads[0].email);
-    }
+    const handleInitialSelection = () => {
+      if (
+        window.innerWidth >= 1024 &&
+        !selectedEmail &&
+        filteredThreads.length > 0 &&
+        !isLoading
+      ) {
+        setSelectedEmail(filteredThreads[0].email);
+      }
+    };
+    handleInitialSelection();
   }, [filteredThreads, isLoading, selectedEmail]);
 
   const activeThread = threads.find((t) => t.email === selectedEmail);
@@ -277,15 +293,26 @@ const MessageCenter = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent">
+    <div className="flex h-full overflow-hidden bg-transparent relative">
       {/* Left Sidebar: Compact Contact List */}
-      <div className="w-[380px] flex flex-col border-r border-white/10 shrink-0 bg-white/5 backdrop-blur-[2px]">
+      <div
+        className={`
+        ${selectedEmail ? "hidden xl:flex" : "flex"} 
+        w-full xl:w-[380px] flex-col border-r border-white/10 shrink-0 bg-white/5 backdrop-blur-[2px] z-20
+      `}
+      >
         {/* Header & Search */}
         <div className="p-6 sticky top-0 z-10 bg-transparent backdrop-blur-md border-b border-white/10">
           <div className="flex justify-between items-start mb-0">
             <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-white tracking-tight">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  onClick={() => setIsSidebarCollapsed(false)}
+                  className="xl:hidden p-1 -ml-1 text-neutral-400 hover:text-white transition-colors"
+                >
+                  <FiMenu size={20} />
+                </button>
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                   Messages
                 </h2>
                 {isFetching && !isLoading && (
@@ -350,7 +377,7 @@ const MessageCenter = () => {
             <div className="relative">
               <FiSearch
                 size={16}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-500"
+                className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-neutral-500 group-focus-within:text-white transition-colors pointer-events-none z-10"
               />
               <input
                 ref={searchInputRef}
@@ -365,85 +392,100 @@ const MessageCenter = () => {
         </div>
 
         {/* Contact List */}
-        <div
-          className="flex-1 overflow-y-auto custom-scrollbar"
-          data-lenis-prevent
-        >
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filteredThreads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-neutral-500">
               <p className="text-sm">No conversations found</p>
             </div>
           ) : (
-            filteredThreads.map((thread) => {
-              const isActive = selectedEmail === thread.email;
-              const lastMsgDate = new Date(thread.lastMessage.created_at);
-              // Format date: "Oct 24" or "2d" style
-              const dateStr = lastMsgDate.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              });
+            <div className="divide-y divide-white/5">
+              {filteredThreads.map((thread) => {
+                const isActive = selectedEmail === thread.email;
+                const lastMsgDate = new Date(thread.lastMessage.created_at);
+                const dateStr = lastMsgDate.toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                });
 
-              return (
-                <button
-                  key={thread.email}
-                  onClick={() => setSelectedEmail(thread.email)}
-                  className={`w-full text-left px-4 py-3 hover:bg-white/10 transition-colors border-r-2 ${
-                    isActive
-                      ? "bg-white/10 border-purple-500"
-                      : "border-transparent"
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
-                      {/* Placeholder for real avatar, using initials */}
-                      <span className="text-sm font-medium text-white/80">
-                        {thread.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline mb-0.5">
-                        <span className="font-bold text-white text-[15px] truncate mr-2">
-                          {thread.name}
-                        </span>
-                        <span className="text-xs text-neutral-500 whitespace-nowrap">
-                          {dateStr}
+                return (
+                  <button
+                    key={thread.email}
+                    onClick={() => setSelectedEmail(thread.email)}
+                    className={`w-full text-left px-4 py-3 hover:bg-white/10 transition-colors border-r-2 ${
+                      isActive
+                        ? "bg-white/10 border-purple-500"
+                        : "border-transparent"
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                        <span className="text-sm font-medium text-white/80">
+                          {thread.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <p
-                        className={`text-[13px] truncate leading-tight ${
-                          thread.unreadCount > 0
-                            ? "text-white font-medium"
-                            : "text-neutral-500"
-                        }`}
-                      >
-                        {thread.lastMessage.message}
-                      </p>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline mb-0.5">
+                          <span className="font-bold text-white text-[15px] truncate mr-2">
+                            {thread.name}
+                          </span>
+                          <span className="text-xs text-neutral-500 whitespace-nowrap">
+                            {dateStr}
+                          </span>
+                        </div>
+                        <p
+                          className={`text-[13px] truncate leading-tight ${
+                            thread.unreadCount > 0
+                              ? "text-white font-medium"
+                              : "text-neutral-500"
+                          }`}
+                        >
+                          {thread.lastMessage.message}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              );
-            })
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
 
       {/* Right Chat Window */}
-      <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
+      <div
+        className={`
+        ${!selectedEmail ? "hidden xl:flex" : "flex"} 
+        flex-1 flex flex-col min-w-0 bg-transparent relative z-10
+      `}
+      >
         {activeThread ? (
           <>
             {/* Chat Header */}
-            <div className="h-[60px] px-6 border-b border-white/10 flex items-center justify-between backdrop-blur-[2px] bg-white/[0.02] z-10 sticky top-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center border border-white/10 shrink-0">
-                  <span className="text-sm font-medium text-white/80">
+            <div className="h-[60px] px-4 sm:px-6 border-b border-white/10 flex items-center justify-between backdrop-blur-[10px] bg-black/20 z-10 sticky top-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                {/* Back button for mobile */}
+                <button
+                  onClick={() => setSelectedEmail(null)}
+                  className="xl:hidden p-2 -ml-2 text-neutral-400 hover:text-white transition-colors"
+                >
+                  <FiChevronLeft size={20} />
+                </button>
+
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center border border-white/10 shrink-0">
+                  <span className="text-xs sm:text-sm font-medium text-white/80">
                     {activeThread.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <span className="font-bold text-white text-lg">
-                  {activeThread.name}
-                </span>
+                <div className="min-w-0">
+                  <span className="font-bold text-white text-base sm:text-lg truncate block">
+                    {activeThread.name}
+                  </span>
+                  <span className="text-[10px] text-neutral-500 truncate block lg:hidden">
+                    {activeThread.email}
+                  </span>
+                </div>
               </div>
               <div className="text-neutral-400">
                 {/* Info icon wrapper */}
@@ -459,24 +501,24 @@ const MessageCenter = () => {
               data-lenis-prevent
             >
               {/* Profile Hero Section */}
-              <div className="flex flex-col items-center py-8 border-b border-white/5 mb-6 hover:bg-white/[0.02] transition-colors cursor-pointer rounded-xl">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center text-2xl font-medium text-white/80 mb-2 border border-white/10">
+              <div className="flex flex-col items-center py-6 sm:py-8 border-b border-white/5 mb-6 hover:bg-white/[0.02] transition-colors cursor-pointer rounded-xl px-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center text-xl sm:text-2xl font-medium text-white/80 mb-2 border border-white/10">
                   {activeThread.name.charAt(0).toUpperCase()}
                 </div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-white text-center">
                   {activeThread.name}
                 </h3>
-                <p className="text-neutral-500 text-sm mb-1">
+                <p className="text-neutral-500 text-xs sm:text-sm mb-1 text-center truncate w-full">
                   {activeThread.email}
                 </p>
-                <p className="text-neutral-600 text-xs mb-4">
+                <p className="text-neutral-600 text-[10px] sm:text-xs mb-4">
                   Joined{" "}
                   {new Date(
                     activeThread.messages[0].created_at
                   ).toLocaleDateString()}
                 </p>
 
-                <button className="px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors backdrop-blur-sm">
+                <button className="px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white font-bold text-xs sm:text-sm hover:bg-white/20 transition-colors backdrop-blur-sm">
                   View Profile
                 </button>
               </div>
@@ -498,7 +540,7 @@ const MessageCenter = () => {
                       {/* Message Bubble */}
                       <div
                         className={`
-                         max-w-[70%] px-4 py-3 text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm backdrop-blur-sm
+                         max-w-[85%] sm:max-w-[70%] px-3 sm:px-4 py-2 sm:py-3 text-[14px] sm:text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm backdrop-blur-sm
                          ${
                            isMe
                              ? "bg-purple-600/80 text-white rounded-2xl rounded-tr-sm border border-purple-500/30"
@@ -575,8 +617,12 @@ const MessageCenter = () => {
                       handleOpenEmailClient();
                     }
                   }}
-                  placeholder={`Type your reply... (Including ${replyDepth === 1 ? "last message" : "last 2 messages"} as context)`}
-                  className="flex-1 bg-transparent border-none focus:ring-0 outline-none focus:outline-none text-white placeholder:text-neutral-500 px-2 py-1.5 text-sm resize-none max-h-32 overflow-y-auto custom-scrollbar"
+                  placeholder={
+                    window.innerWidth < 640
+                      ? "Type reply..."
+                      : `Type your reply... (Including ${replyDepth === 1 ? "last message" : "last 2 messages"} as context)`
+                  }
+                  className="flex-1 bg-transparent border-none focus:ring-0 outline-none focus:outline-none text-white placeholder:text-neutral-500 px-2 py-1.5 text-sm resize-none max-h-32 overflow-y-auto scrollbar-none"
                   style={{ minHeight: "24px" }}
                 />
 

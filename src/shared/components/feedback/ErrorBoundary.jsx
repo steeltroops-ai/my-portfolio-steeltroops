@@ -49,13 +49,28 @@ class ErrorBoundary extends Component {
   }
 
   // Classify and extract error information
-  classifyError(error) {
+  static classifyError(error) {
+    if (!error) {
+      return {
+        code: "UNKNOWN",
+        category: "UNKNOWN",
+        message: "An unexpected error occurred",
+      };
+    }
+
     let code = null;
     let category = "UNKNOWN";
     let message = "An unexpected error occurred";
 
-    // Check for HTTP status codes
-    if (error.status || error.code) {
+    // Extract basic message
+    if (typeof error === "string") {
+      message = error;
+    } else if (error.message) {
+      message = error.message;
+    }
+
+    // 1. Check for HTTP status codes (from API responses)
+    if (error && (error.status || error.code)) {
       code = error.status || error.code;
 
       if (code >= 400 && code < 500) {
@@ -66,25 +81,44 @@ class ErrorBoundary extends Component {
       }
 
       message =
-        ErrorBoundary.HTTP_STATUS_MESSAGES[code] || `HTTP Error ${code}`;
+        ErrorBoundary.HTTP_STATUS_MESSAGES[code] ||
+        message ||
+        `HTTP Error ${code}`;
     }
-    // Check for JavaScript runtime errors
-    else if (error.name) {
+    // 2. Check for JavaScript runtime errors by Name
+    else if (error && error.name) {
       switch (error.name) {
         case "ReferenceError":
-          code = "REF_ERR";
+          code = "MISSING_REF";
           category = "RUNTIME";
-          message = "Variable or function not found";
+          const refMatch = String(message).match(/'(.*?)' is not defined/);
+          message = refMatch
+            ? `Critical Reference Missing: ${refMatch[1]}`
+            : "A required variable or component was not found.";
           break;
         case "TypeError":
           code = "TYPE_ERR";
           category = "RUNTIME";
-          message = "Invalid data type or operation";
+          const msgStr = String(message).toLowerCase();
+          message =
+            msgStr.includes("null") || msgStr.includes("undefined")
+              ? "Attempted to access property of null or undefined"
+              : "Invalid data type or operation";
           break;
         case "SyntaxError":
           code = "SYNTAX_ERR";
           category = "RUNTIME";
-          message = "Code syntax error detected";
+          message = "System syntax error detected in application logic";
+          break;
+        case "SecurityError":
+          code = "SECURITY_ERR";
+          category = "AUTH";
+          message = "Security policy violation detected";
+          break;
+        case "EvalError":
+          code = "EVAL_ERR";
+          category = "RUNTIME";
+          message = "Execution engine error";
           break;
         case "RangeError":
           code = "RANGE_ERR";
@@ -92,95 +126,108 @@ class ErrorBoundary extends Component {
           message = "Value out of valid range";
           break;
         default:
-          // Handle generic Error or unknown error types
           if (error.name === "Error") {
-            code = "RUNTIME";
+            code = "RUNTIME_ERR";
             category = "RUNTIME";
-            message = error.message || "Runtime exception occurred";
+            message = message || "Runtime exception occurred";
           } else {
-            // For custom error types, create a clean code
-            const cleanName = error.name.replace(/Error$/i, "");
+            const cleanName = String(error.name).replace(/Error$/i, "");
             code = cleanName ? cleanName.toUpperCase() : "RUNTIME";
             category = "RUNTIME";
-            message = error.message || "Runtime exception occurred";
+            message = message || "Runtime exception occurred";
           }
       }
     }
-    // Check for React-specific errors
-    else if (error.message) {
-      if (error.message.includes("hook")) {
+    // 3. Fallback: Heuristic message matching
+    else if (message) {
+      const msgLower = String(message).toLowerCase();
+      if (msgLower.includes("hook")) {
         code = "HOOK_ERR";
         category = "RUNTIME";
         message = "React Hook rules violated";
-      } else if (error.message.includes("render")) {
+      } else if (msgLower.includes("render")) {
         code = "RENDER_ERR";
         category = "RUNTIME";
         message = "Component rendering failed";
       } else if (
-        error.message.includes("network") ||
-        error.message.includes("fetch")
+        msgLower.includes("network") ||
+        msgLower.includes("fetch") ||
+        msgLower.includes("failed to fetch") ||
+        msgLower.includes("load failed") ||
+        msgLower.includes("dynamically imported module")
       ) {
         code = "NET_ERR";
         category = "NETWORK";
-        message = "Network connection failed";
+        message = "Failed to load application resource or connection lost";
       } else if (
-        error.message.includes("auth") ||
-        error.message.includes("token")
+        msgLower.includes("auth") ||
+        msgLower.includes("token") ||
+        msgLower.includes("unauthorized") ||
+        msgLower.includes("forbidden")
       ) {
         code = "AUTH_ERR";
         category = "AUTH";
-        message = "Authentication failed";
-      } else if (
-        error.message.includes("JSON") ||
-        error.message.includes("parse")
-      ) {
+        message = "Authentication failure or access denied";
+      } else if (msgLower.includes("json") || msgLower.includes("parse")) {
         code = "DATA_ERR";
         category = "DATA";
-        message = "Invalid data format received";
+        message = "Invalid data format received by application";
       } else {
         code = "RUNTIME_ERR";
         category = "RUNTIME";
-        message = error.message;
       }
     }
 
-    return { code, category, message };
-  }
-
-  static getDerivedStateFromError(error) {
-    // Catch errors during the render phase for immediate UI response
     return {
-      hasError: true,
-      error: error,
+      code: code || "RUNTIME_ERR",
+      category: category || "RUNTIME",
+      message: message || "An unexpected system error occurred",
     };
   }
 
+  static getDerivedStateFromError(error) {
+    // Immediate classification for atomic render
+    const { code, category, message } = ErrorBoundary.classifyError(error);
+
+    return {
+      hasError: true,
+      error: error,
+      errorCode: code,
+      errorCategory: category,
+      errorMessage: message,
+    };
+  }
+
+  componentDidMount() {
+    console.log("  [Forensics] ErrorBoundary Uplinked - Shield Active");
+    // Global debug access
+    window.__ERROR_BOUNDARY__ = this;
+  }
+
   componentDidCatch(error, errorInfo) {
-    // Secondary capture for lifecycle/async errors and logging
+    // Secondary capture for logging and stack trace retrieval
     console.error("Critical System Breach:", error, errorInfo);
 
-    // Classify the error
-    const { code, category, message } = this.classifyError(error);
-
+    // Classification should already be in state from getDerivedStateFromError,
+    // but we capture the exception with full context here.
     errorTracker.captureException(error, {
       componentStack: errorInfo.componentStack,
       isFatal: true,
       recovered: false,
-      errorCode: code,
-      errorCategory: category,
+      errorCode: this.state.errorCode,
+      errorCategory: this.state.errorCategory,
     });
 
-    this.setState({
-      errorInfo,
-      errorCode: code,
-      errorCategory: category,
-      errorMessage: message,
-    });
+    this.setState({ errorInfo });
+
+    // Store for external inspection if needed
+    window.__LAST_REACT_ERROR__ = { error, errorInfo };
   }
 
   componentWillUnmount() {
     // Prevent memory leaks from the copy animation timer
     if (this.copyTimer) clearTimeout(this.copyTimer);
+    if (window.__ERROR_BOUNDARY__ === this) delete window.__ERROR_BOUNDARY__;
   }
 
   resetError = () => {
@@ -190,6 +237,9 @@ class ErrorBoundary extends Component {
       error: null,
       errorInfo: null,
       showDetails: false,
+      errorMessage: null,
+      errorCode: null,
+      errorCategory: null,
     });
   };
 
@@ -283,7 +333,9 @@ class ErrorBoundary extends Component {
                       ? "Unable to connect to the server. Please check your internet connection."
                       : this.state.errorCategory === "AUTH"
                         ? "Your session may have expired. Please try logging in again."
-                        : "The application encountered an unexpected error. We've been notified and are looking into it."}
+                        : this.state.errorCategory === "DATA"
+                          ? "The application received data in an unexpected format."
+                          : "The application encountered an unexpected error. We've been notified and are looking into it."}
                 </p>
               </motion.div>
 

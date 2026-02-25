@@ -15,7 +15,9 @@ import {
   FiFileText,
   FiX,
   FiHash,
+  FiMenu,
 } from "react-icons/fi";
+import { useAdmin } from "../context/AdminContext";
 import { useAIGenerator, GENERATION_STATUS } from "../hooks/useAIGenerator";
 import { useMarkdownComponents } from "@/shared/components/markdown/MarkdownComponents";
 import { useCreatePost } from "@/features/blog/hooks/useBlogQueries";
@@ -26,6 +28,7 @@ import rehypeHighlight from "rehype-highlight";
 import AICreatorInput from "./Creation/AICreatorInput";
 
 const AIBlogGenerator = () => {
+  const { setIsSidebarCollapsed } = useAdmin();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -127,19 +130,25 @@ const AIBlogGenerator = () => {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-none p-8 pb-0">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              AI Blogs
+      <div className="flex-none p-4 sm:p-6 lg:p-8 pb-0">
+        <div className="flex justify-between items-center mb-6 sm:mb-8 gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+              <button
+                onClick={() => setIsSidebarCollapsed(false)}
+                className="xl:hidden p-1 -ml-1 text-neutral-400 hover:text-white transition-colors"
+              >
+                <FiMenu size={20} />
+              </button>
+              AI Generator
             </h1>
-            <p className="text-neutral-400 text-sm mt-1">
-              Create high-quality technical content powered by Llama 3.3.
+            <p className="hidden xs:block text-neutral-400 text-[10px] sm:text-sm mt-0.5 sm:mt-1">
+              Create high-quality technical content.
             </p>
           </div>
 
           {/* Cancel / New buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {isGenerating && (
               <button
                 onClick={cancel}
@@ -165,24 +174,24 @@ const AIBlogGenerator = () => {
       {/* Scrollable Content Area */}
       <div
         ref={contentRef}
-        className="flex-1 overflow-y-auto custom-scrollbar"
+        className="flex-1 overflow-y-auto scrollbar-none"
         data-lenis-prevent
       >
-        <div className="max-w-4xl mx-auto px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           {/* Empty State / Welcome Screen */}
           {!isGenerating && !result && status === GENERATION_STATUS.IDLE && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center mt-20 mb-12 max-w-2xl mx-auto px-4"
+              className="text-center mt-10 sm:mt-20 mb-8 sm:mb-12 max-w-2xl mx-auto px-4"
             >
-              <div className="inline-flex items-center justify-center p-4 mb-6 bg-white/5 rounded-2xl border border-white/10 shadow-lg backdrop-blur-[2px]">
-                <FiFileText size={32} className="text-white" />
+              <div className="inline-flex items-center justify-center p-3 sm:p-4 mb-4 sm:mb-6 bg-white/5 rounded-2xl border border-white/10 shadow-lg backdrop-blur-[2px]">
+                <FiFileText size={24} className="text-white sm:w-8 sm:h-8" />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 leading-tight">
                 What shall we create today?
               </h2>
-              <p className="text-lg text-neutral-400 max-w-lg mx-auto leading-relaxed">
+              <p className="text-sm sm:text-lg text-neutral-400 max-w-lg mx-auto leading-relaxed">
                 Describe your topic, choose a style, and let the AI draft a
                 masterpiece for you.
               </p>
@@ -277,7 +286,7 @@ const AIBlogGenerator = () => {
       </div>
 
       {/* Floating Input Area */}
-      <div className="flex-none p-8 pt-4">
+      <div className="flex-none p-4 sm:p-6 lg:p-8 pt-2 sm:pt-4 border-t border-white/5 bg-black/40 backdrop-blur-md">
         <div className="max-w-4xl mx-auto">
           <AICreatorInput
             onGenerate={handleAIInputSubmit}
@@ -431,25 +440,27 @@ const BlogPreviewCard = ({
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-4xl mx-auto rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl overflow-hidden mb-12"
     >
-      <div className="p-8 border-b border-white/10 bg-white/5">
-        <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
+      <div className="p-4 sm:p-8 border-b border-white/10 bg-white/5">
+        <h2 className="text-xl sm:text-3xl font-bold text-white mb-3 sm:mb-4 leading-tight">
           {result.title}
         </h2>
 
-        <div className="flex flex-wrap gap-4 text-sm text-neutral-400 mb-4">
+        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-neutral-400 mb-4">
           <span className="flex items-center gap-1">
-            <FiCalendar size={14} /> {new Date().toLocaleDateString()}
+            <FiCalendar size={12} className="sm:w-3.5 sm:h-3.5" />{" "}
+            {new Date().toLocaleDateString()}
           </span>
           <span className="flex items-center gap-1">
-            <FiClock size={14} /> {readTime} min read
+            <FiClock size={12} className="sm:w-3.5 sm:h-3.5" /> {readTime} min
+            read
           </span>
-          <span className="flex items-center gap-1 bg-white/10 text-neutral-300 px-2 py-0.5 rounded text-xs border border-white/5">
+          <span className="flex items-center gap-1 bg-white/10 text-neutral-300 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs border border-white/5">
             {totalWords} words
           </span>
           {result.generation_time_ms && (
-            <span className="flex items-center gap-1 bg-white/10 text-neutral-300 px-2 py-0.5 rounded text-xs border border-white/5">
-              <FiCpu size={12} /> {Math.round(result.generation_time_ms / 1000)}
-              s
+            <span className="flex items-center gap-1 bg-white/10 text-neutral-300 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs border border-white/5">
+              <FiCpu size={10} className="sm:w-3 sm:h-3" />{" "}
+              {Math.round(result.generation_time_ms / 1000)}s
             </span>
           )}
         </div>
@@ -495,36 +506,37 @@ const BlogPreviewCard = ({
         )}
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={onSave}
             disabled={isSaving || result.saved}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               result.saved
                 ? "bg-white/10 text-neutral-300 border border-white/10"
                 : "bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
             }`}
           >
             {isSaving ? (
-              <FiLoader className="animate-spin" />
+              <FiLoader className="animate-spin" size={12} />
             ) : result.saved ? (
-              <FiCheck />
+              <FiCheck size={12} />
             ) : (
-              <FiSave />
+              <FiSave size={12} />
             )}
             {result.saved ? "Saved" : "Save Draft"}
           </button>
           <button
             onClick={onEdit}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm transition-all"
           >
-            <FiEdit3 /> Edit
+            <FiEdit3 size={12} /> Edit
           </button>
           <button
             onClick={onCopy}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm transition-all"
           >
-            {copied ? <FiCheck /> : <FiCopy />} {copied ? "Copied" : "Copy"}
+            {copied ? <FiCheck size={12} /> : <FiCopy size={12} />}{" "}
+            {copied ? "Copied" : "Copy"}
           </button>
         </div>
       </div>
@@ -548,7 +560,7 @@ const BlogPreviewCard = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden bg-black/20"
           >
-            <div className="p-8 prose prose-invert max-w-none prose-headings:text-white prose-p:text-neutral-300 prose-strong:text-white prose-code:text-purple-300">
+            <div className="p-4 sm:p-8 prose prose-invert max-w-none prose-headings:text-white prose-p:text-neutral-300 prose-strong:text-white prose-code:text-purple-300">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}

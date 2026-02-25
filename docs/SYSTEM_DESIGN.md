@@ -27,6 +27,10 @@ graph TB
         contact_fn["/api/contact"]
     end
 
+    subgraph RealTime ["Real-Time Layer (Vocal Dev/VPS)"]
+        SocketHub[WebSocket Hub / Socket.io]
+    end
+
     subgraph Data ["🗄️ Intelligence & Persistence"]
         DB[(Neon PostgreSQL)]
         LLM_Primary[Cerebras Llama 3.3]
@@ -38,16 +42,19 @@ graph TB
     UI -->|HTTPS| WAF
     WAF -->|Validated| Gatekeeper
     Gatekeeper --> API_GW
+    UI <-->|WebSockets| SocketHub
     API_GW --> auth_fn
     API_GW --> blog_fn
     API_GW --> ai_fn
 
     ai_fn -->|SSE Stream| UI
+    ai_fn -->|Job Notify| SocketHub
     ai_fn -->|Inference| LLM_Primary
     ai_fn -.->|Fallback| LLM_Backup
 
     blog_fn <--> DB
     auth_fn <--> DB
+    SocketHub -.->|Auth Session| DB
 ```
 
 ---
@@ -84,10 +91,12 @@ graph TD
 
     AdLayout --> AIGen[AI Intelligence Engine]
     AIGen --> Blueprint[BlueprintBuilder]
-    AIGen --> Preview[SSE Streaming Preview]
+    AIGen --> Preview[WS/SSE Streaming Preview]
 
     AdLayout --> Analytics[Visitor Analytics]
+    Analytics --> Pulse[Real-Time Socket Pulse]
     AdLayout --> Messages[Message Center]
+    Messages --> Notif[Push Notifications]
 ```
 
 ---
@@ -96,10 +105,10 @@ graph TD
 
 The system utilizes a streaming-first architecture to manage long-running inference tasks.
 
-### 3.1 SSE Streaming Pipeline
+### 3.1 Streaming Pipeline (SSE & WebSockets)
 
 - **Challenge**: Comprehensive technical content generation often exceeds standard serverless timeout limits (e.g., Vercel's 30-second cap).
-- **Solution**: **Server-Sent Events (SSE)**. A persistent connection allows incremental data flushing as the Cerebras engine generates content.
+- **Solution**: **Hybrid Streaming**. A persistent connection via **SSE** for direct data flushing, or **WebSockets** for decoupled, non-blocking background generation orchestrated through the `SocketHub`.
 
 ```mermaid
 sequenceDiagram

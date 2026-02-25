@@ -1,6 +1,12 @@
 // Neon Blog Service - Replaces SupabaseBlogService
-import { postsApi, tagsApi, generateSlug, estimateReadingTime, extractExcerpt } from '@/lib/neon';
-import { sanitizeBlogContent, sanitizeUserInput } from '@/utils/sanitize';
+import {
+  postsApi,
+  tagsApi,
+  generateSlug,
+  estimateReadingTime,
+  extractExcerpt,
+} from "@/lib/neon";
+import { sanitizeBlogContent, sanitizeUserInput } from "@/utils/sanitize";
 
 /**
  * Get all published blog posts for public viewing
@@ -10,7 +16,7 @@ export const getPublishedPosts = async (options = {}) => {
     const result = await postsApi.getPublishedPosts(options);
     return { data: result.data || [], count: result.count || 0, error: null };
   } catch (error) {
-    console.error('Error fetching published posts:', error);
+    console.error("Error fetching published posts:", error);
     return { data: [], count: 0, error };
   }
 };
@@ -21,9 +27,15 @@ export const getPublishedPosts = async (options = {}) => {
 export const getAllPosts = async (options = {}) => {
   try {
     const result = await postsApi.getAllPosts(options);
-    return { data: result.data || [], count: result.count || 0, error: null };
+    return {
+      data: result.data || [],
+      count: result.count || 0,
+      liveCount: result.liveCount || 0,
+      draftCount: result.draftCount || 0,
+      error: null,
+    };
   } catch (error) {
-    console.error('Error fetching all posts:', error);
+    console.error("Error fetching all posts:", error);
     return { data: [], count: 0, error };
   }
 };
@@ -36,7 +48,7 @@ export const getPostBySlug = async (slug, includeUnpublished = false) => {
     const result = await postsApi.getPostBySlug(slug, includeUnpublished);
     return { data: result.data || null, error: null };
   } catch (error) {
-    console.error('Error fetching post by slug:', error);
+    console.error("Error fetching post by slug:", error);
     return { data: null, error };
   }
 };
@@ -49,7 +61,7 @@ export const getPostById = async (id) => {
     const result = await postsApi.getPostById(id);
     return { data: result.data || null, error: null };
   } catch (error) {
-    console.error('Error fetching post by ID:', error);
+    console.error("Error fetching post by ID:", error);
     return { data: null, error };
   }
 };
@@ -74,7 +86,8 @@ export const createPost = async (postData) => {
     const slug = sanitizedData.slug || generateSlug(sanitizedData.title);
 
     // Generate excerpt if not provided
-    const excerpt = sanitizedData.excerpt || extractExcerpt(sanitizedData.content);
+    const excerpt =
+      sanitizedData.excerpt || extractExcerpt(sanitizedData.content);
 
     // Estimate reading time
     const readTime = estimateReadingTime(sanitizedData.content);
@@ -88,7 +101,7 @@ export const createPost = async (postData) => {
 
     return { data: result.data, error: null };
   } catch (error) {
-    console.error('Error creating post:', error);
+    console.error("Error creating post:", error);
     return { data: null, error };
   }
 };
@@ -102,8 +115,12 @@ export const updatePost = async (id, postData) => {
     const sanitizedData = {
       ...postData,
       title: postData.title ? sanitizeUserInput(postData.title) : undefined,
-      content: postData.content ? sanitizeBlogContent(postData.content) : undefined,
-      excerpt: postData.excerpt ? sanitizeUserInput(postData.excerpt) : undefined,
+      content: postData.content
+        ? sanitizeBlogContent(postData.content)
+        : undefined,
+      excerpt: postData.excerpt
+        ? sanitizeUserInput(postData.excerpt)
+        : undefined,
       meta_description: postData.meta_description
         ? sanitizeUserInput(postData.meta_description)
         : undefined,
@@ -127,7 +144,7 @@ export const updatePost = async (id, postData) => {
     const result = await postsApi.updatePost(id, sanitizedData);
     return { data: result.data, error: null };
   } catch (error) {
-    console.error('Error updating post:', error);
+    console.error("Error updating post:", error);
     return { data: null, error };
   }
 };
@@ -140,7 +157,7 @@ export const deletePost = async (id) => {
     await postsApi.deletePost(id);
     return { success: true, error: null };
   } catch (error) {
-    console.error('Error deleting post:', error);
+    console.error("Error deleting post:", error);
     return { success: false, error };
   }
 };
@@ -153,7 +170,7 @@ export const togglePostPublished = async (id, published) => {
     const result = await postsApi.togglePostPublished(id, published);
     return { data: result.data, error: null };
   } catch (error) {
-    console.error('Error toggling post published status:', error);
+    console.error("Error toggling post published status:", error);
     return { data: null, error };
   }
 };
@@ -166,7 +183,7 @@ export const getAllTags = async () => {
     const result = await tagsApi.getAllTags();
     return { data: result.data || [], error: null };
   } catch (error) {
-    console.error('Error fetching tags:', error);
+    console.error("Error fetching tags:", error);
     return { data: [], error };
   }
 };

@@ -87,7 +87,7 @@ const ToneSelector = ({
           </h3>
         )}
         <div
-          className={`grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"}`}
+          className={`grid gap-2 ${compact ? "grid-cols-1 xs:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"}`}
         >
           {TONE_OPTIONS.map((tone) => {
             const Icon = tone.icon;

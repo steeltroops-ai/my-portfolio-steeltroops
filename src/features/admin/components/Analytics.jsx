@@ -21,9 +21,18 @@ import {
   FiX,
   FiDatabase,
   FiAlertTriangle,
+  FiMenu,
+  FiChevronRight,
 } from "react-icons/fi";
+import { useAdmin } from "../context/AdminContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useSocket } from "@/shared/context/SocketContext";
+import { useQueryClient } from "@tanstack/react-query";
+import LazySection from "@/shared/components/performance/LazySection";
+import EntityDossier from "./EntityDossier";
+import ActiveSwimlane from "./ActiveSwimlane";
+import AdminPanelHeader from "./shared/AdminPanelHeader";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -215,13 +224,33 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
 
       localValidCount++;
 
-      // 2: Dynamic Styling
+      // 2: Dynamic Threat Matrix Styling (God Mode Visuals)
       const count = loc.count || loc.visit_count || 1;
-      const isRecent = loc.last_active
-        ? new Date(loc.last_active).getTime() > Date.now() - 3600000
-        : true;
 
-      const color = loc.is_owner ? "#f59e0b" : isRecent ? "#10b981" : "#3b82f6";
+      // Determine Threat Color
+      let color = "#10b981"; // Green (Residential/Safe)
+      let label = "SAFE";
+      let bgLabel = "rgba(16,185,129,0.1)";
+
+      if (loc.is_owner) {
+        color = "#f59e0b"; // Orange (Admin)
+        label = "ADMIN";
+        bgLabel = "rgba(245,158,11,0.1)";
+      } else if (loc.is_bot) {
+        color = "#ef4444"; // Red (Scraper/Bot/Threat)
+        label = "THREAT";
+        bgLabel = "rgba(239,68,68,0.1)";
+      } else if (
+        count > 50 ||
+        loc.isp?.toLowerCase().includes("amazon") ||
+        loc.isp?.toLowerCase().includes("google") ||
+        loc.isp?.toLowerCase().includes("digitalocean")
+      ) {
+        // High volume or known datacenter ISPs get marked blue (Corporate/Datacenter)
+        color = "#3b82f6"; // Blue (Corporate / Datacenter Node)
+        label = "DATACENTER";
+        bgLabel = "rgba(59,130,246,0.1)";
+      }
       const radius = Math.min(Math.max(Math.log2(count) * 4 + 8, 12), 32);
 
       // 3: HTML Injection for Forensic Markers
@@ -249,8 +278,7 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
             <div style="border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
               <span style="font-weight:900;color:${color};text-transform:uppercase;letter-spacing:2px;font-size:9px;">ENTITY ID: ${visitorId}</span>
               <div style="display:flex;gap:5px;">
-                ${loc.is_owner ? '<span style="background:#f59e0b/20;color:#f59e0b;font-size:7px;padding:2px 5px;border-radius:3px;font-weight:900;border:1px solid rgba(245,158,11,0.3);letter-spacing:1px;">OWNER</span>' : ""}
-                ${loc.is_bot ? '<span style="background:rgba(239,68,68,0.1);color:#ef4444;font-size:7px;padding:2px 5px;border-radius:3px;font-weight:900;border:1px solid rgba(239,68,68,0.3);letter-spacing:1px;">BOT</span>' : ""}
+                <span style="background:${bgLabel};color:${color};font-size:7px;padding:2px 5px;border-radius:3px;font-weight:900;border:1px solid ${color}4d;letter-spacing:1px;">${label}</span>
               </div>
             </div>
             <div style="display:grid;gap:8px;">
@@ -310,50 +338,43 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
   }, [locations, topLocations]);
 
   return (
-    <div className="rounded-xl liquid-glass backdrop-blur-none relative group mb-8 border border-white/5 shadow-2xl overflow-hidden flex flex-col">
+    <div className="rounded-xl liquid-glass backdrop-blur-none overflow-hidden shadow-2xl relative flex flex-col group mb-8">
       <div className="liquid-glass-top-line" />
-
-      {/* Sleek Minimal Header - Spaced Internally */}
-      <div className="flex justify-between items-start px-8 pt-8 mb-6 relative z-10">
-        <div>
-          <h3 className="text-lg font-bold text-white flex items-center gap-3">
-            <FiGlobe className="text-emerald-500 animate-pulse" /> Global Threat
-            Matrix
-          </h3>
-          <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-widest mt-1">
-            Real-time geospatial intelligence linkage
-          </p>
-        </div>
-      </div>
+      <AdminPanelHeader
+        title="GLOBAL_THREAT_MATRIX"
+        subtitle="Real-time Geospatial Intelligence Hub"
+        icon={FiGlobe}
+        iconColorClass="text-emerald-500 animate-pulse"
+      />
 
       {/* Map Viewport - Expanded to Edges */}
-      <div className="relative w-full h-[600px] z-0 overflow-hidden border-t border-white/10 bg-[#020202]">
+      <div className="relative w-full h-[400px] sm:h-[600px] z-0 overflow-hidden border-t border-white/10 bg-[#020202]">
         <div ref={mapContainerRef} className="w-full h-full" />
 
         {/* Tactical HUD Overlay - Consolidated Metrics */}
-        <div className="absolute top-4 left-4 z-[401] flex flex-col gap-2">
-          <div className="px-4 py-2.5 rounded-lg bg-black/80 border border-white/10 backdrop-blur-md shadow-2xl">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
-              <span className="text-[10px] font-black text-white font-mono tracking-tighter uppercase">
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-[401] flex flex-col gap-2 max-w-[calc(100%-24px)]">
+          <div className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-black/80 border border-white/10 backdrop-blur-md shadow-2xl">
+            <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+              <div className="w-1.5 h-1.5 sm:w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
+              <span className="text-[8px] sm:text-[10px] font-black text-white font-mono tracking-tighter uppercase">
                 Satellite Telemetry
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 pt-1 border-t border-white/5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 pt-1 border-t border-white/5">
               <div className="flex flex-col">
-                <span className="text-[8px] text-neutral-500 font-black uppercase tracking-tighter">
+                <span className="text-[7px] sm:text-[8px] text-neutral-500 font-black uppercase tracking-tighter">
                   Signal Matrix
                 </span>
-                <span className="text-sm font-black text-emerald-400 font-mono leading-none mt-0.5">
+                <span className="text-[11px] sm:text-sm font-black text-emerald-400 font-mono leading-none mt-0.5">
                   {locations?.length || 0} NODES
                 </span>
               </div>
-              <div className="flex flex-col border-l border-white/10 pl-6">
-                <span className="text-[8px] text-neutral-500 font-black uppercase tracking-tighter">
+              <div className="flex flex-col border-l border-white/10 pl-3 sm:pl-6">
+                <span className="text-[7px] sm:text-[8px] text-neutral-500 font-black uppercase tracking-tighter">
                   Active Hits
                 </span>
-                <span className="text-sm font-black text-cyan-400 font-mono leading-none mt-0.5">
+                <span className="text-[11px] sm:text-sm font-black text-cyan-400 font-mono leading-none mt-0.5">
                   {locations.reduce((acc, curr) => acc + (curr.count || 0), 0)}
                 </span>
               </div>
@@ -400,13 +421,124 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
   );
 };
 
+const BehavioralStream = ({ actions, showBotTraffic }) => {
+  const filteredActions = useMemo(() => {
+    return actions.filter((action) => showBotTraffic || !action.is_bot);
+  }, [actions, showBotTraffic]);
+
+  const getActionColor = (type) => {
+    switch (type) {
+      case "page_view":
+        return "text-blue-400";
+      case "click":
+        return "text-purple-400";
+      case "submit_success":
+        return "text-green-400";
+      default:
+        return "text-cyan-400";
+    }
+  };
+
+  return (
+    <div className="space-y-1">
+      {filteredActions.map((action, index) => (
+        <div
+          key={action.id || index}
+          className="group relative flex items-center h-16 w-full cursor-default transition-all duration-500 cubic-bezier-[0.4,0,0.2,1]"
+        >
+          {/* Sidebar-style Detail Highlight */}
+          <div className="absolute inset-y-1 inset-x-2 rounded-lg bg-transparent group-hover:bg-white/5 border border-transparent group-hover:border-white/5 transition-all duration-500" />
+
+          {/* Icon Gutter (Matches Sidebar Gutter 64px) */}
+          <div className="relative z-10 w-16 shrink-0 flex items-center justify-center">
+            <div
+              className={`p-2 rounded-lg bg-white/5 ${getActionColor(action.event_type)} border border-white/5 shadow-sm transition-all duration-500 group-hover:scale-110 group-hover:bg-white/10`}
+            >
+              <FiMousePointer size={14} />
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="relative z-10 flex-1 min-w-0 pr-6 pl-1">
+            <div className="flex justify-between items-baseline mb-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">
+                  {decodeURIComponent(action.city || "UNK_CLUSTER")}
+                </span>
+                <span className="text-[8px] text-neutral-600 font-black uppercase tracking-widest bg-white/5 px-1.5 py-0.5 rounded leading-none">
+                  {action.ip_address || "0.0.0.0"}
+                </span>
+              </div>
+              <span className="text-[9px] text-neutral-500 font-mono group-hover:text-white transition-colors">
+                {action.timestamp
+                  ? new Date(action.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })
+                  : "--:--"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span
+                className={`${getActionColor(action.event_type)} uppercase text-[8px] font-black tracking-[0.2em]`}
+              >
+                {(action.event_type || "").split("_")[0]}
+              </span>
+              <span className="w-1 h-1 rounded-full bg-white/10" />
+              <span className="text-[9px] text-neutral-500 font-mono truncate group-hover:text-neutral-400 transition-colors">
+                {action.path}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const Analytics = () => {
   const { data: analyticsData, isLoading, error } = useAnalyticsStats();
+  const [visitorFilter, setVisitorFilter] = useState("all");
   const [selectedVisitorId, setSelectedVisitorId] = useState(null);
-  const [showBotTraffic, setShowBotTraffic] = useState(true);
+  const [viewMode, setViewMode] = useState("swimlanes");
   const [currentPage, setCurrentPage] = useState(1);
   const [isMapMounted, setIsMapMounted] = useState(false);
   const itemsPerPage = 15;
+
+  const { setIsSidebarCollapsed } = useAdmin();
+
+  // Draggable Scroll Control Logic
+  const scrollContainerRef = useRef(null);
+  const [isDragScrolling, setIsDragScrolling] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragScrollLeft, setDragScrollLeft] = useState(0);
+  const [dragHasMoved, setDragHasMoved] = useState(false);
+
+  // --- REAL-TIME SOCKET INTEGRATION ---
+  const { socket } = useSocket();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSignal = (data) => {
+      // On any analytics signal, invalidate stats to trigger a soft refetch
+      // This ensures "Active Now" counts are always logically consistent with DB
+      queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
+    };
+
+    socket.on("ANALYTICS:SIGNAL", handleSignal);
+
+    return () => {
+      socket.off("ANALYTICS:SIGNAL", handleSignal);
+    };
+  }, [socket, queryClient]);
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [visitorFilter]);
 
   // Performance: Mount map immediately for instant feel
   useEffect(() => {
@@ -429,6 +561,61 @@ const Analytics = () => {
   const topPages = analyticsData?.topPages || [];
   const recentVisitors = analyticsData?.recentVisitors || [];
   const recentActions = analyticsData?.recentActions || [];
+
+  const filteredVisitors = useMemo(() => {
+    return recentVisitors.filter((v) => {
+      if (visitorFilter === "bots") return v.is_bot;
+      if (visitorFilter === "resolved") return !v.is_bot && v.visit_count > 5;
+      return true;
+    });
+  }, [recentVisitors, visitorFilter]);
+
+  const startDragScroll = (e) => {
+    if (!scrollContainerRef.current) return;
+    setIsDragScrolling(true);
+    setDragHasMoved(false);
+    setDragStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setDragScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+
+  const stopDragScroll = () => {
+    setIsDragScrolling(false);
+    // Delay resetting move flag to allow it to prevent clicks
+    setTimeout(() => setDragHasMoved(false), 50);
+  };
+
+  const handleDragScroll = (e) => {
+    if (!isDragScrolling || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - dragStartX) * 2; // Drag multiplier
+    if (Math.abs(walk) > 10) setDragHasMoved(true);
+    scrollContainerRef.current.scrollLeft = dragScrollLeft - walk;
+  };
+
+  const getDeviceIcon = (type) => {
+    switch (type?.toLowerCase()) {
+      case "mobile":
+        return <FiSmartphone />;
+      case "tablet":
+        return <FiTablet />;
+      default:
+        return <FiMonitor />;
+    }
+  };
+
+  const getActionColor = (type) => {
+    switch (type) {
+      case "page_view":
+        return "text-blue-400";
+      case "click":
+        return "text-purple-400";
+      case "submit_success":
+        return "text-green-400";
+      default:
+        return "text-cyan-400";
+    }
+  };
 
   // --- PERFORMANCE: SKELETON ENGINE ---
   // Only show skeleton if we have NO data at all (first load, empty cache)
@@ -477,11 +664,11 @@ const Analytics = () => {
     return (
       <div className="p-8 text-center min-h-[60vh] flex flex-col items-center justify-center">
         <div className="p-12 rounded-2xl bg-red-500/5 border border-red-500/10 backdrop-blur-xl">
-          <FiAlertTriangle className="text-red-500 text-5xl mb-4 mx-auto animate-bounce" />
+          <FiAlertTriangle className="text-red-500 text-5xl mb-4 mx-auto" />
           <h2 className="text-xl font-bold text-white mb-2 tracking-tighter uppercase">
             Link Terminated
           </h2>
-          <p className="text-neutral-500 font-mono text-xs mb-6 uppercase tracking-widest">
+          <p className="text-neutral-500 font-mono text-xs mb-6 uppercase tracking-widest leading-loose max-w-sm mx-auto">
             {error.message}
           </p>
           <button
@@ -495,57 +682,40 @@ const Analytics = () => {
     );
   }
 
-  const getDeviceIcon = (type) => {
-    switch (type?.toLowerCase()) {
-      case "mobile":
-        return <FiSmartphone />;
-      case "tablet":
-        return <FiTablet />;
-      default:
-        return <FiMonitor />;
-    }
-  };
-
-  const getActionColor = (type) => {
-    switch (type) {
-      case "page_view":
-        return "text-blue-400";
-      case "click":
-        return "text-purple-400";
-      case "submit_success":
-        return "text-green-400";
-      default:
-        return "text-cyan-400";
-    }
-  };
-
   return (
-    <div className="p-8 space-y-8 pb-32 max-w-[1600px] mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 pb-32">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Analytics <span className="text-cyan-400">Hub</span>
+      <div className="flex justify-between items-center mb-8 gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+            <button
+              onClick={() => setIsSidebarCollapsed(false)}
+              className="xl:hidden p-1 -ml-1 text-neutral-400 hover:text-white transition-colors"
+            >
+              <FiMenu size={20} />
+            </button>
+            Analytics
           </h1>
-          <p className="text-neutral-400 text-sm mt-1">
-            Deep forensic analysis of your digital footprint and visitor
-            clusters.
+          <p className="hidden xs:block text-neutral-400 text-[10px] sm:text-sm mt-0.5 sm:mt-1">
+            Forensic analysis of your digital footprint.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 px-5 py-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 group backdrop-blur-[2px] shadow-lg shadow-cyan-500/5">
+        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 group backdrop-blur-[2px] shadow-lg shadow-cyan-500/5 whitespace-nowrap">
           <div className="relative">
             <span className="absolute inset-0 bg-cyan-400 rounded-full animate-ping opacity-25"></span>
-            <span className="relative block w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+            <span className="relative block w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-cyan-400"></span>
           </div>
-          <span className="text-cyan-100/90 text-sm font-medium tracking-tight">
-            {stats.liveNow} Active Entities
+          <span className="text-cyan-100/90 text-[10px] sm:text-sm font-medium tracking-tight">
+            {stats.liveNow}{" "}
+            <span className="hidden xxs:inline">Active Entities</span>
+            <span className="inline xxs:hidden">Active</span>
           </span>
         </div>
       </div>
 
       {/* Primary Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
         {[
           {
             label: "Unique Visitors",
@@ -571,33 +741,26 @@ const Analytics = () => {
             icon: <FiCpu />,
             color: "red",
           },
-          {
-            label: "Active Momentum",
-            value: stats.liveNow,
-            icon: <FiMousePointer />,
-            color: "green",
-          },
         ].map((item, idx) => (
           <motion.div
             key={idx}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="p-6 rounded-xl liquid-glass backdrop-blur-none relative group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+            transition={{ delay: idx * 0.05 }}
+            className="p-4 sm:p-6 rounded-xl liquid-glass backdrop-blur-none relative group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center text-center overflow-hidden"
           >
             <div className="liquid-glass-top-line" />
             <div
-              className={`absolute -right-4 -bottom-4 text-white/[0.03] text-6xl transition-transform group-hover:scale-110 duration-500`}
+              className={`text-${item.color}-400/80 mb-2 sm:mb-3 text-lg sm:text-xl relative z-10 transition-transform group-hover:scale-110`}
             >
               {item.icon}
             </div>
-            <div className={`text-${item.color}-400/80 mb-3 text-lg`}>
-              {item.icon}
-            </div>
-            <div className="text-neutral-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+
+            <div className="text-neutral-500 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] mb-1 sm:mb-2 relative z-10">
               {item.label}
             </div>
-            <div className="text-3xl font-black text-white tracking-tighter">
+
+            <div className="text-xl sm:text-3xl font-black text-white tracking-tighter leading-none relative z-10 font-mono">
               {(item.value || 0).toLocaleString()}
             </div>
           </motion.div>
@@ -608,365 +771,361 @@ const Analytics = () => {
         {/* Main Feed Section (Col 8) */}
         <div className="xl:col-span-8 space-y-8">
           {/* Forensic Identity Matrix */}
-          <div className="liquid-glass backdrop-blur-none rounded-xl relative mb-8">
+          <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative mb-8">
             <div className="liquid-glass-top-line" />
-            <div className="p-8 border-b border-white/5 flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-black text-white tracking-tighter flex items-center gap-3">
-                  <FiDatabase className="text-red-400" /> Forensic Identity
-                  Matrix
-                </h2>
-                <p className="text-xs text-neutral-500 font-medium">
-                  Classified digital residue and hardware-linked entity mapping.
-                </p>
-              </div>
-              <div className="flex gap-4">
-                <div className="text-right px-4 border-r border-white/5">
-                  <p className="text-[8px] text-neutral-600 font-black uppercase tracking-widest">
-                    Active Nodes
-                  </p>
-                  <p className="text-xl font-black text-white">
-                    {stats.liveNow}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[8px] text-neutral-600 font-black uppercase tracking-widest">
-                    Total Resolved
-                  </p>
-                  <p className="text-xl font-black text-cyan-400">
-                    {stats.totalVisitors}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <AdminPanelHeader
+              title="Forensic Identity Matrix"
+              subtitle="Classified Neural Ingress Hub"
+              icon={FiDatabase}
+              iconColorClass="text-red-400"
+            />
+            <LazySection placeholderHeight="400px">
+              <div className="px-8 py-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white/[0.02]">
+                <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto items-end sm:items-center">
+                  <div className="flex p-1 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm">
+                    {[
+                      { id: "all", label: "ALL_NODES" },
+                      { id: "resolved", label: "RESOLVED" },
+                      { id: "bots", label: "BOT_TRAFFIC" },
+                    ].map((btn) => (
+                      <button
+                        key={btn.id}
+                        onClick={() => setVisitorFilter(btn.id)}
+                        className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all tracking-widest ${
+                          visitorFilter === btn.id
+                            ? "bg-white/10 text-white shadow-xl"
+                            : "text-neutral-500 hover:text-neutral-300"
+                        }`}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
 
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[1000px]">
-                <thead>
-                  <tr className="bg-white/[0.01] border-b border-white/5">
-                    <th className="px-4 py-3 text-[9px] font-black text-neutral-500 uppercase tracking-widest whitespace-nowrap sticky left-0 bg-[#000000] z-10 backdrop-blur-md bg-opacity-90">
-                      Resolved Entity
-                    </th>
-                    <th className="px-4 py-3 text-[9px] font-black text-neutral-500 uppercase tracking-widest whitespace-nowrap">
-                      Trust Score
-                    </th>
-                    <th className="px-4 py-3 text-[9px] font-black text-neutral-500 uppercase tracking-widest whitespace-nowrap">
-                      Engagement
-                    </th>
-                    <th className="px-4 py-3 text-[9px] font-black text-neutral-500 uppercase tracking-widest whitespace-nowrap">
-                      Traffic Source
-                    </th>
-                    <th className="px-4 py-3 text-[9px] font-black text-neutral-500 uppercase tracking-widest whitespace-nowrap">
-                      System DNA
-                    </th>
-                    <th className="px-4 py-3 text-[9px] font-black text-neutral-500 uppercase tracking-widest whitespace-nowrap">
-                      Last Signature
-                    </th>
-                    <th className="px-4 py-3 text-right text-[9px] font-black text-neutral-500 uppercase tracking-widest whitespace-nowrap">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {recentVisitors
+                  <div className="flex gap-6">
+                    <div className="flex-1 sm:flex-none text-right px-6 border-r border-white/5">
+                      <p className="text-[8px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">
+                        Active_Signal
+                      </p>
+                      <p className="text-xl font-black text-white leading-none">
+                        {stats.liveNow}
+                      </p>
+                    </div>
+                    <div className="flex-1 sm:flex-none text-right">
+                      <p className="text-[8px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">
+                        Total_Resolved
+                      </p>
+                      <p className="text-xl font-black text-cyan-400 leading-none">
+                        {stats.totalVisitors}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </LazySection>
+
+            {/* Primary Data Matrix - Maximum Transparency Glass UI */}
+            <div
+              onMouseDown={startDragScroll}
+              onMouseUp={stopDragScroll}
+              onMouseLeave={stopDragScroll}
+              onMouseMove={handleDragScroll}
+              className={`relative border-t border-white/5 flex bg-transparent overflow-hidden ${isDragScrolling ? "cursor-grabbing select-none" : "cursor-grab"}`}
+            >
+              {/* FIXED COLUMN: Entity Signature (Transparent overlay with subtle fade) */}
+              <div className="w-[180px] sm:w-[220px] shrink-0 z-30 border-r border-white/10 bg-gradient-to-r from-black/10 to-transparent backdrop-blur-sm flex flex-col">
+                {/* Fixed Header */}
+                <div className="px-5 py-4 text-[9px] font-black text-neutral-500 uppercase tracking-widest bg-white/[0.02] border-b border-white/5 h-[52px] flex items-center">
+                  Entity Signature
+                </div>
+                {/* Fixed Data Rows */}
+                <div className="divide-y divide-white/[0.03]">
+                  {filteredVisitors
                     .slice(
                       (currentPage - 1) * itemsPerPage,
                       currentPage * itemsPerPage
                     )
                     .map((v, i) => (
-                      <tr
+                      <div
                         key={i}
-                        onClick={() => setSelectedVisitorId(v.id)}
-                        className="group hover:bg-white/[0.02] transition-colors cursor-pointer"
+                        className="px-5 py-3 h-[64px] flex items-center bg-transparent group transition-colors hover:bg-white/[0.02]"
                       >
-                        <td className="px-4 py-3 sticky left-0 bg-[#050505] group-hover:bg-[#0a0a0a] transition-colors z-10 border-r border-white/5">
-                          <div className="flex items-center gap-3">
+                        <div
+                          className="flex items-center gap-2.5 cursor-pointer w-full"
+                          onClick={(e) => {
+                            if (dragHasMoved) return;
+                            e.stopPropagation();
+                            setSelectedVisitorId(v.id);
+                          }}
+                        >
+                          <div
+                            className={`w-7 h-7 rounded flex items-center justify-center shrink-0 border border-white/10 ${v.real_name ? "text-purple-400" : "text-neutral-500"}`}
+                          >
+                            <FiUsers size={12} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black text-white group-hover:text-cyan-400 transition-colors truncate uppercase tracking-tight leading-none mb-1">
+                              {v.real_name ||
+                                (v.city ? `${v.city}` : "RESOLVING...")}
+                            </p>
+                            <p className="text-[7px] text-neutral-600 font-mono truncate tracking-widest uppercase">
+                              {v.country} / {v.region?.slice(0, 3) || "UNK"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* SCROLLABLE DATA: Ultra-Transparent Container */}
+              <div
+                ref={scrollContainerRef}
+                className="flex-1 overflow-x-auto custom-scrollbar relative bg-transparent"
+              >
+                <div className="min-w-[800px] flex flex-col">
+                  {/* Header Row */}
+                  <div className="flex bg-white/[0.02] border-b border-white/5 h-[52px]">
+                    <div className="w-[15%] min-w-[120px] px-5 py-4 text-[9px] font-black text-neutral-500 uppercase tracking-widest flex items-center">
+                      Trust Matrix
+                    </div>
+                    <div className="w-[25%] min-w-[200px] px-5 py-4 text-[9px] font-black text-neutral-500 uppercase tracking-widest flex items-center">
+                      Ingress Node
+                    </div>
+                    <div className="w-[25%] min-w-[200px] px-5 py-4 text-[9px] font-black text-neutral-500 uppercase tracking-widest flex items-center">
+                      Hardware DNA
+                    </div>
+                    <div className="w-[20%] min-w-[180px] px-5 py-4 text-[9px] font-black text-neutral-500 uppercase tracking-widest flex items-center">
+                      Last Contact
+                    </div>
+                    <div className="w-[15%] min-w-[100px] px-5 py-4 text-right text-[9px] font-black text-neutral-500 uppercase tracking-widest flex items-center justify-end">
+                      Signal
+                    </div>
+                  </div>
+
+                  {/* Data Rows */}
+                  <div className="divide-y divide-white/[0.03]">
+                    {filteredVisitors
+                      .slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage
+                      )
+                      .map((v, i) => (
+                        <div
+                          key={i}
+                          className="flex h-[64px] items-center hover:bg-white/[0.01] transition-colors"
+                        >
+                          <div className="w-[15%] min-w-[120px] px-5 py-3 whitespace-nowrap">
                             <div
-                              className={`w-8 h-8 rounded-lg flex items-center justify-center text-white group-hover:scale-105 transition-all liquid-glass border relative overflow-hidden ${v.real_name ? "bg-purple-500/20 border-purple-500/30 text-purple-300 shadow-[0_0_15px_-3px_rgba(168,85,247,0.2)]" : "bg-white/5 border-white/10"}`}
+                              className={`inline-flex items-center gap-2 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${
+                                v.is_bot
+                                  ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                  : v.visit_count > 5
+                                    ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                    : "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                              }`}
                             >
-                              <div className="liquid-glass-highlight" />
-                              <FiUsers size={14} className="relative z-10" />
+                              <div
+                                className={`w-1 h-1 rounded-full bg-current ${!v.is_bot && v.visit_count > 5 ? "animate-pulse" : ""}`}
+                              />
+                              {v.is_bot
+                                ? "BOT_LINK"
+                                : v.visit_count > 5
+                                  ? "RESOLVED"
+                                  : "SIGNAL"}
                             </div>
-                            <div title={v.isp}>
-                              <p className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors truncate max-w-[140px] flex items-center gap-1">
-                                {v.real_name ||
-                                  (v.city
-                                    ? `${v.city} Entity`
-                                    : "Unknown Entity")}
-                                {v.real_name && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                          </div>
+                          <div className="w-[25%] min-w-[200px] px-5 py-3">
+                            <div className="flex flex-col gap-1">
+                              <p className="text-[10px] font-bold text-neutral-300 truncate">
+                                {(v.last_referrer || "DIRECT TRAFFIC").split(
+                                  "/"
+                                )[2] || "DIRECT"}
+                              </p>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[7px] px-1 bg-white/5 text-neutral-500 font-mono border border-white/5 rounded">
+                                  {v.path}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="w-[25%] min-w-[200px] px-5 py-3 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <p className="text-[10px] font-bold text-neutral-300 flex items-center gap-1.5">
+                                {v.device_type === "mobile" ? (
+                                  <FiSmartphone
+                                    size={10}
+                                    className="text-cyan-400"
+                                  />
+                                ) : (
+                                  <FiMonitor
+                                    size={10}
+                                    className="text-green-400"
+                                  />
+                                )}
+                                {v.os}
+                              </p>
+                              <p className="text-[8px] text-neutral-600 font-mono mt-0.5">
+                                {v.ip_address}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="w-[20%] min-w-[180px] px-5 py-3 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <p className="text-[10px] font-bold text-white uppercase tabular-nums leading-none">
+                                {new Date(v.last_seen).toLocaleDateString(
+                                  undefined,
+                                  { month: "short", day: "2-digit" }
                                 )}
                               </p>
-                              <p className="text-[9px] text-neutral-500 font-mono truncate max-w-[140px]">
-                                {v.region ? `${v.region}, ` : ""}
-                                {v.country}
+                              <p className="text-[8px] text-neutral-600 font-mono mt-1 tabular-nums leading-none">
+                                {new Date(v.last_seen).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </p>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div
-                            className={`inline-flex px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${
-                              v.is_bot
-                                ? "bg-red-500/5 text-red-500 border-red-500/20"
-                                : v.visit_count > 5
-                                  ? "bg-green-500/5 text-green-400 border-green-500/20"
-                                  : "bg-yellow-500/5 text-yellow-400 border-yellow-500/20"
-                            }`}
-                          >
-                            {v.is_bot
-                              ? "BOT"
-                              : v.visit_count > 5
-                                ? "VERIFIED"
-                                : "GUEST"}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-4">
-                            <div
-                              className="flex items-center gap-1.5"
-                              title="Total Clicks"
-                            >
-                              <FiMousePointer
-                                size={12}
-                                className="text-purple-400"
+                          <div className="w-[15%] min-w-[100px] px-5 py-3 text-right">
+                            <button className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-400/5 border border-cyan-400/10 text-[8px] font-black text-cyan-400 hover:bg-cyan-400/20 transition-all uppercase tracking-widest">
+                              TRACE{" "}
+                              <FiChevronRight
+                                size={10}
+                                className="transition-transform group-hover:translate-x-0.5"
                               />
-                              <span className="text-xs font-bold text-neutral-300">
-                                {v.total_clicks || 0}
-                              </span>
-                            </div>
-                            <div
-                              className="flex items-center gap-1.5"
-                              title="Page Views"
-                            >
-                              <FiExternalLink
-                                size={12}
-                                className="text-blue-400"
-                              />
-                              <span className="text-xs font-bold text-neutral-300">
-                                {v.total_pageviews || 0}
-                              </span>
-                            </div>
+                            </button>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 max-w-[180px]">
-                          <div className="flex flex-col gap-0.5">
-                            <p
-                              className="text-[10px] font-bold text-neutral-300 truncate"
-                              title={v.last_referrer}
-                            >
-                              {(v.last_referrer || "Direct")
-                                .replace("https://", "")
-                                .replace("www.", "")}
-                            </p>
-                            <p
-                              className="text-[9px] text-neutral-600 font-mono truncate bg-white/5 rounded px-1.5 py-0.5 w-fit max-w-full border border-white/5"
-                              title={v.visited_paths}
-                            >
-                              {v.visited_paths?.split(",")[0]}
-                              {v.visited_paths?.split(",").length > 1 &&
-                                ` +${v.visited_paths.split(",").length - 1}`}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <p
-                              className="text-[10px] font-bold text-neutral-300 flex items-center gap-1.5 truncate max-w-[140px]"
-                              title={`${v.os} | ${v.browser} | ${v.gpu_renderer}`}
-                            >
-                              {v.device_type === "mobile" ? (
-                                <FiSmartphone
-                                  size={10}
-                                  className="text-cyan-400"
-                                />
-                              ) : v.device_type === "tablet" ? (
-                                <FiTablet
-                                  size={10}
-                                  className="text-purple-400"
-                                />
-                              ) : (
-                                <FiMonitor
-                                  size={10}
-                                  className="text-green-400"
-                                />
-                              )}
-                              {v.device_model &&
-                              v.device_model !== "Unknown Device"
-                                ? v.device_model
-                                : v.os}
-                            </p>
-                            <p className="text-[9px] text-neutral-600 font-mono">
-                              {v.ip_address}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <p className="text-[10px] font-medium text-white">
-                              {new Date(v.last_seen).toLocaleDateString(
-                                undefined,
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )}
-                            </p>
-                            <p className="text-[9px] text-neutral-600 font-mono">
-                              {new Date(v.last_seen).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1">
-                            VIEW <FiTarget size={10} />
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Matrix Pagination Controls */}
-            <div className="p-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
-              <div className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em]">
-                Showing {(currentPage - 1) * itemsPerPage + 1}-
-                {Math.min(currentPage * itemsPerPage, recentVisitors.length)} of{" "}
-                {recentVisitors.length} Resolved Entities
+            <div className="p-4 sm:p-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] gap-4">
+              <div className="text-[8px] sm:text-[9px] text-neutral-600 font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-neutral-600" />
+                SIGNATURES {(currentPage - 1) * itemsPerPage + 1} —{" "}
+                {Math.min(currentPage * itemsPerPage, recentVisitors.length)} /{" "}
+                {recentVisitors.length} RESOLVED
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-black text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all uppercase tracking-widest liquid-glass relative overflow-hidden group"
+                  className="flex-1 sm:flex-none px-6 py-2 rounded bg-white/[0.03] border border-white/5 text-[9px] font-black text-white hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-all uppercase tracking-[0.3em] min-h-[36px]"
                 >
-                  <div className="liquid-glass-highlight opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="relative z-10">Previous</span>
+                  PREV
                 </button>
+                <div className="flex gap-1 h-full items-center px-4 border-x border-white/5 hidden xs:flex">
+                  <span className="text-cyan-400 font-black text-[10px] font-mono leading-none">
+                    {currentPage.toString().padStart(2, "0")}
+                  </span>
+                  <span className="text-neutral-700 text-[8px] font-black">
+                    /
+                  </span>
+                  <span className="text-neutral-500 font-black text-[9px] font-mono leading-none">
+                    {Math.ceil(recentVisitors.length / itemsPerPage)
+                      .toString()
+                      .padStart(2, "0")}
+                  </span>
+                </div>
                 <button
                   onClick={() => setCurrentPage((prev) => prev + 1)}
                   disabled={currentPage * itemsPerPage >= recentVisitors.length}
-                  className="px-4 py-2 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-[10px] font-black text-cyan-400 hover:bg-cyan-400/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all uppercase tracking-widest liquid-glass relative overflow-hidden group"
+                  className="flex-1 sm:flex-none px-6 py-2 rounded bg-cyan-400/10 border border-cyan-400/20 text-[9px] font-black text-cyan-400 hover:bg-cyan-400/20 disabled:opacity-20 disabled:cursor-not-allowed transition-all uppercase tracking-[0.3em] min-h-[36px]"
                 >
-                  <div className="liquid-glass-highlight opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="relative z-10">Next Page</span>
+                  NEXT
                 </button>
               </div>
             </div>
           </div>
 
           {/* Real-time Interaction Feed */}
-          <div className="p-8 rounded-xl liquid-glass backdrop-blur-none relative">
+          <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
             <div className="liquid-glass-top-line" />
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                <FiZap className="text-yellow-400" /> Behavioral Stream
-              </h3>
-              <div className="flex items-center gap-4">
+            <AdminPanelHeader
+              title="BEHAVIORAL_MATRIX"
+              subtitle="Live Neural Interaction Feed"
+              icon={FiZap}
+              iconColorClass="text-yellow-400"
+            />
+            <div className="px-8 py-5 flex justify-between items-center border-b border-white/5 bg-white/[0.02]">
+              <div className="flex items-center gap-6">
+                <div className="flex bg-white/5 rounded-xl p-1 border border-white/5">
+                  <button
+                    onClick={() => setViewMode("stream")}
+                    className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all ${viewMode === "stream" ? "bg-white/10 text-white" : "text-neutral-500 hover:text-neutral-300"}`}
+                  >
+                    Signal_Stream
+                  </button>
+                  <button
+                    onClick={() => setViewMode("swimlanes")}
+                    className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all ${viewMode === "swimlanes" ? "bg-white/10 text-white" : "text-neutral-500 hover:text-neutral-300"}`}
+                  >
+                    Active_Lanes
+                  </button>
+                </div>
+
+                <div className="w-px h-4 bg-white/5" />
+
                 <button
-                  onClick={() => setShowBotTraffic(!showBotTraffic)}
-                  className={`px-3 py-1 rounded-full text-[10px] transition-all font-bold tracking-widest uppercase border ${
-                    showBotTraffic
-                      ? "bg-red-500/10 border-red-500/30 text-red-400"
-                      : "bg-white/5 border-white/10 text-neutral-500"
+                  onClick={() =>
+                    setVisitorFilter(visitorFilter === "bots" ? "all" : "bots")
+                  }
+                  className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all tracking-[0.2em] uppercase border ${
+                    visitorFilter === "bots"
+                      ? "bg-red-500/10 border-red-500/10 text-red-500"
+                      : "bg-white/5 border-white/5 text-neutral-500 hover:text-white"
                   }`}
                 >
-                  {showBotTraffic ? "Bots Visible" : "Humans Only"}
+                  {visitorFilter === "bots" ? "BOTS_VISIBLE" : "HUMANS_ONLY"}
                 </button>
-                <div className="px-3 py-1 rounded-full bg-white/5 text-[10px] text-neutral-500 font-mono">
-                  LIVE UPDATES
-                </div>
+              </div>
+              <div className="px-4 py-1.5 rounded-lg bg-emerald-500/5 text-[9px] font-black text-emerald-500/80 font-mono tracking-widest border border-emerald-500/10">
+                LIVE_RELAY_ACTIVE
               </div>
             </div>
-            <div
-              data-lenis-prevent
-              className="space-y-4 h-[600px] overflow-y-auto pr-2 custom-scrollbar"
-            >
-              {recentActions
-                .filter((action) => showBotTraffic || !action.is_bot)
-                .map((action, i) => (
-                  <div
-                    key={i}
-                    className="relative flex gap-4 items-start p-4 rounded-2xl bg-white/[0.01] border border-white/5 hover:bg-white/[0.03] transition-all liquid-glass overflow-hidden group"
-                  >
-                    <div className="liquid-glass-highlight" />
-                    <div className="liquid-glass-top-line" />
-                    <div
-                      className={`relative z-10 mt-1 p-2 rounded-xl bg-white/5 ${getActionColor(action.event_type)} group-hover:scale-110 transition-transform border border-white/5`}
-                    >
-                      <FiMousePointer size={16} />
-                    </div>
-                    <div className="flex-1 min-w-0 relative z-10">
-                      <div className="flex justify-between items-start">
-                        <p className="text-sm font-bold text-white">
-                          {decodeURIComponent(action.city || "Private Cluster")}
-                          <span className="mx-2 text-neutral-700 opacity-50">
-                            /
-                          </span>
-                          <span className={getActionColor(action.event_type)}>
-                            {(action.event_type || "").replace(/_/g, " ")}
-                          </span>
-                          {action.is_bot && (
-                            <span className="ml-2 px-1.5 py-0.5 rounded bg-red-500/10 text-[8px] text-red-400 font-black tracking-widest uppercase border border-red-500/20">
-                              BOT
-                            </span>
-                          )}
-                        </p>
-                        <span className="text-[10px] text-neutral-500 font-mono pt-0.5">
-                          {action.timestamp
-                            ? new Date(action.timestamp).toLocaleTimeString(
-                                [],
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  second: "2-digit",
-                                }
-                              )
-                            : "--:--:--"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-neutral-400 font-mono border border-white/5">
-                          {action.ip_address || "IP Hidden"} • {action.os} •{" "}
-                          {action.browser}
-                        </span>
-                        <span className="text-[10px] text-neutral-500 truncate italic opacity-60">
-                          {action.event_label
-                            ? `via ${action.event_label}`
-                            : `at ${action.path}`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+
+            <div className="p-4">
+              {viewMode === "stream" ? (
+                <BehavioralStream
+                  actions={recentActions}
+                  showBotTraffic={visitorFilter === "bots"}
+                />
+              ) : (
+                <div className="text-neutral-500 text-sm p-4">
+                  Swimlanes view coming soon...
+                </div>
+              )}
             </div>
           </div>
 
           {/* Detailed Content & Origin Matrix */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Top Pages */}
-            <div className="p-8 rounded-xl liquid-glass backdrop-blur-none relative">
+            <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
               <div className="liquid-glass-top-line" />
-              <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <FiExternalLink className="text-cyan-400" /> Content Hotspots
-              </h3>
-              <div className="space-y-2">
+              <AdminPanelHeader
+                title="CONTENT_HOTSPOTS"
+                subtitle="High-Value Data Streams"
+                icon={FiExternalLink}
+                iconColorClass="text-cyan-400"
+              />
+              <div className="p-8 space-y-2">
                 {topPages.map((page, i) => (
                   <div
                     key={i}
-                    className="flex justify-between items-center p-3 rounded-xl bg-white/[0.01] hover:bg-white/5 transition-all text-sm group"
+                    className="flex items-center p-2.5 rounded-lg bg-white/[0.01] hover:bg-white/5 transition-all text-[11px] group border border-transparent hover:border-white/5"
                   >
-                    <span className="text-neutral-400 font-mono group-hover:text-cyan-400 truncate max-w-[200px]">
+                    <span className="text-neutral-500 font-mono group-hover:text-cyan-400 truncate flex-1 pr-4">
                       {page.path}
                     </span>
-                    <div className="flex items-center gap-3">
-                      <div className="h-1.5 w-16 bg-white/5 rounded-full overflow-hidden hidden sm:block">
+                    <div className="flex items-center gap-4 w-24 sm:w-32 justify-end">
+                      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden hidden xs:block">
                         <div
                           className="h-full bg-cyan-400/30"
                           style={{
@@ -974,8 +1133,8 @@ const Analytics = () => {
                           }}
                         ></div>
                       </div>
-                      <span className="text-white font-black min-w-[40px] text-right">
-                        {page.count}
+                      <span className="text-white font-black font-mono w-10 text-right">
+                        {page.count.toString().padStart(3, "0")}
                       </span>
                     </div>
                   </div>
@@ -984,12 +1143,15 @@ const Analytics = () => {
             </div>
 
             {/* Referral Sources */}
-            <div className="p-8 rounded-xl liquid-glass backdrop-blur-none relative">
+            <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
               <div className="liquid-glass-top-line" />
-              <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <FiTarget className="text-purple-400" /> Traffic Ingress
-              </h3>
-              <div className="space-y-4">
+              <AdminPanelHeader
+                title="TRAFFIC_INGRESS"
+                subtitle="External Signal Origins"
+                icon={FiTarget}
+                iconColorClass="text-purple-400"
+              />
+              <div className="p-8 space-y-4">
                 {topReferrers.length > 0 ? (
                   topReferrers.map((ref, i) => (
                     <div key={i} className="space-y-1">
@@ -1046,52 +1208,47 @@ const Analytics = () => {
 
         {/* Intelligence Sidebar (Col 4) */}
         <div className="xl:col-span-4 space-y-8">
-          {isMapMounted ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1 }}
-            >
-              <GlobalThreatMap
-                locations={analyticsData?.mapNodes || []}
-                topLocations={analyticsData?.topLocations || []}
-              />
-            </motion.div>
-          ) : (
-            <div className="h-[500px] rounded-xl liquid-glass border border-white/5 bg-white/[0.01] flex items-center justify-center">
-              <div className="flex flex-col items-center gap-2">
-                <FiGlobe className="text-neutral-700 text-3xl animate-spin-slow" />
-                <span className="text-[10px] text-neutral-600 font-mono uppercase tracking-widest">
-                  Warming Engines...
-                </span>
-              </div>
-            </div>
-          )}
+          <LazySection placeholderHeight="600px">
+            {isMapMounted && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1 }}
+              >
+                <GlobalThreatMap
+                  locations={analyticsData?.mapNodes || []}
+                  topLocations={analyticsData?.topLocations || []}
+                />
+              </motion.div>
+            )}
+          </LazySection>
           {/* Geo Distribution */}
-          <div className="p-8 rounded-xl liquid-glass backdrop-blur-none relative">
+          <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
             <div className="liquid-glass-top-line" />
-            <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <FiGlobe className="text-blue-400" /> Geo Cluster
-            </h3>
-            <div className="space-y-5">
+            <AdminPanelHeader
+              title="GEO_CLUSTERS"
+              subtitle="Regional Signal Distribution"
+              icon={FiMapPin}
+              iconColorClass="text-blue-400"
+            />
+            <div className="p-8 space-y-6">
               {topLocations.map((loc, i) => (
-                <div key={i} className="group">
-                  <div className="flex justify-between text-sm mb-2">
-                    <div className="flex items-baseline gap-2">
-                      <span
-                        className="text-white font-bold truncate max-w-[120px]"
-                        title={loc.city}
-                      >
-                        {decodeURIComponent(loc.city || "Private")}
+                <div
+                  key={i}
+                  className="group p-2 rounded-lg hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5"
+                >
+                  <div className="flex justify-between items-end mb-1.5">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-white font-black text-[10px] uppercase tracking-wider truncate">
+                        {decodeURIComponent(loc.city || "PRIVATE")}
                       </span>
-                      <span className="text-neutral-500 text-[10px] uppercase font-bold truncate max-w-[100px]">
-                        {loc.region
-                          ? `${decodeURIComponent(loc.region)}, `
-                          : ""}
+                      <span className="text-[7px] text-neutral-600 font-black uppercase tracking-widest mt-0.5">
                         {decodeURIComponent(loc.country)}
                       </span>
                     </div>
-                    <span className="text-white font-mono">{loc.count}</span>
+                    <span className="text-white font-mono text-[10px] bg-white/5 px-1.5 py-0.5 rounded leading-none">
+                      {loc.count.toString().padStart(2, "0")}
+                    </span>
                   </div>
                   <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
                     <motion.div
@@ -1107,56 +1264,68 @@ const Analytics = () => {
             </div>
           </div>
 
-          {/* System Hardware Map */}
-          <div className="p-8 rounded-xl liquid-glass backdrop-blur-none relative">
+          {/* System Architecture */}
+          <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
             <div className="liquid-glass-top-line" />
-            <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <FiMonitor className="text-green-400" /> Hardware Distribution
-            </h3>
-            <div className="space-y-6">
-              {deviceBreakdown.map((d, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="p-3 rounded-2xl bg-white/5 text-green-400">
-                    {getDeviceIcon(d.device_type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-[11px] text-neutral-400 mb-1 font-bold uppercase tracking-wider">
-                      <span>{d.device_type}</span>
-                      <span className="text-white font-mono">
-                        {Math.round(
-                          (d.count / (stats.totalVisitors || 1)) * 100
-                        )}
-                        %
+            <AdminPanelHeader
+              title="SYSTEM_ARCHITECTURE"
+              subtitle="Device & Browser Distribution"
+              icon={FiCpu}
+              iconColorClass="text-green-400"
+            />
+            <div className="p-8 space-y-6">
+              {deviceBreakdown.slice(0, 4).map((d, i) => (
+                <div key={i} className="group transition-all">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-white/5 text-neutral-500 group-hover:text-white transition-colors">
+                        {getDeviceIcon(d.device_type)}
+                      </div>
+                      <span className="text-white font-black text-[10px] uppercase tracking-wider">
+                        {d.device_type}
                       </span>
                     </div>
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-green-500/40"
-                        style={{
-                          width: `${(d.count / (stats.totalVisitors || 1)) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
+                    <span className="text-white font-black font-mono text-[10px] tabular-nums">
+                      {Math.round((d.count / (stats.totalVisitors || 1)) * 100)}
+                      %
+                    </span>
+                  </div>
+                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${(d.count / (stats.totalVisitors || 1)) * 100}%`,
+                      }}
+                      className="h-full bg-emerald-500/60"
+                    />
                   </div>
                 </div>
               ))}
-            </div>
 
-            <div className="mt-8 pt-6 border-t border-white/5 space-y-3">
-              <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">
-                Browser Popularity
-              </p>
-              {browserBreakdown.map((b, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center text-xs"
-                >
-                  <span className="text-neutral-400 flex items-center gap-2">
-                    <FiCompass className="text-neutral-600" /> {b.browser}
-                  </span>
-                  <span className="text-white font-bold">{b.count}</span>
-                </div>
-              ))}
+              <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">
+                  BROWSER_SIGNATURES
+                </p>
+                {browserBreakdown.slice(0, 5).map((b, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between items-center text-xs group"
+                  >
+                    <span className="text-neutral-500 flex items-center gap-2 group-hover:text-neutral-300 transition-colors">
+                      <FiCompass
+                        size={12}
+                        className="text-neutral-600 group-hover:text-cyan-400 transition-colors"
+                      />
+                      <span className="text-[10px] font-mono tracking-tight">
+                        {b.browser}
+                      </span>
+                    </span>
+                    <span className="text-white font-black font-mono text-[10px] bg-white/5 px-1.5 py-0.5 rounded">
+                      {b.count.toString().padStart(2, "0")}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1164,251 +1333,13 @@ const Analytics = () => {
 
       <AnimatePresence>
         {selectedVisitorId && (
-          <VisitorIntelligence
+          <EntityDossier
             visitorId={selectedVisitorId}
             onClose={() => setSelectedVisitorId(null)}
           />
         )}
       </AnimatePresence>
     </div>
-  );
-};
-
-const VisitorIntelligence = ({ visitorId, onClose }) => {
-  const { data: detail, isLoading } = useVisitorDetail(visitorId);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex justify-end bg-black/40 backdrop-blur-[4px]"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ duration: 0.2 }}
-        className="w-full max-w-[450px] h-full flex flex-col relative overflow-hidden bg-white/[0.01] backdrop-blur-[12px] border-l border-white/20 liquid-glass"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="liquid-glass-highlight" />
-        <div className="liquid-glass-top-line" />
-
-        {/* Liquid Glass Global Highlights */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.05] via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 left-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
-
-        {/* Header */}
-        <div className="relative p-6 flex justify-between items-start z-10">
-          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-white/[0.03] border border-white/10 flex items-center justify-center text-cyan-400">
-              <FiUsers size={18} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                {detail?.profile?.real_name || "Entity Intelligence"}
-                {detail?.profile?.real_name && (
-                  <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-[9px] text-green-400 font-bold tracking-wider border border-green-500/20 uppercase">
-                    Verified
-                  </span>
-                )}
-              </h2>
-              <div className="flex flex-col gap-0.5 mt-0.5">
-                <span className="text-[10px] text-neutral-400 font-mono">
-                  ID: {(detail?.profile?.visitor_id || visitorId).slice(0, 12)}
-                  ...
-                </span>
-                {detail?.profile?.is_bot && (
-                  <span className="w-fit mt-1 px-1.5 py-0.5 rounded bg-red-500/10 text-[9px] text-red-400 font-bold tracking-wider border border-red-500/20">
-                    BOT DETECTED
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/[0.05] text-neutral-400 hover:text-white transition-all"
-          >
-            <FiX size={18} />
-          </button>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden flex flex-col relative z-0">
-          {isLoading ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <div className="w-12 h-12 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin"></div>
-              <p className="text-cyan-400/60 font-mono text-[10px] uppercase tracking-[0.2em]">
-                Decrypting...
-              </p>
-            </div>
-          ) : !detail || !detail.profile ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <FiAlertTriangle className="text-red-400/80 text-3xl mb-2" />
-              <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-[0.2em]">
-                Entity Profile Not Found
-              </p>
-            </div>
-          ) : (
-            <div
-              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 overscroll-contain"
-              data-lenis-prevent
-            >
-              {/* Critical Stats - List Style */}
-              <div className="space-y-2">
-                <div className="relative px-4 py-3 rounded-xl flex items-center justify-between bg-white/5 border border-white/10 liquid-glass group hover:bg-white/[0.08] transition-all">
-                  <div className="liquid-glass-highlight" />
-                  <div className="flex items-center gap-3 relative z-10">
-                    <FiActivity className="text-cyan-400" size={14} />
-                    <span className="text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-black">
-                      Total Visits
-                    </span>
-                  </div>
-                  <span className="text-sm font-bold text-white relative z-10">
-                    {detail?.profile?.visit_count || 1}
-                  </span>
-                </div>
-
-                <div className="relative px-4 py-3 rounded-xl flex items-center justify-between bg-white/5 border border-white/10 liquid-glass group hover:bg-white/[0.08] transition-all">
-                  <div className="liquid-glass-highlight" />
-                  <div className="flex items-center gap-3 relative z-10">
-                    <FiTarget className="text-purple-400" size={14} />
-                    <span className="text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-black">
-                      Engagement Score
-                    </span>
-                  </div>
-                  <span className="text-sm font-bold text-cyan-400 relative z-10">
-                    {(detail?.stats?.total_clicks || 0) * 5 +
-                      (detail?.stats?.total_pageviews || 0) * 2}
-                  </span>
-                </div>
-              </div>
-
-              {/* Hardware & Network DNA */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.25em] flex items-center gap-2 pl-1">
-                  <FiCpu className="text-purple-400/80" /> Hardware DNA
-                </h3>
-                <div className="relative p-2 rounded-xl bg-white/[0.02] border border-white/10 liquid-glass">
-                  <div className="liquid-glass-highlight" />
-                  <div className="space-y-1 relative z-10">
-                    {[
-                      {
-                        label: "Model",
-                        value: detail?.profile?.device_model || "Generic",
-                      },
-                      {
-                        label: "Type",
-                        value: detail?.profile?.device_type || "Desktop",
-                      },
-                      { label: "OS", value: detail?.profile?.os },
-                      { label: "Browser", value: detail?.profile?.browser },
-                      {
-                        label: "Resolution",
-                        value: detail?.profile?.screen_size || "Unknown",
-                      },
-                      {
-                        label: "IP Address",
-                        value: detail?.profile?.ip_address,
-                        mono: true,
-                      },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex justify-between items-center py-2.5 px-3 ${idx !== 5 ? "border-b border-white/5" : ""}`}
-                      >
-                        <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
-                          {item.label}
-                        </span>
-                        <span
-                          className={`text-xs font-bold text-white ${item.mono ? "font-mono" : ""}`}
-                        >
-                          {item.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Geolocation */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.25em] flex items-center gap-2 pl-1">
-                  <FiMapPin className="text-blue-400/80" /> Geolocation
-                </h3>
-                <div className="relative p-5 rounded-xl bg-white/[0.02] border border-white/10 liquid-glass flex items-center gap-4">
-                  <div className="liquid-glass-highlight" />
-                  <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
-                    <FiGlobe size={18} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white mb-0.5">
-                      {detail?.profile?.city || "Unknown City"},{" "}
-                      {detail?.profile?.region}
-                    </p>
-                    <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
-                      {detail?.profile?.country} • {detail?.profile?.isp}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Activity Stream */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.25em] flex items-center gap-2 pl-1">
-                  <FiActivity className="text-green-400/80" /> Activity
-                  Continuous
-                </h3>
-                <div className="space-y-3">
-                  {detail?.events?.slice(0, 15).map((event, i) => (
-                    <div
-                      key={i}
-                      className="relative p-4 rounded-xl bg-white/5 border border-white/10 liquid-glass group hover:bg-white/[0.08] transition-all overflow-hidden"
-                    >
-                      <div className="liquid-glass-highlight" />
-                      <div className="flex justify-between items-start relative z-10">
-                        <div className="flex-1 pr-4">
-                          <p
-                            className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${
-                              event.event_type === "click"
-                                ? "text-purple-400"
-                                : "text-blue-400"
-                            }`}
-                          >
-                            {event.event_type?.replace("_", " ")}
-                          </p>
-                          <p className="text-xs text-white font-mono break-all leading-relaxed">
-                            {event.path || event.event_label}
-                          </p>
-                        </div>
-                        <span className="text-[9px] text-neutral-500 font-mono pt-1 whitespace-nowrap">
-                          {new Date(event.timestamp).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
   );
 };
 

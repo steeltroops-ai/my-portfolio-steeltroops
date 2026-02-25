@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { imagetools } from "vite-imagetools";
+import viteCompression from "vite-plugin-compression";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   plugins: [
@@ -9,6 +11,43 @@ export default defineConfig({
       jsxRuntime: "automatic",
     }),
     imagetools(),
+    viteCompression({
+      algorithm: "brotliCompress",
+      ext: ".br",
+      threshold: 1024,
+    }),
+    viteCompression({
+      algorithm: "gzip",
+      ext: ".gz",
+      threshold: 1024,
+    }),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+      manifest: {
+        name: "Admin Control | steeltroops",
+        short_name: "AdminHQ",
+        description: "Admin Control Center for Mayank's portfolio",
+        theme_color: "#0a0a0a",
+        background_color: "#0a0a0a",
+        display: "standalone",
+        start_url: "/admin/dashboard",
+        icons: [
+          {
+            src: "/android-chrome-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+          {
+            src: "/android-chrome-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+        ],
+      },
+    }),
   ],
   define: {
     global: "globalThis",
@@ -16,6 +55,7 @@ export default defineConfig({
   envDir: ".",
   envPrefix: "VITE_",
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: {
       "@": resolve(__dirname, "./src"),
       "@/components": resolve(__dirname, "./src/components"),
@@ -46,6 +86,11 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: true,
         secure: false,
+      },
+      "/socket.io": {
+        target: "http://localhost:3001",
+        ws: true,
+        changeOrigin: true,
       },
     },
   },

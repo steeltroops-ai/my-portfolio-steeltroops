@@ -75,7 +75,7 @@ export const useUnreadCount = () => {
       const data = await response.json();
       return { count: data.data?.length || 0 };
     },
-    staleTime: 60000,
+    staleTime: 0,
     retry: 3,
     refetchInterval: (query) => {
       // If error, poll every 10s to recover
@@ -109,7 +109,36 @@ export const useUpdateMessageStatus = () => {
 
       return response.json();
     },
+    onMutate: async ({ id, action }) => {
+      await queryClient.cancelQueries({ queryKey: ["contactMessages"] });
+      const previousMessages = queryClient.getQueryData([
+        "contactMessages",
+        "all",
+      ]);
+
+      if (previousMessages?.data) {
+        queryClient.setQueryData(["contactMessages", "all"], {
+          ...previousMessages,
+          data: previousMessages.data.map((m) =>
+            m.id === id ? { ...m, status: action } : m
+          ),
+        });
+      }
+
+      return { previousMessages };
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contactMessages"] });
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(
+          ["contactMessages", "all"],
+          context.previousMessages
+        );
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contactMessages"] });
     },
   });
@@ -135,7 +164,34 @@ export const useDeleteMessage = () => {
 
       return response.json();
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["contactMessages"] });
+      const previousMessages = queryClient.getQueryData([
+        "contactMessages",
+        "all",
+      ]);
+
+      if (previousMessages?.data) {
+        queryClient.setQueryData(["contactMessages", "all"], {
+          ...previousMessages,
+          data: previousMessages.data.filter((m) => m.id !== id),
+        });
+      }
+
+      return { previousMessages };
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contactMessages"] });
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(
+          ["contactMessages", "all"],
+          context.previousMessages
+        );
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contactMessages"] });
     },
   });

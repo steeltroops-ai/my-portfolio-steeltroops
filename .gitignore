@@ -14,6 +14,7 @@ dist-ssr
 .agent/
 .gemini/
 docs/reports
+docs/
 
 # Editor directories and files
 .vscode/*

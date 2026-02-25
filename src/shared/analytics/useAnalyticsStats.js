@@ -23,7 +23,7 @@ export const useAnalyticsStats = () => {
       return data;
     },
     initialData: cachedData,
-    staleTime: 0, // Always refresh in background
+    staleTime: 0, // Enforce Real-Time Performance: Always revalidate on mount
     refetchOnWindowFocus: true,
     retry: 3,
     refetchInterval: (query) => {

@@ -87,8 +87,13 @@ export const useAllPosts = (options = {}) => {
     queryKey: blogQueryKeys.allPosts(options),
     queryFn: async () => {
       const data = await getAllPosts(options);
-      if (data?.error && data.error.type === "error") {
-        throw new Error(data.error.message || "Failed to fetch posts");
+      if (data?.error && (data.error.type === "error" || !data.error.type)) {
+        throw new Error(
+          data.error.message ||
+            (typeof data.error === "string"
+              ? data.error
+              : "Failed to fetch posts")
+        );
       }
       if (data?.data && !data.error) {
         cacheManager.set(cacheKey, data, "adminData");
@@ -96,7 +101,7 @@ export const useAllPosts = (options = {}) => {
       return data;
     },
     initialData: cachedData || undefined,
-    staleTime: 0,
+    staleTime: options.staleTime ?? 60000, // 1 min default
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 3,
@@ -107,6 +112,8 @@ export const useAllPosts = (options = {}) => {
     select: (data) => ({
       posts: data?.data || [],
       count: data?.count || 0,
+      liveCount: data?.liveCount || 0,
+      draftCount: data?.draftCount || 0,
       error: data?.error,
     }),
   });
@@ -250,14 +257,53 @@ export const useDeletePost = () => {
 
   return useMutation({
     mutationFn: deletePost,
+    onMutate: async (postId) => {
+      // 1. Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: blogQueryKeys.posts() });
+
+      // 2. Snapshot the current state
+      const previousPosts = queryClient.getQueryData(
+        blogQueryKeys.allPosts({})
+      );
+
+      // 3. Optimistically patch the cache
+      if (previousPosts?.posts) {
+        const postToDelete = previousPosts.posts.find((p) => p.id === postId);
+        const isLive = postToDelete?.published;
+
+        queryClient.setQueryData(blogQueryKeys.allPosts({}), {
+          ...previousPosts,
+          posts: previousPosts.posts.filter((p) => p.id !== postId),
+          count: previousPosts.count - 1,
+          liveCount: isLive
+            ? previousPosts.liveCount - 1
+            : previousPosts.liveCount,
+          draftCount: isLive
+            ? previousPosts.draftCount
+            : previousPosts.draftCount - 1,
+        });
+      }
+
+      return { previousPosts };
+    },
     onSuccess: (data, postId) => {
       queryClient.removeQueries({ queryKey: blogQueryKeys.post(postId) });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.tags() });
       cacheManager.invalidatePrefix("blog-");
     },
-    onError: (error) => {
+    onError: (error, postId, context) => {
       console.error("Error deleting post:", error);
+      // Roll back to previous state
+      if (context?.previousPosts) {
+        queryClient.setQueryData(
+          blogQueryKeys.allPosts({}),
+          context.previousPosts
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
     },
   });
 };
@@ -276,8 +322,8 @@ export const useTogglePostPublished = () => {
         const allPostsData = queryClient.getQueryData(
           blogQueryKeys.allPosts({})
         );
-        if (allPostsData?.data) {
-          const found = allPostsData.data.find((p) => p.id === postId);
+        if (allPostsData?.posts) {
+          const found = allPostsData.posts.find((p) => p.id === postId);
           if (found) currentPost = { data: found };
         }
       }
@@ -289,19 +335,57 @@ export const useTogglePostPublished = () => {
       const currentPublished = currentPost?.data?.published ?? false;
       return togglePostPublished(postId, !currentPublished);
     },
-    onSuccess: (data, postId) => {
+    onMutate: async ({ id, published }) => {
+      // 1. Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: blogQueryKeys.posts() });
+
+      // 2. Snapshot the current state
+      const previousPosts = queryClient.getQueryData(
+        blogQueryKeys.allPosts({})
+      );
+
+      // 3. Optimistically patch the cache
+      if (previousPosts?.posts) {
+        queryClient.setQueryData(blogQueryKeys.allPosts({}), {
+          ...previousPosts,
+          posts: previousPosts.posts.map((p) =>
+            p.id === id ? { ...p, published } : p
+          ),
+          liveCount: published
+            ? previousPosts.liveCount + 1
+            : previousPosts.liveCount - 1,
+          draftCount: published
+            ? previousPosts.draftCount - 1
+            : previousPosts.draftCount + 1,
+        });
+      }
+
+      return { previousPosts };
+    },
+    onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
       cacheManager.invalidatePrefix("blog-");
 
       if (data.data) {
-        queryClient.setQueryData(blogQueryKeys.post(postId), {
+        queryClient.setQueryData(blogQueryKeys.post(id), {
           data: data.data,
           error: null,
         });
       }
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
       console.error("Error toggling post status:", error);
+      // Roll back to the previous state on failure
+      if (context?.previousPosts) {
+        queryClient.setQueryData(
+          blogQueryKeys.allPosts({}),
+          context.previousPosts
+        );
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure sync
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.posts() });
     },
   });
 };

@@ -22,18 +22,92 @@ export const getForensicData = async () => {
       data.gpu_renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
     }
 
-    // 2. Hardware Specs
+    // 2. Hardware & Locale Specs
     data.cpu_cores = navigator.hardwareConcurrency || 0;
     data.memory_estimate = navigator.deviceMemory || 0;
     data.max_touch_points = navigator.maxTouchPoints || 0;
     data.timezone_offset = new Date().getTimezoneOffset();
+    try {
+      data.timezone_name = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch (e) {
+      data.timezone_name = "Unknown";
+    }
+    data.languages = navigator.languages
+      ? navigator.languages.join(",")
+      : navigator.language;
+    data.platform = navigator.platform || "Unknown";
 
-    // 3. Network Guess
+    // 3. Network Intelligence
     if (navigator.connection) {
       data.network_type = navigator.connection.effectiveType || "unknown";
+      data.network_downlink = navigator.connection.downlink || 0;
+      data.network_rtt = navigator.connection.rtt || 0;
+      data.save_data = navigator.connection.saveData || false;
     }
 
-    // 4. Canvas Fingerprint
+    // 4. Audio Context Fingerprint (Oscillator Math)
+    try {
+      const AudioContext =
+        window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if (AudioContext) {
+        const audioCtx = new AudioContext(1, 44100, 44100);
+        const oscillator = audioCtx.createOscillator();
+        oscillator.type = "triangle";
+        oscillator.frequency.value = 10000;
+
+        const compressor = audioCtx.createDynamicsCompressor();
+        compressor.threshold.value = -50;
+        compressor.knee.value = 40;
+        compressor.ratio.value = 12;
+        compressor.reduction.value = -20;
+        compressor.attack.value = 0;
+        compressor.release.value = 0.25;
+
+        oscillator.connect(compressor);
+        compressor.connect(audioCtx.destination);
+        oscillator.start(0);
+
+        const renderedBuffer = await audioCtx.startRendering();
+        const channelData = renderedBuffer.getChannelData(0);
+
+        let audioHash = 0;
+        for (let i = 4500; i < 5000; i++) {
+          audioHash += Math.abs(channelData[i]);
+        }
+        data.audio_hash = audioHash.toString();
+        data.audio_support = true;
+      }
+    } catch (e) {
+      data.audio_support = false;
+    }
+
+    // 5. WebRTC Local IP Leak Extraction
+    data.local_ips = await new Promise((resolve) => {
+      const ips = [];
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("");
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch(() => resolve([]));
+      pc.onicecandidate = (event) => {
+        if (!event || !event.candidate) {
+          resolve(ips);
+          return;
+        }
+        const ipRegex =
+          /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/g;
+        const matches = event.candidate.candidate.match(ipRegex);
+        if (matches) {
+          matches.forEach((ip) => {
+            if (!ips.includes(ip) && ip !== "0.0.0.0" && ip !== "127.0.0.1")
+              ips.push(ip);
+          });
+        }
+      };
+      setTimeout(() => resolve(ips), 1000); // 1s timeout to prevent hanging
+    });
+
+    // 6. Canvas Fingerprint
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.textBaseline = "top";
@@ -48,7 +122,7 @@ export const getForensicData = async () => {
       data.canvas_hash = canvas.toDataURL();
     }
 
-    // 5. Precise Device Model (via UAParser + Heuristics fallback)
+    // 7. Precise Device Model (via UAParser + Heuristics fallback)
     const vendor = result.device.vendor || "";
     const model = result.device.model || "";
     const type = result.device.type || "desktop";

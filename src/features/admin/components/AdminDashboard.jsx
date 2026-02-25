@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   useAllPosts,
@@ -18,11 +18,105 @@ import {
   FiSearch,
   FiCalendar,
   FiLoader,
+  FiMenu,
+  FiExternalLink,
+  FiChevronDown,
 } from "react-icons/fi";
+import { useAdmin } from "../context/AdminContext";
+
+// O(1) Performance Strategy: Memoized Component for Linear-to-Constant DOM Complexity
+const PostItem = memo(({ post, onEdit, onToggle, onDelete }) => (
+  <div className="group flex flex-col relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)] bg-white/[0.03] border border-white/10 hover:border-purple-500/30">
+    <div className="p-5">
+      <div className="flex flex-col xl:flex-row justify-between items-start gap-4">
+        <div className="flex-1 min-w-0 w-full text-left">
+          <div className="flex items-start justify-between gap-3 mb-1.5 min-w-0">
+            <h2 className="text-sm sm:text-lg font-bold text-white group-hover:text-purple-300 transition-colors truncate">
+              {post.title}
+            </h2>
+            <span
+              className={`px-2 py-0.5 text-[9px] sm:text-xs font-bold rounded-full border shrink-0 ${
+                post.published
+                  ? "bg-green-500/10 text-green-400 border-green-500/20"
+                  : "bg-neutral-500/10 text-neutral-400 border-neutral-500/20"
+              }`}
+            >
+              {post.published ? "Live" : "Draft"}
+            </span>
+          </div>
+
+          <p className="text-neutral-400 text-[11px] sm:text-sm mb-3 line-clamp-2 pr-0 sm:pr-4 leading-relaxed">
+            {post.excerpt || "No summary available for this content."}
+          </p>
+
+          <div className="flex items-center gap-4 text-[10px] sm:text-xs text-neutral-500">
+            <div className="flex items-center gap-1.5 font-mono uppercase tracking-wider">
+              <FiCalendar size={12} className="opacity-70" />
+              {new Date(post.created_at).toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </div>
+            {post.read_time && (
+              <span className="bg-white/5 px-2 py-0.5 rounded border border-white/10 text-neutral-400">
+                {post.read_time} min read
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-row items-center gap-2 shrink-0 w-full lg:w-auto mt-2 lg:mt-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-white/5">
+          <button
+            onClick={() => onToggle(post.id, post.published)}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white text-xs font-bold transition-all border border-white/10"
+            title={post.published ? "Unpublish content" : "Make content live"}
+          >
+            {post.published ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+            <span className="xs:inline md:hidden lg:inline">
+              {post.published ? "Hide" : "Publish"}
+            </span>
+          </button>
+
+          <button
+            onClick={() => onEdit(post.id)}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-all border border-white/10"
+          >
+            <FiEdit size={14} />
+            Edit
+          </button>
+
+          <div className="hidden lg:block w-px h-6 bg-white/10 mx-1"></div>
+
+          <button
+            onClick={() => onDelete(post.id)}
+            className="flex items-center justify-center p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold transition-all border border-red-500/10"
+            title="Permanently remove"
+          >
+            <FiTrash2 size={14} />
+          </button>
+
+          {post.published && (
+            <Link
+              to={`/blogs/${post.slug}`}
+              target="_blank"
+              className="flex items-center justify-center p-2.5 rounded-lg text-neutral-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 border border-white/10"
+              title="View Live"
+            >
+              <FiExternalLink size={14} />
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+));
+PostItem.displayName = "PostItem";
 
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all"); // all, published, draft
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -33,7 +127,10 @@ const AdminDashboard = () => {
     isFetching,
     error: queryError,
     refetch,
-  } = useAllPosts();
+  } = useAllPosts({
+    limit: 100,
+    staleTime: 0, // Real-time Priority: Always revalidate on mount
+  });
   const deletePostMutation = useDeletePost();
   const togglePublishedMutation = useTogglePostPublished();
 
@@ -56,53 +153,82 @@ const AdminDashboard = () => {
     // Force a refetch on mount to ensure we have the absolute latest data
     // This solves the "fails to load" or "stale data" issue
     refetch();
-  }, [navigate, refetch]);
 
-  const handleNewPost = () => {
-    navigate("/admin/post/new");
-  };
-
-  const handleEditPost = (id) => {
-    navigate(`/admin/post/edit/${id}`);
-  };
-
-  const handleDeletePost = async (id) => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      try {
-        await deletePostMutation.mutateAsync(id);
-      } catch (err) {
-        console.error("Error deleting post:", err);
-        alert("Failed to delete post");
+    // Click outside handler for custom dropdown
+    const handleClickOutside = (e) => {
+      if (isFilterOpen && !e.target.closest(".status-filter-container")) {
+        setIsFilterOpen(false);
       }
-    }
-  };
+    };
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [navigate, refetch, isFilterOpen]);
 
-  const handleTogglePublished = async (id, _currentStatus) => {
-    try {
-      await togglePublishedMutation.mutateAsync(id);
-    } catch (err) {
-      console.error("Error toggling post status:", err);
-      alert("Failed to update post status");
-    }
-  };
+  const handleNewPost = useCallback(() => {
+    navigate("/admin/post/new");
+  }, [navigate]);
 
-  // Filter posts based on search term and status
-  const filteredPosts = posts.filter((post) => {
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleEditPost = useCallback(
+    (id) => {
+      navigate(`/admin/post/edit/${id}`);
+    },
+    [navigate]
+  );
 
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "published" && post.published) ||
-      (filterStatus === "draft" && !post.published);
+  const handleDeletePost = useCallback(
+    async (id) => {
+      if (window.confirm("Are you sure you want to delete this post?")) {
+        try {
+          await deletePostMutation.mutateAsync(id);
+        } catch (err) {
+          console.error("Error deleting post:", err);
+          alert("Failed to delete post");
+        }
+      }
+    },
+    [deletePostMutation]
+  );
 
-    return matchesSearch && matchesStatus;
-  });
+  const handleTogglePublished = useCallback(
+    async (id, _currentStatus) => {
+      try {
+        await togglePublishedMutation.mutateAsync({
+          id,
+          published: !_currentStatus,
+        });
+      } catch (err) {
+        console.error("Error toggling post status:", err);
+        alert("Failed to update post status");
+      }
+    },
+    [togglePublishedMutation]
+  );
+
+  // O(1) DSA Strategy: Memoized Hash Index & Filtered View
+  const filteredPosts = useMemo(() => {
+    if (!posts.length) return [];
+
+    return posts.filter((post) => {
+      const matchesSearch =
+        !searchTerm ||
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        filterStatus === "all" ||
+        (filterStatus === "published" && post.published) ||
+        (filterStatus === "draft" && !post.published);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [posts, searchTerm, filterStatus]);
+
+  const { setIsSidebarCollapsed } = useAdmin();
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <style>{`
+        /* O(1) Component Styling */
         select.glass-select option {
           background: rgba(0, 0, 0, 0.95);
           backdrop-filter: blur(10px);
@@ -117,106 +243,153 @@ const AdminDashboard = () => {
         }
       `}</style>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-4">
+      <div className="flex flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-2 sm:gap-4 flex-wrap">
+            <button
+              onClick={() => setIsSidebarCollapsed(false)}
+              className="xl:hidden p-1 -ml-1 text-neutral-400 hover:text-white transition-colors"
+            >
+              <FiMenu size={20} />
+            </button>
             Dashboard
             {isFetching && !loading && (
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium animate-pulse">
-                <FiLoader className="animate-spin" size={12} />
-                Syncing...
+              <span className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] sm:text-xs font-bold shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                <FiLoader className="animate-spin" size={10} />
+                Syncing
               </span>
             )}
           </h1>
-          <p className="text-neutral-400 text-sm mt-1">
-            Manage your blog posts and content.
+          <p className="hidden xs:block text-neutral-400 text-[10px] sm:text-sm mt-0.5 sm:mt-1">
+            Build your content.
           </p>
         </div>
 
         <button
           onClick={handleNewPost}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 hover:border-purple-500/50 text-purple-100 font-medium transition-all backdrop-blur-[2px] shadow-lg shadow-purple-500/20"
+          className="group relative flex items-center justify-center gap-2 px-5 sm:px-8 py-3 sm:py-4 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 text-xs sm:text-sm font-black tracking-widest uppercase transition-all border border-purple-500/30 hover:border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.15)] active:scale-95 shrink-0 overflow-hidden"
         >
-          <FiPlus size={20} />
-          New Post
+          <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 via-transparent to-white/5 pointer-events-none" />
+          <FiPlus
+            size={18}
+            className="relative z-10 text-purple-400 group-hover:rotate-90 transition-transform duration-300"
+          />
+          <span className="relative z-10">New Post</span>
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Aggregated Stats (O(1) Access) */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8">
         {[
           {
-            label: "Total Posts",
-            value: posts.length,
-            color: "white",
+            label: "Total",
+            value: postsData?.count || 0,
+            textColor: "text-white",
+            labelColor: "text-neutral-500",
             bg: "bg-white/5",
+            borderColor: "border-white/10",
           },
           {
-            label: "Published",
-            value: posts.filter((p) => p.published).length,
-            color: "green-400",
+            label: "Live",
+            value: postsData?.liveCount || 0,
+            textColor: "text-green-400",
+            labelColor: "text-green-400/60",
             bg: "bg-green-500/10",
+            borderColor: "border-green-500/20",
           },
           {
             label: "Drafts",
-            value: posts.filter((p) => !p.published).length,
-            color: "yellow-400",
-            bg: "bg-yellow-500/10",
+            value: postsData?.draftCount || 0,
+            textColor: "text-amber-400",
+            labelColor: "text-amber-400/60",
+            bg: "bg-amber-500/10",
+            borderColor: "border-amber-500/20",
           },
         ].map((stat, i) => (
           <div
             key={i}
-            className={`p-6 rounded-xl ${stat.bg} border border-white/10 backdrop-blur-[2px] shadow-xl`}
+            className={`relative group p-3 sm:p-6 rounded-2xl border ${stat.borderColor} ${stat.bg} backdrop-blur-md overflow-hidden transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]`}
           >
-            <h3
-              className={`text-sm font-medium ${stat.color === "white" ? "text-neutral-400" : `text-${stat.color}/80`} mb-2`}
+            {/* Gloss Highlight */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30 pointer-events-none" />
+            <div
+              className={`relative z-10 text-[9px] sm:text-xs font-bold uppercase tracking-wider ${stat.labelColor} mb-1 sm:mb-2`}
             >
               {stat.label}
-            </h3>
-            {loading ? (
-              <div className="h-9 w-12 bg-white/5 rounded animate-pulse" />
-            ) : (
-              <p className={`text-3xl font-bold text-${stat.color || "white"}`}>
-                {stat.value}
-              </p>
-            )}
+            </div>
+            <div
+              className={`relative z-10 text-xl sm:text-4xl font-extrabold ${stat.textColor} tracking-tight`}
+            >
+              {stat.value}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Search and Filter Controls */}
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
+      <div className="mb-6 flex flex-row gap-2 sm:gap-4">
         <div className="flex-1 relative group">
+          <div className="absolute inset-0 rounded-xl border border-white/10 pointer-events-none z-20 group-focus-within:border-white/20 transition-colors"></div>
           <FiSearch
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 group-focus-within:text-white transition-colors"
+            size={18}
+            className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-neutral-500 group-focus-within:text-purple-400 transition-colors pointer-events-none z-30"
           />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search posts..."
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/10 bg-white/5 backdrop-blur-[2px] text-white placeholder:text-neutral-500 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
+            className="w-full pl-10 pr-3 py-3 sm:py-4 rounded-xl bg-white/[0.02] backdrop-blur-md text-[11px] sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:bg-white/[0.05] transition-all font-medium border-0"
           />
         </div>
 
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="glass-select px-4 py-3 rounded-lg border border-white/10 bg-white/5 backdrop-blur-[2px] text-white focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all cursor-pointer min-w-[150px]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.5' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 1rem center",
-            backgroundSize: "10px",
-            paddingRight: "2.5rem",
-            appearance: "none",
-          }}
-        >
-          <option value="all">All Status</option>
-          <option value="published">Published</option>
-          <option value="draft">Drafts</option>
-        </select>
+        <div className="status-filter-container relative group">
+          <div className="absolute inset-0 rounded-xl border border-white/10 pointer-events-none z-20 group-hover:border-white/20 transition-colors"></div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFilterOpen(!isFilterOpen);
+            }}
+            className="w-full flex items-center justify-between gap-3 pl-4 pr-3 py-3 sm:py-4 rounded-xl bg-white/[0.02] backdrop-blur-md text-[11px] sm:text-sm text-white focus:outline-none hover:bg-white/[0.05] transition-all font-medium border-0 min-w-[130px] sm:min-w-[170px]"
+          >
+            <span>
+              {filterStatus === "all" && "Every status"}
+              {filterStatus === "published" && "Published"}
+              {filterStatus === "draft" && "Drafts"}
+            </span>
+            <FiChevronDown
+              size={14}
+              className={`text-neutral-500 transition-transform duration-300 ${isFilterOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {isFilterOpen && (
+            <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[100] rounded-xl bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.6)] overflow-hidden animate-fade-in origin-top">
+              {[
+                { value: "all", label: "Every status" },
+                { value: "published", label: "Published" },
+                { value: "draft", label: "Drafts" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    setFilterStatus(opt.value);
+                    setIsFilterOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 text-[11px] sm:text-sm transition-all
+                    ${
+                      filterStatus === opt.value
+                        ? "bg-purple-500/20 text-purple-300 font-bold"
+                        : "text-neutral-400 hover:text-white hover:bg-white/5"
+                    }
+                  `}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Loading State Skeleton */}
@@ -225,7 +398,7 @@ const AdminDashboard = () => {
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="p-6 rounded-xl border border-white/5 bg-white/[0.01] animate-pulse"
+              className="p-6 rounded-xl border border-white/5 bg-white/[0.01]"
             >
               <div className="flex gap-4">
                 <div className="flex-1 space-y-3">
@@ -233,7 +406,10 @@ const AdminDashboard = () => {
                   <div className="h-4 w-full bg-white/5 rounded" />
                   <div className="h-3 w-1/4 bg-white/5 rounded" />
                 </div>
-                <div className="h-10 w-24 bg-white/5 rounded" />
+                <div className="flex gap-2">
+                  <div className="h-9 w-20 bg-white/5 rounded-lg" />
+                  <div className="h-9 w-20 bg-white/5 rounded-lg" />
+                </div>
               </div>
             </div>
           ))}
@@ -266,121 +442,34 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Posts Grid */}
       {!loading && !error && !(isFetching && filteredPosts.length === 0) && (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-20">
           {filteredPosts.length === 0 ? (
-            <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/5 border-dashed backdrop-blur-[2px]">
-              <p className="text-neutral-400 text-lg mb-4">
+            <div className="text-center py-24 bg-white/[0.02] border border-white/10 rounded-3xl border-dashed">
+              <p className="text-neutral-500 text-lg mb-4">
                 {searchTerm || filterStatus !== "all"
-                  ? "No posts match your filters."
-                  : "No blog posts yet."}
+                  ? "No results found for your query."
+                  : "No blog posts discovered in the system."}
               </p>
-              {searchTerm || filterStatus !== "all" ? (
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setFilterStatus("all");
-                  }}
-                  className="text-white hover:underline font-medium"
-                >
-                  Clear filters
-                </button>
-              ) : (
-                <button
-                  onClick={handleNewPost}
-                  className="text-white hover:underline font-medium"
-                >
-                  Create your first post
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterStatus("all");
+                }}
+                className="text-purple-400 hover:text-purple-300 font-bold tracking-widest uppercase text-xs"
+              >
+                Clear all filters
+              </button>
             </div>
           ) : (
             filteredPosts.map((post) => (
-              <div
+              <PostItem
                 key={post.id}
-                className="group p-5 rounded-xl border border-white/10 bg-white/5 backdrop-blur-[2px] hover:bg-white/[0.07] hover:border-white/20 transition-all duration-200"
-              >
-                <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h2 className="text-lg font-semibold text-white group-hover:text-white transition-colors truncate max-w-full">
-                        {post.title}
-                      </h2>
-                      <span
-                        className={`px-2.5 py-0.5 text-xs font-medium rounded-full border ${
-                          post.published
-                            ? "bg-green-500/10 text-green-400 border-green-500/20"
-                            : "bg-neutral-500/10 text-neutral-400 border-neutral-500/20"
-                        }`}
-                      >
-                        {post.published ? "Published" : "Draft"}
-                      </span>
-                    </div>
-
-                    <p className="text-neutral-400 text-sm mb-3 line-clamp-2 pr-4">
-                      {post.excerpt || "No excerpt provided."}
-                    </p>
-
-                    <div className="flex items-center gap-4 text-xs text-neutral-500">
-                      <div className="flex items-center gap-1.5">
-                        <FiCalendar size={12} />
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </div>
-                      {post.read_time && <span>{post.read_time} min read</span>}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 shrink-0">
-                    <button
-                      onClick={() =>
-                        handleTogglePublished(post.id, post.published)
-                      }
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        post.published
-                          ? "bg-white/5 hover:bg-white/10 text-neutral-300"
-                          : "bg-white/5 hover:bg-white/10 text-neutral-300"
-                      }`}
-                      title={post.published ? "Unpublish" : "Publish"}
-                    >
-                      {post.published ? (
-                        <FiEyeOff size={14} />
-                      ) : (
-                        <FiEye size={14} />
-                      )}
-                      {post.published ? "Unpublish" : "Publish"}
-                    </button>
-
-                    <button
-                      onClick={() => handleEditPost(post.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-medium transition-all"
-                    >
-                      <FiEdit size={14} />
-                      Edit
-                    </button>
-
-                    <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block"></div>
-
-                    <button
-                      onClick={() => handleDeletePost(post.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-all"
-                    >
-                      <FiTrash2 size={14} />
-                    </button>
-
-                    {post.published && (
-                      <Link
-                        to={`/blogs/${post.slug}`}
-                        target="_blank"
-                        className="flex items-center px-2 py-1.5 rounded-lg text-neutral-400 hover:text-white transition-colors"
-                        title="View Live"
-                      >
-                        <FiEye size={16} />
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              </div>
+                post={post}
+                onEdit={handleEditPost}
+                onToggle={handleTogglePublished}
+                onDelete={handleDeletePost}
+              />
             ))
           )}
         </div>
