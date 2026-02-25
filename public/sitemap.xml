@@ -13,6 +13,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://steeltroops.vercel.app/blogs/deep-dive-into-transformers-understanding-the-fundamentals</loc>
+    <lastmod>2026-02-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://steeltroops.vercel.app/blogs/understanding-robotics-bottlenecks-beyond-intelligence</loc>
     <lastmod>2026-02-10</lastmod>
     <changefreq>weekly</changefreq>

@@ -23,7 +23,7 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+      includeAssets: ["favicon.ico", "profile.jpg", "masked-icon.svg"],
       manifest: {
         name: "Admin Control | steeltroops",
         short_name: "AdminHQ",
@@ -34,15 +34,15 @@ export default defineConfig({
         start_url: "/admin/dashboard",
         icons: [
           {
-            src: "/android-chrome-192x192.png",
+            src: "/profile.jpg",
             sizes: "192x192",
-            type: "image/png",
+            type: "image/jpeg",
             purpose: "any maskable",
           },
           {
-            src: "/android-chrome-512x512.png",
+            src: "/profile.jpg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/jpeg",
             purpose: "any maskable",
           },
         ],
