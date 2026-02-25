@@ -1,8 +1,8 @@
 {
-  "version": "2.0.6",
-  "buildId": "mm1ichti-dbvjw6",
-  "deployedAt": "2026-02-25T04:01:43.734Z",
-  "previousVersion": "2.0.5",
+  "version": "2.0.7",
+  "buildId": "mm1igvte-84ot0u",
+  "deployedAt": "2026-02-25T04:05:08.498Z",
+  "previousVersion": "2.0.6",
   "daysSinceLastDeploy": 0,
   "env": "production"
 }
