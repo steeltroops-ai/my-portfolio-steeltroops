@@ -129,18 +129,8 @@ function main() {
 
   // 2. DEV MODE Check
   if (!isProduction && !forceArg) {
-    console.log("\n  [DEV MODE] Skipping Version Bump (Local Build)");
-    const buildMeta = {
-      version: formatVersion(currentVersion),
-      buildId: `dev-${Date.now().toString(36)}`,
-      deployedAt: new Date().toISOString(),
-      previousVersion: formatVersion(currentVersion),
-      env: "development",
-    };
-    writeFileSync(
-      META_PATH,
-      JSON.stringify(buildMeta, null, 2) + "\n",
-      "utf-8"
+    console.log(
+      "\n  [DEV MODE] Skipping Version Bump (Local Build). Not modifying build-meta.json to prevent git conflicts."
     );
     return;
   }
