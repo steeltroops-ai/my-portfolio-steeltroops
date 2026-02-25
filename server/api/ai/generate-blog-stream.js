@@ -178,7 +178,7 @@ export default async function handler(req, res) {
     });
 
     const outlineResponse = await client.chat.completions.create({
-      model: "llama-3.3-70b",
+      model: "llama3.1-8b",
       messages: [{ role: "system", content: outlinePrompt }],
       response_format: { type: "json_object" },
       temperature: 0.7,
@@ -276,7 +276,7 @@ export default async function handler(req, res) {
 
         // Generate with streaming
         const sectionStream = await client.chat.completions.create({
-          model: "llama-3.3-70b",
+          model: "llama3.1-8b",
           messages: [{ role: "user", content: sectionPrompt }],
           temperature: 0.55,
           max_completion_tokens: Math.min(
@@ -363,7 +363,7 @@ export default async function handler(req, res) {
         });
 
         const metaResponse = await client.chat.completions.create({
-          model: "llama-3.3-70b",
+          model: "llama3.1-8b",
           messages: [{ role: "user", content: metaPrompt }],
           response_format: { type: "json_object" },
           temperature: 0.5,
@@ -513,7 +513,6 @@ async function savePost({
       title, slug, content, excerpt, tags, 
       featured_image_url, meta_description, 
       published, author, read_time, 
-      generation_status,
       created_at, updated_at
     )
     VALUES (
@@ -527,7 +526,6 @@ async function savePost({
       ${!saveAsDraft},
       'Mayank',
       ${calculatedReadTime},
-      ${generationStatus},
       NOW(),
       NOW()
     )
