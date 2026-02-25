@@ -64,6 +64,148 @@ export default async function handler(req, res) {
       });
     }
 
+    // 2. Entities God View - Full correlation CTE
+    if (req.query.action === "entities") {
+      const entities = await sql`
+        WITH entity_profile AS (
+          SELECT
+            ke.entity_id,
+            ke.real_name,
+            ke.email,
+            ke.role,
+            ke.notes,
+            ke.confidence_score,
+            ke.resolution_sources,
+            ke.total_visits,
+            ke.first_seen,
+            ke.last_seen,
+            COUNT(DISTINCT vp.id) as linked_device_count,
+            COUNT(DISTINCT vs.id) as total_sessions,
+            ARRAY_AGG(DISTINCT vp.ip_address) FILTER (WHERE vp.ip_address IS NOT NULL) as known_ips,
+            ARRAY_AGG(DISTINCT vp.hardware_hash) FILTER (WHERE vp.hardware_hash IS NOT NULL) as known_devices,
+            ARRAY_AGG(DISTINCT (vp.city || ', ' || vp.country)) FILTER (WHERE vp.city IS NOT NULL) as known_locations,
+            ARRAY_AGG(DISTINCT vp.browser) FILTER (WHERE vp.browser IS NOT NULL) as browsers_used,
+            ARRAY_AGG(DISTINCT vp.os) FILTER (WHERE vp.os IS NOT NULL) as os_used,
+            MAX(vp.last_seen) as truly_last_seen
+          FROM known_entities ke
+          LEFT JOIN visitor_profiles vp ON vp.likely_entity_id = ke.entity_id
+          LEFT JOIN visitor_sessions vs ON vs.visitor_uuid = vp.id
+          GROUP BY ke.entity_id, ke.real_name, ke.email, ke.role, ke.notes,
+                   ke.confidence_score, ke.resolution_sources, ke.total_visits,
+                   ke.first_seen, ke.last_seen
+        )
+        SELECT * FROM entity_profile
+        ORDER BY confidence_score DESC, truly_last_seen DESC
+        LIMIT 200
+      `;
+
+      const signals = await sql`
+        SELECT entity_id, signal_type, signal_weight, signal_value, recorded_at
+        FROM identity_signals
+        ORDER BY recorded_at DESC
+        LIMIT 500
+      `;
+
+      return res.status(200).json({
+        success: true,
+        entities,
+        signals,
+      });
+    }
+
+    // 3. Content Behaviour Profile - what a specific visitor/entity actually read
+    if (req.query.action === "content_profile") {
+      const { visitorId, entityId } = req.query;
+      if (!visitorId && !entityId) {
+        return res
+          .status(400)
+          .json({ error: "visitorId or entityId required" });
+      }
+
+      const blogEvents = entityId
+        ? await sql`
+            SELECT e.event_type, e.event_label, e.event_value, e.path, e.timestamp,
+              v.city, v.country, v.device_type, v.browser, k.real_name, k.email
+            FROM visitor_events e
+            JOIN visitor_sessions s ON e.session_uuid = s.id
+            JOIN visitor_profiles v ON s.visitor_uuid = v.id
+            LEFT JOIN known_entities k ON v.likely_entity_id = k.entity_id
+            WHERE v.likely_entity_id = ${entityId}
+              AND e.event_type IN (
+                'blog_open','blog_finish','blog_bounce',
+                'read_depth_25pct','read_depth_50pct','read_depth_75pct','read_depth_100pct',
+                'section_view','blog_card_click','contact'
+              )
+            ORDER BY e.timestamp DESC LIMIT 500
+          `
+        : await sql`
+            SELECT e.event_type, e.event_label, e.event_value, e.path, e.timestamp,
+              v.city, v.country, v.device_type, v.browser, k.real_name, k.email
+            FROM visitor_events e
+            JOIN visitor_sessions s ON e.session_uuid = s.id
+            JOIN visitor_profiles v ON s.visitor_uuid = v.id
+            LEFT JOIN known_entities k ON v.likely_entity_id = k.entity_id
+            WHERE v.visitor_id = ${visitorId}
+              AND e.event_type IN (
+                'blog_open','blog_finish','blog_bounce',
+                'read_depth_25pct','read_depth_50pct','read_depth_75pct','read_depth_100pct',
+                'section_view','blog_card_click','contact'
+              )
+            ORDER BY e.timestamp DESC LIMIT 500
+          `;
+
+      // Aggregate per post slug
+      const postSummary = blogEvents.reduce((acc, ev) => {
+        const slug =
+          ev.event_value?.split("|")[0] || ev.event_label || "unknown";
+        if (!acc[slug])
+          acc[slug] = {
+            slug,
+            opened: false,
+            finished: false,
+            bounced: false,
+            max_depth: 0,
+            sections_read: [],
+            time_spent: null,
+          };
+        if (ev.event_type === "blog_open") acc[slug].opened = true;
+        if (ev.event_type === "blog_finish") {
+          acc[slug].finished = true;
+          const p = (ev.event_value || "").split("|");
+          acc[slug].time_spent = p[1] || null;
+          acc[slug].max_depth = parseInt(p[2]) || 100;
+        }
+        if (ev.event_type === "blog_bounce") {
+          acc[slug].bounced = true;
+          const p = (ev.event_value || "").split("|");
+          acc[slug].time_spent = p[1] || null;
+          acc[slug].max_depth = parseInt(p[2]) || 0;
+        }
+        if (ev.event_type.startsWith("read_depth_")) {
+          const d =
+            parseInt(
+              ev.event_type.replace("read_depth_", "").replace("pct", "")
+            ) || 0;
+          if (d > acc[slug].max_depth) acc[slug].max_depth = d;
+        }
+        if (ev.event_type === "section_view") {
+          const s = (ev.event_value || "").split("|")[1] || "";
+          if (s && !acc[slug].sections_read.includes(s))
+            acc[slug].sections_read.push(s);
+        }
+        return acc;
+      }, {});
+
+      return res.status(200).json({
+        success: true,
+        raw_events: blogEvents,
+        post_summary: Object.values(postSummary),
+        identity: blogEvents[0]
+          ? { real_name: blogEvents[0].real_name, email: blogEvents[0].email }
+          : null,
+      });
+    }
+
     // 2. Parallel Core Dashboard Aggregation (High Speed Mode - Split into two batches for stability)
     console.log(
       "[Stats] Starting localized aggregation for session:",

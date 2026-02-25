@@ -50,3 +50,25 @@ export const useVisitorDetail = (visitorId) => {
     enabled: !!visitorId,
   });
 };
+
+export const useContentProfile = (visitorId, entityId) => {
+  return useQuery({
+    queryKey: ["content-profile", visitorId, entityId],
+    queryFn: async () => {
+      let queryStr = "";
+      if (entityId) queryStr = `&entityId=${entityId}`;
+      else if (visitorId) queryStr = `&visitorId=${visitorId}`;
+      else throw new Error("Need visitorId or entityId");
+
+      const res = await fetch(
+        `/api/analytics/stats?action=content_profile${queryStr}`,
+        {
+          credentials: "include",
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch content profile");
+      return res.json();
+    },
+    enabled: !!visitorId || !!entityId,
+  });
+};

@@ -48,6 +48,14 @@ const pageviewSchema = z.object({
   sessionId: z.string().min(5).max(100),
   path: z.string().max(300).optional(),
 });
+
+const identifySchema = z.object({
+  visitorId: z.string().min(5).max(100).optional(),
+  sessionId: z.string().min(5).max(100).optional(),
+  email: z.string().email().max(255),
+  name: z.string().max(255).nullable().optional(),
+  source: z.enum(["autofill", "form_submit", "manual"]).optional(),
+});
 // -----------------------------
 
 /**
@@ -379,14 +387,20 @@ export default async function handler(req, res) {
 
         // Log deep biometric behavior if provided
         if (biometrics) {
-          const is_bot_suspect = biometrics.entropy_score < 0.2; // Dead giveaway for a headless script
+          const is_bot_suspect = biometrics.entropy_score < 0.2;
 
           await sql`
             INSERT INTO behavioral_biometrics (
-              session_id, avg_mouse_velocity, typing_cadence_ms, entropy_score, is_bot_verified
-            ) VALUES (
-              ${sessionId}, ${biometrics.mouse_velocity || 0}, ${biometrics.typing_cadence_ms || 0}, ${biometrics.entropy_score || 0}, ${is_bot_suspect}
+              session_id, session_uuid, avg_mouse_velocity, typing_cadence_ms, entropy_score, is_bot_verified
             )
+            SELECT
+              ${sessionId},
+              id,
+              ${biometrics.mouse_velocity || 0},
+              ${biometrics.typing_cadence_ms || 0},
+              ${biometrics.entropy_score || 0},
+              ${is_bot_suspect}
+            FROM visitor_sessions WHERE session_id = ${sessionId}
           `;
         }
       }
@@ -446,6 +460,176 @@ export default async function handler(req, res) {
         }
       } catch (e) {
         // Broadcast failed
+      }
+
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === "identify") {
+      const parsed = identifySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid identify payload" });
+      }
+
+      const { visitorId, sessionId, email, name, source } = parsed.data;
+
+      // A. Upsert known_entities - passive identity resolution
+      const entities = await sql`
+        INSERT INTO known_entities (real_name, email, role, notes)
+        VALUES (
+          ${name || "Unknown"},
+          ${email.toLowerCase()},
+          'Contact Candidate',
+          ${`Auto-resolved via ${source || "autofill"} at ${new Date().toISOString()}`}
+        )
+        ON CONFLICT (email) DO UPDATE SET
+          real_name = CASE
+            WHEN known_entities.real_name = 'Unknown' THEN EXCLUDED.real_name
+            ELSE known_entities.real_name
+          END,
+          updated_at = NOW()
+        RETURNING entity_id
+      `;
+
+      if (entities.length > 0 && visitorId) {
+        const entityId = entities[0].entity_id;
+
+        // B. Link current visitor profile
+        await sql`
+          UPDATE visitor_profiles
+          SET likely_entity_id = ${entityId}
+          WHERE visitor_id = ${visitorId}
+            AND likely_entity_id IS NULL
+        `;
+
+        // C. Retroactive God Mode sweep
+        const hardwareRows = await sql`
+          SELECT hardware_hash FROM visitor_profiles
+          WHERE visitor_id = ${visitorId}
+            AND hardware_hash IS NOT NULL
+          LIMIT 1
+        `;
+
+        if (hardwareRows.length > 0 && hardwareRows[0].hardware_hash) {
+          const retroUpdate = await sql`
+            UPDATE visitor_profiles
+            SET likely_entity_id = ${entityId}
+            WHERE hardware_hash = ${hardwareRows[0].hardware_hash}
+              AND likely_entity_id IS NULL
+            RETURNING visitor_id
+          `;
+
+          if (retroUpdate.length > 0) {
+            console.log(
+              `[Identity] AUTOFILL GOD MODE: Retroactively linked ${retroUpdate.length} anonymous profile(s) to ${email}`
+            );
+          }
+        }
+
+        // D. Compute & persist confidence score
+        // Signals: autofill=0.3, form_submit=0.5, hardware_match=0.15, ip_match=0.05
+        const BASE_WEIGHTS = { autofill: 0.3, form_submit: 0.5, manual: 0.4 };
+        const baseWeight = BASE_WEIGHTS[source || "autofill"] || 0.3;
+
+        // Count corroborating device + IP signals for this entity
+        const correlationStats = await sql`
+          SELECT
+            COUNT(DISTINCT hardware_hash) FILTER (WHERE hardware_hash IS NOT NULL) as device_count,
+            COUNT(DISTINCT ip_address) FILTER (WHERE ip_address IS NOT NULL) as ip_count
+          FROM visitor_profiles
+          WHERE likely_entity_id = ${entityId}
+        `;
+
+        const deviceBonus = Math.min(
+          (correlationStats[0]?.device_count || 0) * 0.15,
+          0.3
+        );
+        const ipBonus = Math.min(
+          (correlationStats[0]?.ip_count || 0) * 0.05,
+          0.1
+        );
+        const newConfidence = Math.min(baseWeight + deviceBonus + ipBonus, 1.0);
+
+        // Log signal to audit trail
+        await sql`
+          INSERT INTO identity_signals (entity_id, visitor_id, signal_type, signal_weight, signal_value)
+          VALUES (
+            ${entityId},
+            ${visitorId || null},
+            ${source || "autofill"},
+            ${baseWeight},
+            ${email.toLowerCase()}
+          )
+        `.catch(() => {});
+
+        // Update entity: confidence, timestamps, resolution_sources
+        await sql`
+          UPDATE known_entities SET
+            confidence_score = GREATEST(confidence_score, ${newConfidence}),
+            last_seen = NOW(),
+            total_visits = (
+              SELECT COALESCE(SUM(visit_count), 0)
+              FROM visitor_profiles WHERE likely_entity_id = ${entityId}
+            ),
+            resolution_sources = (
+              SELECT ARRAY(
+                SELECT DISTINCT unnest(array_append(resolution_sources, ${source || "autofill"}))
+              )
+              FROM known_entities WHERE entity_id = ${entityId}
+            )
+          WHERE entity_id = ${entityId}
+        `.catch(() => {});
+
+        // Upsert identity_clusters for cross-device linking
+        if (hardwareRows.length > 0 && hardwareRows[0].hardware_hash) {
+          await sql`
+            INSERT INTO identity_clusters (fingerprint_hash, primary_entity_id, confidence_score)
+            VALUES (${hardwareRows[0].hardware_hash}, ${entityId}, ${newConfidence})
+            ON CONFLICT (fingerprint_hash) DO UPDATE SET
+              primary_entity_id = EXCLUDED.primary_entity_id,
+              confidence_score = GREATEST(identity_clusters.confidence_score, EXCLUDED.confidence_score)
+          `.catch(() => {});
+        }
+
+        // E. Log the identity resolution event
+        if (sessionId) {
+          await sql`
+            INSERT INTO visitor_events (
+              session_uuid, event_type, event_label, event_value, path, timestamp
+            )
+            SELECT id,
+              'identity_resolved',
+              ${`autofill:${source || "autofill"}`},
+              ${email.toLowerCase()},
+              '/contact',
+              NOW()
+            FROM visitor_sessions WHERE session_id = ${sessionId}
+            ON CONFLICT DO NOTHING
+          `.catch(() => {}); // Non-blocking
+        }
+
+        // F. Real-time admin broadcast
+        try {
+          if (!process.env.VERCEL) {
+            const { emitToAdmins } = await import("../../socket-hub.js");
+            emitToAdmins("ANALYTICS:SIGNAL", {
+              type: "IDENTITY_RESOLVED",
+              method: source || "autofill",
+              email,
+              name: name || null,
+              entityId,
+              visitorId,
+              confidence: newConfidence,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch (e) {
+          // Broadcast failed, ignore
+        }
+
+        console.log(
+          `[Identity] Resolved: ${email} -> entity ${entityId} | confidence: ${newConfidence.toFixed(2)}`
+        );
       }
 
       return res.status(200).json({ success: true });

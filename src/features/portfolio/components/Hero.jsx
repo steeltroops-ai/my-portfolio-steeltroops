@@ -112,7 +112,14 @@ const Hero = () => {
                   <m.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => scrollToElement("contact", { offset: 80 })}
+                    onClick={() => {
+                      scrollToElement("contact", { offset: 80 });
+                      setTimeout(() => {
+                        window.dispatchEvent(
+                          new CustomEvent("contact-autofill-trigger")
+                        );
+                      }, 600);
+                    }}
                     className="relative group cursor-pointer touch-manipulation"
                   >
                     <div className="relative px-10 py-1 sm:px-14 sm:py-1.5 rounded-2xl overflow-hidden transition-all duration-700 bg-white/[0.02] border border-purple-400/50 ring-1 ring-white/10 flex flex-col items-center min-w-[220px] sm:min-w-[260px] group-hover:bg-purple-500/20 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)]">

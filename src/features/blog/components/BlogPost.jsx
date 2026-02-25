@@ -5,6 +5,7 @@ import { usePostBySlug } from "../hooks/useBlogQueries";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import { useAnalytics } from "@/shared/analytics/useAnalytics";
 
 import {
   FiChevronLeft,
@@ -47,6 +48,7 @@ const BlogPost = () => {
   const navigate = useNavigate();
   const articleRef = useRef(null);
   const [activeId, setActiveId] = useState("");
+  const { trackEvent } = useAnalytics();
 
   // Use React Query to fetch the post
   const {
@@ -118,7 +120,102 @@ const BlogPost = () => {
     }, 100);
 
     return () => observer.disconnect();
-  }, [headings]); // DEPEND ON HEADINGS, NOT POST
+  }, [headings]);
+
+  // Blog Content Analytics: open, read depth, time spent, finish/bounce
+  useEffect(() => {
+    if (!post?.slug) return;
+
+    const openedAt = Date.now();
+    let maxDepthPct = 0;
+    let finished = false;
+
+    // Fire blog_open immediately
+    trackEvent("blog", "blog_open", post.slug);
+
+    // Scroll depth via article IntersectionObserver
+    const depthObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Calculate how far down the article is visible
+            const rect = entry.boundingClientRect;
+            const articleHeight =
+              entry.rootBounds?.height || window.innerHeight;
+            const rawDepth = Math.round(
+              ((window.scrollY +
+                window.innerHeight -
+                (articleRef.current?.offsetTop || 0)) /
+                (articleRef.current?.scrollHeight || 1)) *
+                100
+            );
+            const depth = Math.min(Math.max(rawDepth, 0), 100);
+            if (depth > maxDepthPct) {
+              maxDepthPct = depth;
+              // Fire milestone events at 25%, 50%, 75%, 100%
+              [25, 50, 75, 100].forEach((milestone) => {
+                if (
+                  maxDepthPct >= milestone &&
+                  !entry.target.dataset[`fired${milestone}`]
+                ) {
+                  entry.target.dataset[`fired${milestone}`] = "1";
+                  trackEvent("blog", `read_depth_${milestone}pct`, post.slug);
+                  if (milestone === 100) finished = true;
+                }
+              });
+            }
+          }
+        });
+      },
+      { threshold: Array.from({ length: 20 }, (_, i) => i * 0.05) }
+    );
+
+    if (articleRef.current) depthObserver.observe(articleRef.current);
+
+    // Cleanup: fire finish or bounce analytics on unmount
+    return () => {
+      depthObserver.disconnect();
+      const timeSpentSec = Math.round((Date.now() - openedAt) / 1000);
+      if (finished || maxDepthPct >= 75) {
+        trackEvent(
+          "blog",
+          "blog_finish",
+          `${post.slug}|${timeSpentSec}s|${maxDepthPct}pct`
+        );
+      } else {
+        trackEvent(
+          "blog",
+          "blog_bounce",
+          `${post.slug}|${timeSpentSec}s|${maxDepthPct}pct`
+        );
+      }
+    };
+  }, [post?.slug, trackEvent]);
+
+  // Section heading visibility tracking
+  useEffect(() => {
+    if (!post?.slug || headings.length === 0) return;
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !entry.target.dataset.tracked) {
+            entry.target.dataset.tracked = "1";
+            trackEvent(
+              "blog",
+              "section_view",
+              `${post.slug}|${entry.target.textContent?.slice(0, 60)}`
+            );
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    const headingEls =
+      articleRef.current?.querySelectorAll("h2[id], h3[id]") || [];
+    headingEls.forEach((el) => sectionObserver.observe(el));
+    return () => sectionObserver.disconnect();
+  }, [headings, post?.slug, trackEvent]);
 
   // Ultra-stable Sidebar Scroll Logic (PC Only)
   // Fixes: Eliminates scroll hijacking by only mutating DOM on state/mode changes.

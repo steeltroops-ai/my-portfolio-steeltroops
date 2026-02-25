@@ -23,11 +23,18 @@ import {
   FiClock,
   FiMaximize,
 } from "react-icons/fi";
-import { useVisitorDetail } from "@/shared/analytics/useAnalyticsStats";
+import {
+  useVisitorDetail,
+  useContentProfile,
+} from "@/shared/analytics/useAnalyticsStats";
 import AdminPanelHeader from "./shared/AdminPanelHeader";
 
 const EntityDossier = ({ visitorId, onClose }) => {
-  const { data: detail, isLoading } = useVisitorDetail(visitorId);
+  const { data: detail, isLoading: detailLoading } =
+    useVisitorDetail(visitorId);
+  const { data: contentData, isLoading: contentLoading } =
+    useContentProfile(visitorId);
+  const isLoading = detailLoading || contentLoading;
   const [activeTab, setActiveTab] = useState("dna");
   const dragControls = useDragControls();
   const constraintsRef = React.useRef(null);
@@ -281,6 +288,7 @@ const EntityDossier = ({ visitorId, onClose }) => {
             {[
               { id: "dna", label: "Profile" },
               { id: "timeline", label: "Activity" },
+              { id: "content", label: "Engagement" },
               { id: "threat", label: "Security" },
             ].map((tab) => (
               <button
@@ -387,6 +395,79 @@ const EntityDossier = ({ visitorId, onClose }) => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* CONTENT VIEW */}
+                {activeTab === "content" && (
+                  <div className="py-2">
+                    {!contentData?.post_summary ||
+                    contentData.post_summary.length === 0 ? (
+                      <div className="py-20 text-center text-neutral-700 text-[9px] font-mono uppercase tracking-[0.4em]">
+                        NO_ENGAGEMENT_DETECTED
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {contentData.post_summary.map((post, i) => (
+                          <div
+                            key={i}
+                            className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex flex-col gap-3"
+                          >
+                            <div className="flex justify-between items-start">
+                              <span className="text-xs font-bold text-white tracking-tight">
+                                {post.slug}
+                              </span>
+                              <div
+                                className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${post.finished ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : post.bounced ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"}`}
+                              >
+                                {post.finished
+                                  ? "COMPLETED"
+                                  : post.bounced
+                                    ? "BOUNCED"
+                                    : "OPENED"}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="flex flex-col">
+                                <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-black">
+                                  Max Depth
+                                </span>
+                                <span className="text-sm font-mono text-white">
+                                  {post.max_depth}%
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-black">
+                                  Time Spent
+                                </span>
+                                <span className="text-sm font-mono text-white">
+                                  {post.time_spent
+                                    ? `${post.time_spent}s`
+                                    : "---"}
+                                </span>
+                              </div>
+                            </div>
+                            {post.sections_read?.length > 0 && (
+                              <div className="flex flex-col mt-2 pt-2 border-t border-white/5">
+                                <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-black mb-1.5">
+                                  Sections Read
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {post.sections_read.map((s, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-neutral-300 font-mono border border-white/5"
+                                    >
+                                      {s}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

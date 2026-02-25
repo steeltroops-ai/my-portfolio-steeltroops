@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BiSend, BiCheck } from "react-icons/bi";
 import {
@@ -18,10 +18,160 @@ const Contact = () => {
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
   const formStartRef = useRef(Date.now());
+  const nameInputRef = useRef(null);
+  const emailInputRef = useRef(null);
 
   const { mutate: submitMessage, isLoading } = useSubmitContactMessage();
   const { validateForm } = useContactFormValidation();
   const { trackEvent } = useAnalytics();
+
+  // Sync browser autofill into React controlled state.
+  // Browsers autofill inputs shortly after page load via the autoComplete tokens,
+  // but React's controlled `value` prop overrides those injected values on re-render.
+  // We poll the raw DOM values at multiple intervals to catch whichever timing
+  // the current browser uses (Chrome ~100ms, Firefox/Safari ~500-1000ms).
+  useEffect(() => {
+    const syncAutofill = () => {
+      const nameFilled = nameInputRef.current?.value;
+      const emailFilled = emailInputRef.current?.value;
+      if (nameFilled || emailFilled) {
+        setFormData((prev) => {
+          // Only sync if the field is still empty (don't overwrite user-typed data)
+          const nameChanged = nameFilled && !prev.name;
+          const emailChanged = emailFilled && !prev.email;
+
+          if (!nameChanged && !emailChanged) return prev; // Nothing new
+
+          // Fire identity capture to analytics - passive God Mode binding
+          // at autofill detection time, before the user even hits Send.
+          const resolvedName = nameChanged ? nameFilled : prev.name;
+          const resolvedEmail = emailChanged ? emailFilled : prev.email;
+
+          if (resolvedName || resolvedEmail) {
+            const visitorId = localStorage.getItem("portfolio_visitor_id");
+            const sessionId = sessionStorage.getItem("portfolio_session_id");
+
+            // 1. Lightweight event log row
+            trackEvent(
+              "contact",
+              "autofill_detected",
+              JSON.stringify({ name: resolvedName, email: resolvedEmail })
+            );
+
+            // 2. Passive identity resolve - upsert known_entities + link visitor
+            if (resolvedEmail) {
+              fetch("/api/analytics/track?action=identify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  visitorId,
+                  sessionId,
+                  name: resolvedName || null,
+                  email: resolvedEmail,
+                  source: "autofill",
+                }),
+              }).catch(() => {}); // Silent fail - non-blocking
+            }
+          }
+
+          return {
+            ...prev,
+            ...(nameChanged ? { name: nameFilled } : {}),
+            ...(emailChanged ? { email: emailFilled } : {}),
+          };
+        });
+      }
+    };
+
+    // Fire immediately, then at typical browser autofill delay windows
+    syncAutofill();
+    const t1 = setTimeout(syncAutofill, 100);
+    const t2 = setTimeout(syncAutofill, 500);
+    const t3 = setTimeout(syncAutofill, 1000);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [trackEvent]);
+
+  // Programmatic autofill trigger:
+  // When user clicks "Contact" in nav or "Hire Me" in hero, a custom event fires.
+  // We respond by focusing the name input — this is what tells the browser to
+  // fire its autofill engine for this form. We then poll for the injected values.
+  useEffect(() => {
+    const onTrigger = () => {
+      const nameEl = nameInputRef.current;
+      const emailEl = emailInputRef.current;
+      if (!nameEl) return;
+
+      // Focus name field → triggers browser autofill engine
+      nameEl.focus();
+
+      // Poll after typical autofill injection delay
+      const poll = () => {
+        const nameFilled = nameInputRef.current?.value;
+        const emailFilled = emailInputRef.current?.value;
+
+        if (nameFilled || emailFilled) {
+          setFormData((prev) => {
+            const nameChanged = nameFilled && !prev.name;
+            const emailChanged = emailFilled && !prev.email;
+            if (!nameChanged && !emailChanged) return prev;
+
+            const resolvedName = nameChanged ? nameFilled : prev.name;
+            const resolvedEmail = emailChanged ? emailFilled : prev.email;
+
+            if (resolvedEmail) {
+              const visitorId = localStorage.getItem("portfolio_visitor_id");
+              const sessionId = sessionStorage.getItem("portfolio_session_id");
+
+              trackEvent(
+                "contact",
+                "autofill_detected",
+                JSON.stringify({
+                  name: resolvedName,
+                  email: resolvedEmail,
+                  trigger: "nav_click",
+                })
+              );
+
+              fetch("/api/analytics/track?action=identify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  visitorId,
+                  sessionId,
+                  name: resolvedName || null,
+                  email: resolvedEmail,
+                  source: "autofill_nav",
+                }),
+              }).catch(() => {});
+            }
+
+            return {
+              ...prev,
+              ...(nameChanged ? { name: nameFilled } : {}),
+              ...(emailChanged ? { email: emailFilled } : {}),
+            };
+          });
+        }
+
+        // Blur after capture so it doesn't feel weird to the user
+        nameEl.blur();
+      };
+
+      // Give browser time to inject autofill values
+      setTimeout(poll, 150);
+      setTimeout(poll, 400);
+      setTimeout(poll, 800);
+    };
+
+    window.addEventListener("contact-autofill-trigger", onTrigger);
+    return () =>
+      window.removeEventListener("contact-autofill-trigger", onTrigger);
+  }, [trackEvent]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -78,8 +228,10 @@ const Contact = () => {
     // Get forensic data if available
     let forensicData = {};
     try {
-      const { getForensicData } = await import("@/shared/analytics/forensics");
+      const { getForensicData, hashFingerprint } =
+        await import("@/shared/analytics/forensics");
       forensicData = await getForensicData();
+      forensicData.fingerprint = hashFingerprint(forensicData);
     } catch (e) {
       console.warn("Forensic data collection failed:", e);
     }
@@ -174,6 +326,7 @@ const Contact = () => {
 
               <form
                 onSubmit={handleSubmit}
+                autoComplete="on"
                 className="space-y-2.5 sm:space-y-3 md:space-y-3.5"
               >
                 {/* Responsive Grid Layout */}
@@ -191,11 +344,13 @@ const Contact = () => {
                       Name
                     </label>
                     <input
+                      ref={nameInputRef}
                       type="text"
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
+                      autoComplete="name"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-white/[0.02] border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.05] placeholder-neutral-600 text-sm sm:text-base"
                       placeholder="Your name"
                       disabled={isLoading}
@@ -217,11 +372,13 @@ const Contact = () => {
                       Email
                     </label>
                     <input
+                      ref={emailInputRef}
                       type="email"
                       id="email"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      autoComplete="email"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-white transition-all duration-300 border rounded-lg bg-white/[0.02] border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.05] placeholder-neutral-600 text-sm sm:text-base"
                       placeholder="your@email.com"
                       disabled={isLoading}

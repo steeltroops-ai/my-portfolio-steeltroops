@@ -115,7 +115,7 @@ export default async function handler(req, res) {
               VALUES (
                 ${name.trim()}, 
                 ${email.trim().toLowerCase()}, 
-                ${email.trim().toLowerCase()}, 
+                null, 
                 'Contact Inquiry', 
                 'Auto-resolved via Contact Form'
               )

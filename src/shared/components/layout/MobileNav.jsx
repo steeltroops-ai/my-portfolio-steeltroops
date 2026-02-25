@@ -88,6 +88,11 @@ const MobileNav = () => {
   const handleNavClick = (sectionId) => {
     updateActiveSection(sectionId);
     scrollToElement(sectionId, { offset: 80 });
+    if (sectionId === "contact") {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("contact-autofill-trigger"));
+      }, 600);
+    }
   };
 
   return (

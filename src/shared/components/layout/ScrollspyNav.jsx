@@ -25,10 +25,15 @@ const ScrollspyNav = () => {
     }
   };
 
-  // Handle navigation click to scroll to target section
   const handleNavClick = (sectionId) => {
     updateActiveSection(sectionId);
     scrollToElement(sectionId, { offset: 80 });
+    // After scroll settles, trigger autofill probe on contact form inputs
+    if (sectionId === "contact") {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("contact-autofill-trigger"));
+      }, 600);
+    }
   };
 
   useEffect(() => {

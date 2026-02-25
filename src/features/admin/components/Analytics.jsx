@@ -864,12 +864,20 @@ const Analytics = () => {
                             <FiUsers size={12} />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[10px] font-black text-white group-hover:text-cyan-400 transition-colors truncate uppercase tracking-tight leading-none mb-1">
+                            <p
+                              className={`text-[10px] font-black group-hover:text-cyan-400 transition-colors truncate uppercase tracking-tight leading-none mb-1 ${v.real_name ? "text-purple-300 shadow-purple-500/50 drop-shadow-md" : "text-white"}`}
+                            >
                               {v.real_name ||
                                 (v.city ? `${v.city}` : "RESOLVING...")}
                             </p>
                             <p className="text-[7px] text-neutral-600 font-mono truncate tracking-widest uppercase">
-                              {v.country} / {v.region?.slice(0, 3) || "UNK"}
+                              {v.email ? (
+                                <span className="text-purple-400/80">
+                                  {v.email}
+                                </span>
+                              ) : (
+                                `${v.country} / ${v.region?.slice(0, 3) || "UNK"}`
+                              )}
                             </p>
                           </div>
                         </div>
@@ -920,19 +928,23 @@ const Analytics = () => {
                               className={`inline-flex items-center gap-2 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${
                                 v.is_bot
                                   ? "bg-red-500/10 text-red-400 border-red-500/20"
-                                  : v.visit_count > 5
-                                    ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                    : "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                                  : v.real_name
+                                    ? "bg-purple-500/10 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+                                    : v.visit_count > 5
+                                      ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                      : "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
                               }`}
                             >
                               <div
-                                className={`w-1 h-1 rounded-full bg-current ${!v.is_bot && v.visit_count > 5 ? "animate-pulse" : ""}`}
+                                className={`w-1 h-1 rounded-full bg-current ${!v.is_bot && (v.visit_count > 5 || v.real_name) ? "animate-pulse" : ""}`}
                               />
                               {v.is_bot
                                 ? "BOT_LINK"
-                                : v.visit_count > 5
-                                  ? "RESOLVED"
-                                  : "SIGNAL"}
+                                : v.real_name
+                                  ? "RESOLVED_ID"
+                                  : v.visit_count > 5
+                                    ? "RECURRING"
+                                    : "UNKNOWN"}
                             </div>
                           </div>
                           <div className="w-[25%] min-w-[200px] px-5 py-3">

@@ -21,6 +21,7 @@ import FloatingChatButton from "@/shared/components/ui/FloatingChatButton";
 import SocialLinks from "@/shared/components/ui/SocialLinks";
 import SEOHead from "@/shared/components/ui/SEOHead";
 import OptimizedImage from "@/shared/components/media/OptimizedImage";
+import { useAnalytics } from "@/shared/analytics/useAnalytics";
 
 // Skeleton Loader for critical initial paint - Memoized for performance
 const BlogCardSkeleton = memo(({ view }) => (
@@ -60,9 +61,10 @@ const Blog = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [layoutView, setLayoutView] = useState("grid"); // "grid" or "list"
+  const [layoutView, setLayoutView] = useState("grid");
   const postsPerPage = 6;
   const queryClient = useQueryClient();
+  const { trackEvent } = useAnalytics();
 
   // Optimize fetching: Only fetch what we need for the current page
   // This drastically improves LCP and Reduces Network Payload
@@ -536,6 +538,9 @@ const Blog = () => {
                         <Link
                           to={`/blogs/${post.slug}`}
                           onMouseEnter={() => prefetchPostBySlug(post.slug)}
+                          onClick={() =>
+                            trackEvent("blog", "blog_card_click", post.slug)
+                          }
                           className={`relative z-10 flex flex-1 overflow-hidden ${
                             layoutView === "list"
                               ? "flex-row h-[128px] sm:h-[154px] overflow-hidden"
