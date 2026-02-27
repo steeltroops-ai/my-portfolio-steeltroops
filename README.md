@@ -3,7 +3,7 @@
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen)](https://github.com/steeltroops-ai/my-portfolio-steeltroops)
 [![Deployment](https://img.shields.io/badge/Deployment-Vercel-black?logo=vercel)](https://vercel.com)
 [![Version](https://img.shields.io/github/package-json/v/steeltroops-ai/my-portfolio-steeltroops?label=Version&color=blue)](https://github.com/steeltroops-ai/my-portfolio-steeltroops/blob/main/package.json)
-[![Build](https://img.shields.io/github/actions/workflow/status/steeltroops-ai/my-portfolio-steeltroops/quality-checks.yml?label=Build)](https://github.com/steeltroops-ai/my-portfolio-steeltroops/actions)
+[![Build](https://img.shields.io/github/actions/workflow/status/steeltroops-ai/my-portfolio-steeltroops/deploy.yml?branch=main&label=Build)](https://github.com/steeltroops-ai/my-portfolio-steeltroops/actions)
 [![License](https://img.shields.io/badge/License-Private-red)](./LICENSE)
 
 A modern, dynamic personal portfolio website featuring a blog, admin dashboard, and AI integration.

@@ -95,6 +95,7 @@ const GlobalThreatMap = ({
   const mapInstanceRef = useRef(null);
   const clusterGroupRef = useRef(null);
   const hubsLayerRef = useRef(null);
+  const hasFittedBoundsRef = useRef(false);
 
   // Debug Data State
   useEffect(() => {
@@ -123,10 +124,10 @@ const GlobalThreatMap = ({
     };
   }, []);
 
+  // 1. Initialize Map Engine (Run Once)
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // 1. Initialize Map Engine
     if (!mapInstanceRef.current) {
       console.log("[ForensicMap] Initializing Engine...");
       const map = L.map(mapContainerRef.current, {
@@ -146,6 +147,25 @@ const GlobalThreatMap = ({
       mapInstanceRef.current = map;
     }
 
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
+    });
+    resizeObserver.observe(mapContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        clusterGroupRef.current = null;
+        hubsLayerRef.current = null;
+      }
+    };
+  }, []);
+
+  // 2. Render Markers and Hubs (Runs on data changes)
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
 
     // 2. Initialize Cluster Group (Library Check)
@@ -320,42 +340,34 @@ const GlobalThreatMap = ({
     const finalizeMap = () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
-        if (bounds.length > 0) {
+        // Only fit bounds on first paint to prevent zooming out and closing popups when the map is clicked
+        if (bounds.length > 0 && !hasFittedBoundsRef.current) {
           mapInstanceRef.current.fitBounds(bounds, {
             padding: [40, 40],
             maxZoom: 14,
           });
+          hasFittedBoundsRef.current = true;
         }
       }
     };
 
-    // Multiple resizing triggers to ensure correct rendering
+    // Multiple resizing triggers to ensure correct rendering for first-paint bounds
     setTimeout(finalizeMap, 200);
     setTimeout(finalizeMap, 1000);
 
-    const resizeObserver = new ResizeObserver(() => {
-      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
-    });
-    if (mapContainerRef.current)
-      resizeObserver.observe(mapContainerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-      // Proper cleanup to prevent memory leaks and "map already initialized" errors
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        clusterGroupRef.current = null;
-        hubsLayerRef.current = null;
-      }
-    };
-  }, [locations, topLocations, onLocationSelect]);
+    // Disable exhaustive-deps to use stable stringified JSON dependency checks instead of raw object references
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    JSON.stringify(locations),
+    JSON.stringify(topLocations),
+    onLocationSelect,
+  ]);
 
   return (
     <div className="rounded-xl liquid-glass backdrop-blur-none overflow-hidden shadow-2xl relative flex flex-col group mb-8">
       <div className="liquid-glass-top-line" />
       <AdminPanelHeader
-        title="GLOBAL_THREAT_MATRIX"
+        title="GLOBAL THREAT MATRIX"
         subtitle="Real-time Geospatial Intelligence Hub"
         icon={FiGlobe}
         iconColorClass="text-emerald-500 animate-pulse"
@@ -570,6 +582,13 @@ const Analytics = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [visitorFilter, sortBy, locationFilter]);
+
+  const handleLocationSelect = useCallback((loc) => {
+    // Toggle: clicking the same location again deselects it
+    setLocationFilter((prev) =>
+      prev?.city === loc.city && prev?.country === loc.country ? null : loc
+    );
+  }, []);
 
   // Performance: Mount map immediately for instant feel
   useEffect(() => {
@@ -1277,65 +1296,7 @@ const Analytics = () => {
             </div>
           </div>
 
-          {/* Real-time Interaction Feed */}
-          <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
-            <div className="liquid-glass-top-line" />
-            <AdminPanelHeader
-              title="BEHAVIORAL_MATRIX"
-              subtitle="Live Neural Interaction Feed"
-              icon={FiZap}
-              iconColorClass="text-yellow-400"
-            />
-            <div className="px-8 py-5 flex justify-between items-center border-b border-white/5 bg-white/[0.02]">
-              <div className="flex items-center gap-6">
-                <div className="flex bg-white/5 rounded-xl p-1 border border-white/5">
-                  <button
-                    onClick={() => setViewMode("stream")}
-                    className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all ${viewMode === "stream" ? "bg-white/10 text-white" : "text-neutral-500 hover:text-neutral-300"}`}
-                  >
-                    Signal_Stream
-                  </button>
-                  <button
-                    onClick={() => setViewMode("swimlanes")}
-                    className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all ${viewMode === "swimlanes" ? "bg-white/10 text-white" : "text-neutral-500 hover:text-neutral-300"}`}
-                  >
-                    Active_Lanes
-                  </button>
-                </div>
 
-                <div className="w-px h-4 bg-white/5" />
-
-                <button
-                  onClick={() =>
-                    setVisitorFilter(visitorFilter === "bots" ? "all" : "bots")
-                  }
-                  className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all tracking-[0.2em] uppercase border ${
-                    visitorFilter === "bots"
-                      ? "bg-red-500/10 border-red-500/10 text-red-500"
-                      : "bg-white/5 border-white/5 text-neutral-500 hover:text-white"
-                  }`}
-                >
-                  {visitorFilter === "bots" ? "BOTS_VISIBLE" : "HUMANS_ONLY"}
-                </button>
-              </div>
-              <div className="px-4 py-1.5 rounded-lg bg-emerald-500/5 text-[9px] font-black text-emerald-500/80 font-mono tracking-widest border border-emerald-500/10">
-                LIVE_RELAY_ACTIVE
-              </div>
-            </div>
-
-            <div className="p-4">
-              {viewMode === "stream" ? (
-                <BehavioralStream
-                  actions={recentActions}
-                  showBotTraffic={visitorFilter === "bots"}
-                />
-              ) : (
-                <div className="text-neutral-500 text-sm p-4">
-                  Swimlanes view coming soon...
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Detailed Content & Origin Matrix */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1451,71 +1412,12 @@ const Analytics = () => {
                 <GlobalThreatMap
                   locations={analyticsData?.mapNodes || []}
                   topLocations={analyticsData?.topLocations || []}
-                  onLocationSelect={(loc) => {
-                    // Toggle: clicking the same location again deselects it
-                    setLocationFilter((prev) =>
-                      prev?.city === loc.city && prev?.country === loc.country
-                        ? null
-                        : loc
-                    );
-                  }}
+                  onLocationSelect={handleLocationSelect}
                 />
               </motion.div>
             )}
           </LazySection>
-          {/* Geo Distribution */}
-          <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
-            <div className="liquid-glass-top-line" />
-            <AdminPanelHeader
-              title="GEO_CLUSTERS"
-              subtitle="Regional Signal Distribution"
-              icon={FiMapPin}
-              iconColorClass="text-blue-400"
-            />
-            <div className="p-8 space-y-6">
-              {topLocations.map((loc, i) => (
-                <div
-                  key={i}
-                  onClick={() =>
-                    setLocationFilter((prev) =>
-                      prev?.city === loc.city && prev?.country === loc.country
-                        ? null
-                        : { city: loc.city, country: loc.country }
-                    )
-                  }
-                  className={`group p-2 rounded-lg transition-colors border cursor-pointer ${
-                    locationFilter?.city === loc.city &&
-                    locationFilter?.country === loc.country
-                      ? "bg-blue-500/10 border-blue-500/30"
-                      : "hover:bg-white/[0.02] border-transparent hover:border-white/5"
-                  }`}
-                >
-                  <div className="flex justify-between items-end mb-1.5">
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-white font-black text-[10px] uppercase tracking-wider truncate">
-                        {decodeURIComponent(loc.city || "PRIVATE")}
-                      </span>
-                      <span className="text-[7px] text-neutral-600 font-black uppercase tracking-widest mt-0.5">
-                        {decodeURIComponent(loc.country)}
-                      </span>
-                    </div>
-                    <span className="text-white font-mono text-[10px] bg-white/5 px-1.5 py-0.5 rounded leading-none">
-                      {loc.count.toString().padStart(2, "0")}
-                    </span>
-                  </div>
-                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${(loc.count / (stats.totalVisitors || 1)) * 100}%`,
-                      }}
-                      className="h-full bg-blue-500/60"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+
 
           {/* System Architecture */}
           <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
