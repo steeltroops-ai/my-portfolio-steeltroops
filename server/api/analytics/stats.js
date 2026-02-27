@@ -248,49 +248,74 @@ export default async function handler(req, res) {
         sql`SELECT path, COUNT(*) as count FROM visitor_events WHERE event_type = 'page_view' GROUP BY path ORDER BY count DESC LIMIT 15`,
         // Recent Visitors (Complex Join)
         sql`
-          WITH visitor_stats AS (
-            SELECT
-              s.visitor_uuid,
-              COUNT(CASE WHEN e.event_type = 'click' THEN 1 END) as total_clicks,
-              COUNT(CASE WHEN e.event_type = 'page_view' THEN 1 END) as total_pageviews,
-              (ARRAY_AGG(s.referrer ORDER BY s.last_heartbeat DESC) FILTER (WHERE s.referrer IS NOT NULL AND s.referrer != ''))[1] as last_referrer,
-              (ARRAY_AGG(e.path ORDER BY e.timestamp DESC))[1] as last_path,
-              EXTRACT(EPOCH FROM (MAX(e.timestamp) - MIN(e.timestamp))) as duration_seconds
-            FROM visitor_sessions s
-            LEFT JOIN visitor_events e ON e.session_uuid = s.id
-            GROUP BY s.visitor_uuid
-          )
-          SELECT 
-            p.id, 
-            p.visitor_id, 
-            p.ip_address, 
-            p.browser, 
-            p.os, 
-            p.device_type, 
-            p.country, 
-            p.city, 
-            p.region, 
-            p.isp, 
-            p.last_seen, 
-            p.visit_count, 
-            p.screen_size, 
-            p.fingerprint, 
-            p.device_model, 
-            p.is_bot, 
-            k.real_name, 
-            k.email,
-            k.role,
-            COALESCE(vs.total_clicks, 0) as total_clicks,
-            COALESCE(vs.total_pageviews, 0) as total_pageviews,
-            COALESCE(vs.last_referrer, 'Direct') as last_referrer,
-            COALESCE(vs.last_path, '/') as last_path,
-            COALESCE(vs.duration_seconds, 0) as duration_seconds
-          FROM visitor_profiles p
-          LEFT JOIN known_entities k ON p.likely_entity_id = k.entity_id
-          LEFT JOIN visitor_stats vs ON vs.visitor_uuid = p.id
-          WHERE p.is_owner = FALSE
-          ORDER BY p.last_seen DESC
-          LIMIT 100`,
+          -- Deduplicated session stats per visitor
+        WITH visitor_stats AS (
+          SELECT
+            s.visitor_uuid,
+            COUNT(CASE WHEN e.event_type = 'click' THEN 1 END) as total_clicks,
+            COUNT(CASE WHEN e.event_type = 'page_view' THEN 1 END) as total_pageviews,
+            (ARRAY_AGG(s.referrer ORDER BY s.last_heartbeat DESC) FILTER (WHERE s.referrer IS NOT NULL AND s.referrer != ''))[1] as last_referrer,
+            (ARRAY_AGG(e.path ORDER BY e.timestamp DESC))[1] as last_path,
+            EXTRACT(EPOCH FROM (MAX(e.timestamp) - MIN(e.timestamp))) as duration_seconds
+          FROM visitor_sessions s
+          LEFT JOIN visitor_events e ON e.session_uuid = s.id
+          GROUP BY s.visitor_uuid
+        ),
+        -- Last 10 visit sessions per visitor
+        visit_log AS (
+          SELECT
+            s.visitor_uuid,
+            JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'session_id', s.session_id,
+                'start_time', s.start_time,
+                'last_heartbeat', s.last_heartbeat,
+                'duration_seconds', EXTRACT(EPOCH FROM (s.last_heartbeat - s.start_time)),
+                'page_views', (SELECT COUNT(*) FROM visitor_events ve WHERE ve.session_uuid = s.id AND ve.event_type = 'page_view'),
+                'referrer', COALESCE(s.referrer, ''),
+                'entry_path', COALESCE(s.entry_page, '/')
+              ) ORDER BY s.start_time DESC
+            ) as sessions
+          FROM (
+            SELECT * FROM visitor_sessions
+            ORDER BY start_time DESC
+          ) s
+          GROUP BY s.visitor_uuid
+        )
+        SELECT 
+          p.id, 
+          p.visitor_id, 
+          p.ip_address, 
+          p.browser, 
+          p.os, 
+          p.device_type, 
+          p.country, 
+          p.city, 
+          p.region, 
+          p.isp, 
+          p.first_seen,
+          p.last_seen, 
+          p.visit_count, 
+          p.screen_size, 
+          p.fingerprint, 
+          p.device_model, 
+          p.is_bot, 
+          k.real_name, 
+          k.email,
+          k.role,
+          COALESCE(vs.total_clicks, 0) as total_clicks,
+          COALESCE(vs.total_pageviews, 0) as total_pageviews,
+          COALESCE(vs.last_referrer, 'Direct') as last_referrer,
+          COALESCE(vs.last_path, '/') as last_path,
+          COALESCE(vs.duration_seconds, 0) as duration_seconds,
+          COALESCE(vl.sessions, '[]'::json) as visit_log
+        FROM visitor_profiles p
+        LEFT JOIN known_entities k ON p.likely_entity_id = k.entity_id
+        LEFT JOIN visitor_stats vs ON vs.visitor_uuid = p.id
+        LEFT JOIN visit_log vl ON vl.visitor_uuid = p.id
+        WHERE p.is_owner = FALSE
+        ORDER BY p.last_seen DESC
+        LIMIT 100`,
         // Recent Actions
         sql`
           SELECT e.timestamp, e.event_type, e.event_label, e.path, v.city, v.country, v.os, v.browser, v.ip_address, v.is_bot

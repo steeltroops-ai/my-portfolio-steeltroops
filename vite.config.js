@@ -82,6 +82,19 @@ export default defineConfig({
     },
     // Proxy API requests to local Express server
     proxy: {
+      // SSE endpoint: dedicated entry to preserve long-lived connection and disable buffering
+      "/api/realtime/stream": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+        secure: false,
+        // Prevent Vite proxy from buffering the SSE response
+        configure: (proxy) => {
+          proxy.on("proxyRes", (proxyRes) => {
+            proxyRes.headers["cache-control"] = "no-cache";
+            proxyRes.headers["x-accel-buffering"] = "no";
+          });
+        },
+      },
       "/api": {
         target: "http://localhost:3001",
         changeOrigin: true,

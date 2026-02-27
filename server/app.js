@@ -13,6 +13,7 @@ import aiGenerateHandler from "./api/ai/generate-blog.js";
 import aiGenerateStreamHandler from "./api/ai/generate-blog-stream.js";
 import analyticsTrackHandler from "./api/analytics/track.js";
 import analyticsStatsHandler from "./api/analytics/stats.js";
+import sseStreamHandler from "./api/realtime/stream.js";
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.all("/api/ai/generate-blog", aiGenerateHandler);
 app.all("/api/ai/generate-blog-stream", aiGenerateStreamHandler);
 app.all("/api/analytics/track", analyticsTrackHandler);
 app.all("/api/analytics/stats", analyticsStatsHandler);
+// SSE endpoint: must be GET only — long-lived connection, not buffered
+app.get("/api/realtime/stream", sseStreamHandler);
 
 // Health check
 app.get("/api/health", (req, res) => {

@@ -51,6 +51,7 @@ const EntityDossier = ({ visitorId, onClose }) => {
 
   const profile = detail?.profile || {};
   const events = detail?.events || [];
+  const sessions = detail?.sessions || [];
 
   const profileItems = [
     // --- IDENTITY ---
@@ -346,128 +347,285 @@ const EntityDossier = ({ visitorId, onClose }) => {
                   </div>
                 )}
 
-                {/* TIMELINE VIEW */}
+                {/* ACTIVITY: Visit Log Timeline */}
                 {activeTab === "timeline" && (
-                  <div className="py-2">
-                    {events.length === 0 && (
+                  <div className="py-2 space-y-2">
+                    {sessions.length === 0 ? (
                       <div className="py-20 text-center text-neutral-700 text-[9px] font-mono uppercase tracking-[0.4em]">
-                        Buffer_Empty
+                        No_Visit_Records
                       </div>
-                    )}
-
-                    {events.slice(0, 15).map((event, i) => (
-                      <div
-                        key={i}
-                        className="group relative flex items-center min-h-[4rem] w-full px-2 transition-all duration-500"
-                      >
-                        <div className="absolute left-8 top-0 bottom-0 w-px bg-white/5 z-0 group-last:h-1/2" />
-                        <div className="relative z-10 w-12 shrink-0 flex items-center justify-center">
+                    ) : (
+                      sessions.map((session, i) => {
+                        const start = session.start_time
+                          ? new Date(session.start_time)
+                          : null;
+                        const end = session.last_heartbeat
+                          ? new Date(session.last_heartbeat)
+                          : null;
+                        const durSec =
+                          start && end ? Math.round((end - start) / 1000) : 0;
+                        const durLabel =
+                          durSec < 60
+                            ? `${durSec}s`
+                            : durSec < 3600
+                              ? `${Math.floor(durSec / 60)}m ${durSec % 60}s`
+                              : `${Math.floor(durSec / 3600)}h ${Math.floor((durSec % 3600) / 60)}m`;
+                        const ref = session.referrer
+                          ? session.referrer
+                              .replace("https://", "")
+                              .replace("http://", "")
+                              .split("/")[0]
+                          : "Direct";
+                        const isLatest = i === 0;
+                        return (
                           <div
-                            className={`w-1.5 h-1.5 rounded-full transition-all duration-500 group-hover:scale-[3] group-hover:ring-8 group-hover:ring-white/5 ${
-                              event.event_type === "click"
-                                ? "bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
-                                : "bg-white/40"
+                            key={i}
+                            className={`relative mx-1 p-3 rounded-xl border transition-all ${
+                              isLatest
+                                ? "border-cyan-500/20 bg-cyan-500/5"
+                                : "border-white/5 bg-white/[0.02] hover:bg-white/[0.04]"
                             }`}
-                          />
-                        </div>
-                        <div className="flex-1 relative z-10 p-3 rounded-xl border border-white/5 bg-white/[0.02] group-hover:bg-white/[0.06] group-hover:border-white/10 transition-all ml-2">
-                          <div className="flex justify-between items-start mb-1.5">
-                            <span
-                              className={`text-[8px] font-black uppercase tracking-[0.2em] ${event.event_type === "click" ? "text-purple-400" : "text-neutral-400"}`}
-                            >
-                              {event.event_type}
-                            </span>
-                            <span className="text-[8px] text-neutral-600 font-mono">
-                              {new Date(event.timestamp).toLocaleTimeString(
-                                [],
-                                {
-                                  hour12: false,
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  second: "2-digit",
-                                }
-                              )}
-                            </span>
+                          >
+                            {/* Visit number badge */}
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`text-[7px] font-black px-1.5 py-0.5 rounded ${
+                                    isLatest
+                                      ? "bg-cyan-500/20 text-cyan-400"
+                                      : "bg-white/5 text-neutral-500"
+                                  }`}
+                                >
+                                  VISIT #{i + 1}
+                                </span>
+                                {isLatest && (
+                                  <span className="text-[7px] font-black text-cyan-400/60 uppercase tracking-widest">
+                                    Latest
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[7px] font-black text-neutral-600 uppercase tracking-widest">
+                                {durLabel}
+                              </span>
+                            </div>
+
+                            {/* Date + Time */}
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <FiClock
+                                size={9}
+                                className="text-neutral-600 shrink-0"
+                              />
+                              <span className="text-[9px] font-mono text-white">
+                                {start
+                                  ? start.toLocaleDateString(undefined, {
+                                      weekday: "short",
+                                      month: "short",
+                                      day: "2-digit",
+                                      year: "numeric",
+                                    }) +
+                                    " " +
+                                    start.toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                                  : "--"}
+                              </span>
+                            </div>
+
+                            {/* Page views + referrer */}
+                            <div className="flex items-center gap-4 mt-1">
+                              <div className="flex items-center gap-1">
+                                <FiActivity
+                                  size={9}
+                                  className="text-neutral-600"
+                                />
+                                <span className="text-[8px] text-neutral-400 font-mono">
+                                  {Number(session.event_count) || 0} events
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <FiGlobe
+                                  size={9}
+                                  className="text-neutral-600"
+                                />
+                                <span className="text-[8px] text-neutral-400 font-mono truncate max-w-[120px]">
+                                  {ref}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-[10px] text-neutral-400 font-mono break-all line-clamp-1 group-hover:text-neutral-200 transition-colors">
-                            {event.path || event.event_label}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      })
+                    )}
                   </div>
                 )}
 
-                {/* CONTENT VIEW */}
+                {/* ENGAGEMENT: Real interaction data from sessions + events */}
                 {activeTab === "content" && (
-                  <div className="py-2">
-                    {!contentData?.post_summary ||
-                    contentData.post_summary.length === 0 ? (
-                      <div className="py-20 text-center text-neutral-700 text-[9px] font-mono uppercase tracking-[0.4em]">
-                        NO_ENGAGEMENT_DETECTED
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {contentData.post_summary.map((post, i) => (
-                          <div
-                            key={i}
-                            className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex flex-col gap-3"
-                          >
-                            <div className="flex justify-between items-start">
-                              <span className="text-xs font-bold text-white tracking-tight">
-                                {post.slug}
-                              </span>
+                  <div className="py-2 space-y-3">
+                    {(() => {
+                      const totalPV = events.filter(
+                        (e) => e.event_type === "page_view"
+                      ).length;
+                      const totalClicks = events.filter(
+                        (e) => e.event_type === "click"
+                      ).length;
+                      const pagesVisited = [
+                        ...new Set(
+                          events
+                            .filter((e) => e.event_type === "page_view")
+                            .map((e) => e.path)
+                        ),
+                      ].filter(Boolean);
+                      const blogEvents = events.filter(
+                        (e) =>
+                          e.event_type === "blog_open" ||
+                          e.event_type === "blog_finish"
+                      );
+                      const totalDurSec = sessions.reduce((acc, s) => {
+                        const start = s.start_time
+                          ? new Date(s.start_time)
+                          : null;
+                        const end = s.last_heartbeat
+                          ? new Date(s.last_heartbeat)
+                          : null;
+                        return start && end
+                          ? acc + Math.round((end - start) / 1000)
+                          : acc;
+                      }, 0);
+                      const totalDurLabel =
+                        totalDurSec < 60
+                          ? `${totalDurSec}s`
+                          : totalDurSec < 3600
+                            ? `${Math.floor(totalDurSec / 60)}m`
+                            : `${Math.floor(totalDurSec / 3600)}h ${Math.floor((totalDurSec % 3600) / 60)}m`;
+
+                      return (
+                        <>
+                          {/* Summary stats grid */}
+                          <div className="grid grid-cols-2 gap-2 mx-1">
+                            {[
+                              {
+                                label: "Page Views",
+                                value: totalPV,
+                                color: "text-cyan-400",
+                              },
+                              {
+                                label: "Total Clicks",
+                                value: totalClicks,
+                                color: "text-purple-400",
+                              },
+                              {
+                                label: "Sessions",
+                                value: sessions.length,
+                                color: "text-blue-400",
+                              },
+                              {
+                                label: "Total Time",
+                                value: totalDurLabel || "0s",
+                                color: "text-emerald-400",
+                              },
+                            ].map((stat, i) => (
                               <div
-                                className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${post.finished ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : post.bounced ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"}`}
+                                key={i}
+                                className="p-3 rounded-xl border border-white/5 bg-white/[0.02] flex flex-col gap-1"
                               >
-                                {post.finished
-                                  ? "COMPLETED"
-                                  : post.bounced
-                                    ? "BOUNCED"
-                                    : "OPENED"}
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="flex flex-col">
-                                <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-black">
-                                  Max Depth
+                                <span className="text-[7px] text-neutral-500 font-black uppercase tracking-widest">
+                                  {stat.label}
                                 </span>
-                                <span className="text-sm font-mono text-white">
-                                  {post.max_depth}%
+                                <span
+                                  className={`text-lg font-black font-mono leading-none ${stat.color}`}
+                                >
+                                  {stat.value}
                                 </span>
                               </div>
-                              <div className="flex flex-col">
-                                <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-black">
-                                  Time Spent
-                                </span>
-                                <span className="text-sm font-mono text-white">
-                                  {post.time_spent
-                                    ? `${post.time_spent}s`
-                                    : "---"}
-                                </span>
-                              </div>
-                            </div>
-                            {post.sections_read?.length > 0 && (
-                              <div className="flex flex-col mt-2 pt-2 border-t border-white/5">
-                                <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-black mb-1.5">
-                                  Sections Read
-                                </span>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {post.sections_read.map((s, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-neutral-300 font-mono border border-white/5"
-                                    >
-                                      {s}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
+
+                          {/* Pages visited */}
+                          {pagesVisited.length > 0 && (
+                            <div className="mx-1 p-3 rounded-xl border border-white/5 bg-white/[0.02]">
+                              <p className="text-[7px] font-black text-neutral-500 uppercase tracking-widest mb-2">
+                                Pages Visited
+                              </p>
+                              <div className="space-y-1">
+                                {pagesVisited.slice(0, 8).map((page, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <span className="text-[9px] font-mono text-neutral-300 truncate max-w-[160px]">
+                                      {page}
+                                    </span>
+                                    <span className="text-[7px] text-neutral-600 font-mono">
+                                      {
+                                        events.filter(
+                                          (e) =>
+                                            e.event_type === "page_view" &&
+                                            e.path === page
+                                        ).length
+                                      }
+                                      x
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Blog engagement if any */}
+                          {contentData?.post_summary &&
+                          contentData.post_summary.length > 0 ? (
+                            <div className="mx-1 p-3 rounded-xl border border-white/5 bg-white/[0.02]">
+                              <p className="text-[7px] font-black text-neutral-500 uppercase tracking-widest mb-2">
+                                Blog Reads
+                              </p>
+                              <div className="space-y-2">
+                                {contentData.post_summary.map((post, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex justify-between items-center"
+                                  >
+                                    <span className="text-[9px] font-mono text-neutral-300 truncate max-w-[140px]">
+                                      {post.slug}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[7px] text-neutral-600">
+                                        {post.max_depth}%
+                                      </span>
+                                      <span
+                                        className={`text-[7px] font-black px-1.5 py-0.5 rounded ${
+                                          post.finished
+                                            ? "bg-emerald-500/10 text-emerald-400"
+                                            : "bg-red-500/10 text-red-400"
+                                        }`}
+                                      >
+                                        {post.finished ? "DONE" : "BOUNCE"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            blogEvents.length === 0 && (
+                              <div className="mx-1 p-2 text-center">
+                                <span className="text-[8px] text-neutral-700 font-mono uppercase tracking-widest">
+                                  No blog reads recorded
+                                </span>
+                              </div>
+                            )
+                          )}
+
+                          {/* Empty state: no engagement at all */}
+                          {totalPV === 0 && totalClicks === 0 && (
+                            <div className="py-12 text-center text-neutral-700 text-[9px] font-mono uppercase tracking-[0.4em]">
+                              No_Engagement_Data
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
 

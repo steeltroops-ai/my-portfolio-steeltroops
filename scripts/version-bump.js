@@ -1,27 +1,24 @@
 #!/usr/bin/env node
 
 /**
- * Smart Version Bumper for Portfolio
- * ===================================
- * Invoked in two contexts:
+ * Conventional Commits Version Bumper
+ * =====================================
+ * Determines the version bump level by parsing commit messages since the last
+ * push to origin/main. Uses the Conventional Commits specification.
  *
- *   1. [LOCAL PRE-PUSH] via Husky pre-push hook (PUSH_MODE=true)
- *      -> Performs the actual bump, writes package.json + build-meta.json
- *      -> The resulting files are committed locally BEFORE the push hits GitHub
+ * Rules (evaluated against all commits in the current push batch):
+ *   MAJOR  <- any commit with `!` suffix or `BREAKING CHANGE:` footer
+ *   MINOR  <- any `feat:` commit (when no breaking change detected)
+ *   PATCH  <- any `fix:` / `perf:` / `refactor:` / `style:` commit
+ *   NONE   <- only `docs:` / `chore:` / `test:` commits (no code change)
  *
- *   2. [CI VERIFY] via GitHub Actions (CI_VERIFY=true)
- *      -> Reads the version already in package.json and only refreshes build-meta.json
- *      -> Never bumps the version number (it was already bumped by step 1)
- *      -> Never pushes a commit back to origin (eliminates the "ahead by 1" problem)
+ * The highest severity in the batch wins. MAJOR > MINOR > PATCH > NONE.
  *
- *   3. [DEV BUILD] via `bun run build` locally without env flags
- *      -> No-op. Does NOT modify any files.
- *
- * Bump rules (applied in PUSH_MODE only):
- *   - Only docs/metadata changed    -> No bump
- *   - Last deploy < 7 days ago      -> patch bump  (1.2.3 -> 1.2.4)
- *   - Last deploy >= 7 days ago     -> minor bump  (1.2.3 -> 1.3.0)
- *   - --major / --minor / --patch   -> force specific level
+ * Invocation modes:
+ *   PUSH_MODE=true   -> Bumps version + writes package.json + build-meta.json
+ *   CI_VERIFY=true   -> Read-only verify, only refreshes deployedAt timestamp
+ *   (neither)        -> DEV BUILD no-op, exits immediately
+ *   --major / --minor / --patch -> Force a specific level (overrides detection)
  */
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
@@ -34,25 +31,23 @@ const ROOT = resolve(__dirname, "..");
 const PKG_PATH = resolve(ROOT, "package.json");
 const META_PATH = resolve(ROOT, "public", "build-meta.json");
 
-// Files that alone do NOT warrant a version bump
-const IGNORE_PATTERNS = [
-  /^docs\//,
-  /\.md$/,
-  /^\.github\//,
-  /^\.husky\//,
-  /^\.vscode\//,
-  /^\.gitignore$/,
-  /^\.prettierrc$/,
-  /^public\/build-meta\.json$/,
-  /^package\.json$/,
-  /^bun\.lock$/,
-  /^README\.md$/,
-];
+// Commit types that carry zero version weight
+const NO_BUMP_TYPES = new Set([
+  "docs",
+  "chore",
+  "test",
+  "ci",
+  "build",
+  "revert",
+]);
+
+// Commit types that constitute a PATCH
+const PATCH_TYPES = new Set(["fix", "perf", "refactor", "style"]);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function parseVersion(versionStr) {
-  const [major, minor, patch] = versionStr.split(".").map(Number);
+  const [major, minor, patch] = (versionStr || "1.0.0").split(".").map(Number);
   return { major: major || 0, minor: minor || 0, patch: patch || 0 };
 }
 
@@ -60,50 +55,130 @@ function formatVersion({ major, minor, patch }) {
   return `${major}.${minor}.${patch}`;
 }
 
-function daysSince(isoDate) {
-  if (!isoDate) return Infinity;
-  return (Date.now() - new Date(isoDate).getTime()) / (1000 * 60 * 60 * 24);
+/**
+ * Parse a single conventional commit subject line.
+ * Returns: "major" | "minor" | "patch" | "none"
+ */
+function classifyCommit(subject, body = "") {
+  // BREAKING CHANGE in body footer always means major
+  if (body.includes("BREAKING CHANGE:")) return "major";
+
+  // Conventional commit pattern: type(scope)!: description
+  // The `!` before the colon signals a breaking change regardless of type
+  const match = subject.match(/^(\w+)(\([^)]*\))?(!)?:/);
+  if (!match) return "none"; // Not a conventional commit — treat as no bump
+
+  const type = match[1].toLowerCase();
+  const isBreaking = !!match[3]; // `!` present
+
+  if (isBreaking) return "major";
+  if (type === "feat") return "minor";
+  if (PATCH_TYPES.has(type)) return "patch";
+  if (NO_BUMP_TYPES.has(type)) return "none";
+
+  return "none";
 }
 
-function hasCodebaseChanges() {
+/**
+ * Severity ordering for comparison.
+ */
+const SEVERITY = { none: 0, patch: 1, minor: 2, major: 3 };
+
+/**
+ * Scan all commits between origin/main and local HEAD.
+ * Returns the highest-severity bump level required.
+ */
+function detectBumpLevel() {
+  let rawLog;
   try {
-    const changedFiles = execSync("git diff --name-only HEAD^ HEAD")
-      .toString()
-      .trim()
-      .split("\n")
-      .filter(Boolean);
-
-    if (changedFiles.length === 0) return false;
-
-    return changedFiles.some(
-      (file) => !IGNORE_PATTERNS.some((pattern) => pattern.test(file))
+    // --format="%s%n%b%n---COMMIT---" gives us subject + body per commit
+    rawLog = execSync(
+      'git log origin/main..HEAD --format="%s%n%b%n---COMMIT---"',
+      { encoding: "utf-8" }
     );
   } catch {
-    // Fresh repo or no parent commit — assume code changed
-    return true;
+    try {
+      // Fallback: no origin/main (fresh clone or first push)
+      rawLog = execSync('git log HEAD -1 --format="%s%n%b%n---COMMIT---"', {
+        encoding: "utf-8",
+      });
+    } catch {
+      // Cannot determine — default to patch to be safe
+      return "patch";
+    }
+  }
+
+  const commits = rawLog.split("---COMMIT---").filter((c) => c.trim());
+
+  if (commits.length === 0) {
+    console.log("  [Versioning] No commits found since origin/main.");
+    return "none";
+  }
+
+  let highestLevel = "none";
+
+  for (const commit of commits) {
+    const lines = commit.trim().split("\n");
+    const subject = lines[0] || "";
+    const body = lines.slice(1).join("\n");
+
+    const level = classifyCommit(subject, body);
+
+    console.log(
+      `  [Versioning] "${subject.slice(0, 60)}" -> ${level.toUpperCase()}`
+    );
+
+    if (SEVERITY[level] > SEVERITY[highestLevel]) {
+      highestLevel = level;
+    }
+
+    // Short-circuit: can't go higher than major
+    if (highestLevel === "major") break;
+  }
+
+  return highestLevel;
+}
+
+/**
+ * Apply the bump level to a version object.
+ * Returns a new version object — does NOT mutate the input.
+ */
+function applyBump(current, level) {
+  switch (level) {
+    case "major":
+      return { major: current.major + 1, minor: 0, patch: 0 };
+    case "minor":
+      return { major: current.major, minor: current.minor + 1, patch: 0 };
+    case "patch":
+      return {
+        major: current.major,
+        minor: current.minor,
+        patch: current.patch + 1,
+      };
+    default:
+      return { ...current }; // "none" — no change
   }
 }
 
-// ─── Modes ────────────────────────────────────────────────────────────────────
+// ─── Mode Resolution ──────────────────────────────────────────────────────────
 
 const isPushMode = process.env.PUSH_MODE === "true";
 const isCIVerify = process.env.CI_VERIFY === "true";
 const forceArg = process.argv[2]; // --major | --minor | --patch
 
-// ─── DEV BUILD: no-op ─────────────────────────────────────────────────────────
+// ─── DEV BUILD: complete no-op ────────────────────────────────────────────────
 
 if (!isPushMode && !isCIVerify && !forceArg) {
   console.log(
-    "\n  [DEV MODE] Skipping Version Bump. Not modifying build-meta.json to prevent git conflicts."
+    "\n  [DEV MODE] Skipping version bump. build-meta.json unchanged.\n"
   );
   process.exit(0);
 }
 
-// ─── CI VERIFY: refresh build-meta only, no version change ───────────────────
+// ─── CI VERIFY: refresh deployedAt, confirm version, never bump ───────────────
 
 if (isCIVerify) {
   const pkg = JSON.parse(readFileSync(PKG_PATH, "utf-8"));
-  const versionString = pkg.version;
 
   let existingMeta = {};
   if (existsSync(META_PATH)) {
@@ -114,84 +189,57 @@ if (isCIVerify) {
 
   const buildMeta = {
     ...existingMeta,
-    version: versionString,
+    version: pkg.version,
     buildId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     deployedAt: new Date().toISOString(),
     env: "production",
   };
 
   writeFileSync(META_PATH, JSON.stringify(buildMeta, null, 2) + "\n", "utf-8");
-
-  console.log(`\n  [CI VERIFY] Version confirmed: ${versionString}`);
-  console.log("  build-meta.json refreshed (no version change).\n");
+  console.log(`\n  [CI VERIFY] Confirmed: v${pkg.version}\n`);
   process.exit(0);
 }
 
-// ─── PUSH MODE: bump version locally before the push lands on GitHub ──────────
+// ─── PUSH MODE: Conventional Commits detection + actual bump ──────────────────
 
 const pkg = JSON.parse(readFileSync(PKG_PATH, "utf-8"));
-const currentVersion = parseVersion(pkg.version || "1.0.0");
+const currentVersion = parseVersion(pkg.version);
 
-let lastDeployDate = null;
-if (existsSync(META_PATH)) {
-  try {
-    const meta = JSON.parse(readFileSync(META_PATH, "utf-8"));
-    lastDeployDate = meta.deployedAt;
-  } catch {}
-}
+// Determine bump level: force arg overrides auto-detection
+const bumpLevel = forceArg
+  ? forceArg.replace("--", "") // "--major" -> "major"
+  : detectBumpLevel();
 
-const gap = daysSince(lastDeployDate);
-const codebaseChanged = hasCodebaseChanges();
-
-// If only docs/metadata changed, skip the bump entirely
-if (!forceArg && !codebaseChanged) {
+if (bumpLevel === "none") {
   console.log(
-    "\n  [PUSH MODE] Only documentation/metadata changed. Maintaining current version."
+    "\n  [PUSH MODE] No version bump required (docs/chore/test commits only).\n"
   );
 
-  const buildMeta = {
-    version: formatVersion(currentVersion),
-    buildId: `meta-${Date.now().toString(36)}`,
-    deployedAt: new Date().toISOString(),
-    previousVersion: formatVersion(currentVersion),
-    env: "production",
-    reason: "doc-only update",
-  };
-  writeFileSync(META_PATH, JSON.stringify(buildMeta, null, 2) + "\n", "utf-8");
+  // Still refresh build-meta so deployedAt stays accurate
+  const existingMeta = existsSync(META_PATH)
+    ? JSON.parse(readFileSync(META_PATH, "utf-8") || "{}")
+    : {};
+
+  writeFileSync(
+    META_PATH,
+    JSON.stringify(
+      {
+        ...existingMeta,
+        version: formatVersion(currentVersion),
+        buildId: `meta-${Date.now().toString(36)}`,
+        deployedAt: new Date().toISOString(),
+        env: "production",
+        reason: "no-code-change",
+      },
+      null,
+      2
+    ) + "\n",
+    "utf-8"
+  );
   process.exit(0);
 }
 
-// Determine new version
-let newVersion;
-
-if (forceArg === "--major") {
-  newVersion = { major: currentVersion.major + 1, minor: 0, patch: 0 };
-} else if (forceArg === "--minor") {
-  newVersion = {
-    major: currentVersion.major,
-    minor: currentVersion.minor + 1,
-    patch: 0,
-  };
-} else if (forceArg === "--patch") {
-  newVersion = {
-    major: currentVersion.major,
-    minor: currentVersion.minor,
-    patch: currentVersion.patch + 1,
-  };
-} else if (gap >= 7) {
-  newVersion = {
-    major: currentVersion.major,
-    minor: currentVersion.minor + 1,
-    patch: 0,
-  };
-} else {
-  newVersion = {
-    major: currentVersion.major,
-    minor: currentVersion.minor,
-    patch: currentVersion.patch + 1,
-  };
-}
-
+const newVersion = applyBump(currentVersion, bumpLevel);
 const versionString = formatVersion(newVersion);
 
 // Write package.json
@@ -204,14 +252,12 @@ const buildMeta = {
   buildId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
   deployedAt: new Date().toISOString(),
   previousVersion: formatVersion(currentVersion),
-  daysSinceLastDeploy: gap === Infinity ? "first-deploy" : Math.round(gap),
+  bumpLevel,
   env: "production",
 };
 writeFileSync(META_PATH, JSON.stringify(buildMeta, null, 2) + "\n", "utf-8");
 
 console.log(
-  `\n  [PUSH MODE] Version Bump: ${formatVersion(currentVersion)} -> ${versionString}`
+  `\n  [PUSH MODE] ${formatVersion(currentVersion)} -> ${versionString} (${bumpLevel.toUpperCase()} bump)`
 );
-console.log(
-  `  Strategy: ${gap >= 7 ? "MINOR (>= 7 days)" : "PATCH (< 7 days)"}\n`
-);
+console.log(`  Reason: Conventional Commits analysis of push batch\n`);

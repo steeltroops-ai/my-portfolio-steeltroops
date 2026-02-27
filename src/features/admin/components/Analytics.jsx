@@ -23,6 +23,8 @@ import {
   FiAlertTriangle,
   FiMenu,
   FiChevronRight,
+  FiChevronDown,
+  FiCornerDownRight,
 } from "react-icons/fi";
 import { useAdmin } from "../context/AdminContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -84,7 +86,11 @@ const mapStyles = `
 `;
 
 /* Global Threat Map Component - PRO Leaflet Edition (Direct Core) */
-const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
+const GlobalThreatMap = ({
+  locations = [],
+  topLocations = [],
+  onLocationSelect,
+}) => {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const clusterGroupRef = useRef(null);
@@ -294,6 +300,14 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
 
       const marker = L.marker([lat, lon], { icon: customIcon });
       marker.bindPopup(popupContent, { closeButton: false });
+
+      // Wire click to location filter callback
+      marker.on("click", () => {
+        if (typeof onLocationSelect === "function") {
+          onLocationSelect({ city: loc.city, country: loc.country });
+        }
+      });
+
       targetLayer.addLayer(marker);
       bounds.push([lat, lon]);
     });
@@ -335,7 +349,7 @@ const GlobalThreatMap = ({ locations = [], topLocations = [] }) => {
         hubsLayerRef.current = null;
       }
     };
-  }, [locations, topLocations]);
+  }, [locations, topLocations, onLocationSelect]);
 
   return (
     <div className="rounded-xl liquid-glass backdrop-blur-none overflow-hidden shadow-2xl relative flex flex-col group mb-8">
@@ -499,11 +513,14 @@ const BehavioralStream = ({ actions, showBotTraffic }) => {
 
 const Analytics = () => {
   const { data: analyticsData, isLoading, error } = useAnalyticsStats();
-  const [visitorFilter, setVisitorFilter] = useState("all");
+  const [visitorFilter, setVisitorFilter] = useState("humans");
   const [selectedVisitorId, setSelectedVisitorId] = useState(null);
+  const [expandedVisitorId, setExpandedVisitorId] = useState(null); // visit log expand
   const [viewMode, setViewMode] = useState("swimlanes");
   const [currentPage, setCurrentPage] = useState(1);
   const [isMapMounted, setIsMapMounted] = useState(false);
+  const [sortBy, setSortBy] = useState("last_seen"); // last_seen | first_seen | sessions | threat
+  const [locationFilter, setLocationFilter] = useState(null); // null | { city, country }
   const itemsPerPage = 15;
 
   const { setIsSidebarCollapsed } = useAdmin();
@@ -518,16 +535,41 @@ const Analytics = () => {
   // --- REAL-TIME TELEMETRY INTEGRATION ---
   const queryClient = useQueryClient();
 
+  // Selective cache patching — only full-refetch on state-changing events
   useTelemetry("ANALYTICS:SIGNAL", (data) => {
-    // On any analytics signal, invalidate stats to trigger a soft refetch
-    // This ensures "Active Now" counts are always logically consistent with DB
-    queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
+    if (data.type === "VISITOR_INIT" || data.type === "IDENTITY_RESOLVED") {
+      // New visitor or identity resolved: full stats refresh needed
+      queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
+    } else if (data.type === "EVENT" || data.type === "PAGE_VIEW") {
+      // Patch only recentActions in-place — no full refetch
+      queryClient.setQueryData(["analytics-stats"], (old) => {
+        if (!old) return old;
+        const newAction = {
+          timestamp: data.timestamp,
+          event_type: data.eventType || data.type,
+          event_label: data.label || "",
+          path: data.path || "/",
+          city: data.city || "",
+          country: data.country || "",
+          ip_address: "",
+          is_bot: false,
+        };
+        return {
+          ...old,
+          recentActions: [newAction, ...(old.recentActions || [])].slice(
+            0,
+            100
+          ),
+        };
+      });
+    }
+    // HEARTBEAT: silent — no cache interaction
   });
 
-  // Reset pagination when filter changes
+  // Reset pagination when any filter or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [visitorFilter]);
+  }, [visitorFilter, sortBy, locationFilter]);
 
   // Performance: Mount map immediately for instant feel
   useEffect(() => {
@@ -551,13 +593,61 @@ const Analytics = () => {
   const recentVisitors = analyticsData?.recentVisitors || [];
   const recentActions = analyticsData?.recentActions || [];
 
+  // Classify threat level for "THREAT" sort (Higher = more suspicious, shown first)
+  const getThreatLevel = (v) => {
+    if (v.is_bot) return 100; // Definite bots
+    if (!v.real_name && !v.email && v.visit_count <= 2) return 50; // Unknown casuals
+    if (!v.real_name && !v.email && v.visit_count > 2) return 20; // Recurring unknown
+    return 0; // Known/Resolved identity (Lowest threat)
+  };
+
   const filteredVisitors = useMemo(() => {
-    return recentVisitors.filter((v) => {
-      if (visitorFilter === "bots") return v.is_bot;
-      if (visitorFilter === "resolved") return !v.is_bot && v.visit_count > 5;
-      return true;
+    let list = recentVisitors.filter((v) => {
+      // Location filter: if active, only show visitors from that city+country
+      if (locationFilter) {
+        const cityMatch =
+          (v.city || "").toLowerCase() ===
+          (locationFilter.city || "").toLowerCase();
+        const countryMatch =
+          (v.country || "") === (locationFilter.country || "");
+        if (!cityMatch || !countryMatch) return false;
+      }
+
+      switch (visitorFilter) {
+        case "humans":
+          return !v.is_bot;
+        case "resolved":
+          return !v.is_bot && !!(v.real_name || v.email);
+        case "recurring":
+          return !v.is_bot && !v.real_name && !v.email && v.visit_count > 2;
+        case "bots":
+          return v.is_bot;
+        default:
+          return true; // "all"
+      }
     });
-  }, [recentVisitors, visitorFilter]);
+
+    // Sort
+    list = [...list].sort((a, b) => {
+      switch (sortBy) {
+        case "first_seen":
+          return new Date(b.first_seen || 0) - new Date(a.first_seen || 0);
+        case "sessions":
+          return (b.visit_count || 0) - (a.visit_count || 0);
+        case "threat":
+          // Score descending (highest threat first), tie-break by last_seen
+          return (
+            getThreatLevel(b) - getThreatLevel(a) ||
+            new Date(b.last_seen || 0) - new Date(a.last_seen || 0)
+          );
+        case "last_seen":
+        default:
+          return new Date(b.last_seen || 0) - new Date(a.last_seen || 0);
+      }
+    });
+
+    return list;
+  }, [recentVisitors, visitorFilter, sortBy, locationFilter]);
 
   const startDragScroll = (e) => {
     if (!scrollContainerRef.current) return;
@@ -764,25 +854,34 @@ const Analytics = () => {
             <div className="liquid-glass-top-line" />
             <AdminPanelHeader
               title="Forensic Identity Matrix"
-              subtitle="Classified Neural Ingress Hub"
+              subtitle={`Classified Neural Ingress Hub • ${filteredVisitors.length} MATCHED`}
               icon={FiDatabase}
               iconColorClass="text-red-400"
             />
             <LazySection placeholderHeight="400px">
+              {/* Filter + Sort Toolbar */}
               <div className="px-8 py-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white/[0.02]">
-                <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto items-end sm:items-center">
-                  <div className="flex p-1 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm">
+                {/* LEFT SIDE: Filtering */}
+                <div className="flex items-center gap-4">
+                  {/* Identity Filter Tabs */}
+                  <div className="flex p-1 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm overflow-x-auto hide-scrollbar">
                     {[
-                      { id: "all", label: "ALL_NODES" },
-                      { id: "resolved", label: "RESOLVED" },
-                      { id: "bots", label: "BOT_TRAFFIC" },
+                      { id: "all", label: "ALL" },
+                      { id: "humans", label: "HUMANS" },
+                      { id: "resolved", label: "ID_RESOLVED" },
+                      { id: "recurring", label: "RECURRING" },
+                      { id: "bots", label: "BOTS" },
                     ].map((btn) => (
                       <button
                         key={btn.id}
                         onClick={() => setVisitorFilter(btn.id)}
-                        className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all tracking-widest ${
+                        className={`px-3 py-1.5 rounded-lg text-[8px] font-black transition-all tracking-widest whitespace-nowrap ${
                           visitorFilter === btn.id
-                            ? "bg-white/10 text-white shadow-xl"
+                            ? btn.id === "bots"
+                              ? "bg-red-500/20 text-red-400 shadow-xl"
+                              : btn.id === "resolved"
+                                ? "bg-purple-500/20 text-purple-400 shadow-xl"
+                                : "bg-white/10 text-white shadow-xl"
                             : "text-neutral-500 hover:text-neutral-300"
                         }`}
                       >
@@ -790,25 +889,52 @@ const Analytics = () => {
                       </button>
                     ))}
                   </div>
+                </div>
 
-                  <div className="flex gap-6">
-                    <div className="flex-1 sm:flex-none text-right px-6 border-r border-white/5">
-                      <p className="text-[8px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">
-                        Active_Signal
-                      </p>
-                      <p className="text-xl font-black text-white leading-none">
-                        {stats.liveNow}
-                      </p>
-                    </div>
-                    <div className="flex-1 sm:flex-none text-right">
-                      <p className="text-[8px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">
-                        Total_Resolved
-                      </p>
-                      <p className="text-xl font-black text-cyan-400 leading-none">
-                        {stats.totalVisitors}
-                      </p>
+                {/* RIGHT SIDE: Sorting & Location Active */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+                  {/* Sort Control */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[7px] text-neutral-600 font-black uppercase tracking-widest whitespace-nowrap hidden sm:inline">
+                      SORT:
+                    </span>
+                    <div className="flex p-1 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm overflow-x-auto hide-scrollbar">
+                      {[
+                        { id: "last_seen", label: "LATEST" },
+                        { id: "first_seen", label: "NEWEST" },
+                        { id: "sessions", label: "ACTIVE" },
+                        { id: "threat", label: "THREAT" },
+                      ].map((btn) => (
+                        <button
+                          key={btn.id}
+                          onClick={() => setSortBy(btn.id)}
+                          className={`px-3 py-1.5 rounded-lg text-[8px] font-black transition-all tracking-widest whitespace-nowrap ${
+                            sortBy === btn.id
+                              ? "bg-white/10 text-white shadow-xl"
+                              : "text-neutral-500 hover:text-neutral-300"
+                          }`}
+                        >
+                          {btn.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
+
+                  {/* Active Location Filter Chip */}
+                  {locationFilter && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400">
+                      <FiMapPin size={10} />
+                      <span className="text-[8px] font-black uppercase tracking-widest whitespace-nowrap">
+                        {locationFilter.city}, {locationFilter.country}
+                      </span>
+                      <button
+                        onClick={() => setLocationFilter(null)}
+                        className="ml-1 text-blue-400/60 hover:text-blue-400 transition-colors shrink-0"
+                      >
+                        <FiX size={10} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </LazySection>
@@ -835,41 +961,138 @@ const Analytics = () => {
                       currentPage * itemsPerPage
                     )
                     .map((v, i) => (
-                      <div
-                        key={i}
-                        className="px-5 py-3 h-[64px] flex items-center bg-transparent group transition-colors hover:bg-white/[0.02]"
-                      >
+                      <div key={v.id || i}>
                         <div
-                          className="flex items-center gap-2.5 cursor-pointer w-full"
+                          className="px-5 py-3 flex items-center bg-transparent group transition-colors hover:bg-white/[0.02] cursor-pointer"
+                          style={{ minHeight: 64 }}
                           onClick={(e) => {
                             if (dragHasMoved) return;
                             e.stopPropagation();
-                            setSelectedVisitorId(v.id);
+                            setExpandedVisitorId(
+                              expandedVisitorId === (v.id || i)
+                                ? null
+                                : v.id || i
+                            );
                           }}
                         >
-                          <div
-                            className={`w-7 h-7 rounded flex items-center justify-center shrink-0 border border-white/10 ${v.real_name ? "text-purple-400" : "text-neutral-500"}`}
-                          >
-                            <FiUsers size={12} />
-                          </div>
-                          <div className="min-w-0">
-                            <p
-                              className={`text-[10px] font-black group-hover:text-cyan-400 transition-colors truncate uppercase tracking-tight leading-none mb-1 ${v.real_name ? "text-purple-300 shadow-purple-500/50 drop-shadow-md" : "text-white"}`}
+                          <div className="flex items-center gap-2.5 w-full">
+                            <div
+                              className={`w-7 h-7 rounded flex items-center justify-center shrink-0 border border-white/10 ${v.real_name ? "text-purple-400" : "text-neutral-500"}`}
                             >
-                              {v.real_name ||
-                                (v.city ? `${v.city}` : "RESOLVING...")}
-                            </p>
-                            <p className="text-[7px] text-neutral-600 font-mono truncate tracking-widest uppercase">
-                              {v.email ? (
-                                <span className="text-purple-400/80">
-                                  {v.email}
-                                </span>
+                              {expandedVisitorId === (v.id || i) ? (
+                                <FiChevronDown
+                                  size={12}
+                                  className="text-cyan-400"
+                                />
                               ) : (
-                                `${v.country} / ${v.region?.slice(0, 3) || "UNK"}`
+                                <FiUsers size={12} />
                               )}
-                            </p>
+                            </div>
+                            <div className="min-w-0">
+                              <p
+                                className={`text-[10px] font-black group-hover:text-cyan-400 transition-colors truncate uppercase tracking-tight leading-none mb-1 ${v.real_name ? "text-purple-300 shadow-purple-500/50 drop-shadow-md" : "text-white"}`}
+                              >
+                                {v.real_name ||
+                                  (v.city ? `${v.city}` : "RESOLVING...")}
+                              </p>
+                              <p className="text-[7px] text-neutral-600 font-mono truncate tracking-widest uppercase">
+                                {v.email ? (
+                                  <span className="text-purple-400/80">
+                                    {v.email}
+                                  </span>
+                                ) : (
+                                  `${v.country} / ${v.region?.slice(0, 3) || "UNK"}`
+                                )}
+                              </p>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Inline Visit Log Timeline */}
+                        {expandedVisitorId === (v.id || i) && (
+                          <div className="mx-3 mb-2 rounded-lg border border-white/10 bg-black/40 overflow-hidden">
+                            <div className="px-4 py-2 flex items-center gap-2 border-b border-white/5 bg-white/[0.02]">
+                              <FiClock size={9} className="text-cyan-400" />
+                              <span className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">
+                                Visit Log — {v.visit_count || 0} total visits
+                              </span>
+                            </div>
+                            <div className="divide-y divide-white/[0.04] max-h-[200px] overflow-y-auto custom-scrollbar">
+                              {(Array.isArray(v.visit_log) ? v.visit_log : [])
+                                .length === 0 ? (
+                                <div className="px-4 py-3 text-[8px] text-neutral-600 font-mono">
+                                  No session records
+                                </div>
+                              ) : (
+                                (Array.isArray(v.visit_log) ? v.visit_log : [])
+                                  .slice(0, 10)
+                                  .map((session, si) => {
+                                    const start = session.start_time
+                                      ? new Date(session.start_time)
+                                      : null;
+                                    const durSec = Math.round(
+                                      session.duration_seconds || 0
+                                    );
+                                    const durLabel =
+                                      durSec < 60
+                                        ? `${durSec}s`
+                                        : `${Math.floor(durSec / 60)}m ${durSec % 60}s`;
+                                    const ref = session.referrer
+                                      ? session.referrer
+                                          .replace("https://", "")
+                                          .replace("http://", "")
+                                          .split("/")[0] || "Direct"
+                                      : "Direct";
+                                    return (
+                                      <div
+                                        key={si}
+                                        className="px-4 py-2 flex items-center gap-3 hover:bg-white/[0.02] transition-colors"
+                                      >
+                                        <span className="text-[7px] font-black text-neutral-600 w-4 text-right shrink-0">
+                                          #{si + 1}
+                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-3 flex-wrap">
+                                            <span className="text-[8px] font-mono text-white">
+                                              {start
+                                                ? start.toLocaleDateString(
+                                                    undefined,
+                                                    {
+                                                      month: "short",
+                                                      day: "2-digit",
+                                                    }
+                                                  ) +
+                                                  " " +
+                                                  start.toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                  })
+                                                : "--"}
+                                            </span>
+                                            <span className="text-[7px] text-neutral-500 font-mono">
+                                              {session.page_views || 0} views
+                                            </span>
+                                            <span className="text-[7px] text-cyan-400/70 font-mono">
+                                              {durLabel}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                              <FiCornerDownRight
+                                                size={7}
+                                                className="text-neutral-600"
+                                              />
+                                              <span className="text-[7px] text-neutral-500 font-mono truncate max-w-[80px]">
+                                                {ref}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                 </div>
@@ -988,7 +1211,10 @@ const Analytics = () => {
                             </div>
                           </div>
                           <div className="w-[15%] min-w-[100px] px-5 py-3 text-right">
-                            <button className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-400/5 border border-cyan-400/10 text-[8px] font-black text-cyan-400 hover:bg-cyan-400/20 transition-all uppercase tracking-widest">
+                            <button
+                              onClick={() => setSelectedVisitorId(v.id)}
+                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-400/5 border border-cyan-400/10 text-[8px] font-black text-cyan-400 hover:bg-cyan-400/20 transition-all uppercase tracking-widest"
+                            >
                               TRACE{" "}
                               <FiChevronRight
                                 size={10}
@@ -1007,9 +1233,13 @@ const Analytics = () => {
             <div className="p-4 sm:p-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] gap-4">
               <div className="text-[8px] sm:text-[9px] text-neutral-600 font-black uppercase tracking-[0.2em] flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-neutral-600" />
-                SIGNATURES {(currentPage - 1) * itemsPerPage + 1} —{" "}
-                {Math.min(currentPage * itemsPerPage, recentVisitors.length)} /{" "}
-                {recentVisitors.length} RESOLVED
+                SIGNATURES{" "}
+                {filteredVisitors.length === 0
+                  ? 0
+                  : (currentPage - 1) * itemsPerPage + 1}{" "}
+                —{" "}
+                {Math.min(currentPage * itemsPerPage, filteredVisitors.length)}{" "}
+                / {filteredVisitors.length} MATCHED
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
@@ -1036,7 +1266,9 @@ const Analytics = () => {
                 </div>
                 <button
                   onClick={() => setCurrentPage((prev) => prev + 1)}
-                  disabled={currentPage * itemsPerPage >= recentVisitors.length}
+                  disabled={
+                    currentPage * itemsPerPage >= filteredVisitors.length
+                  }
                   className="flex-1 sm:flex-none px-6 py-2 rounded bg-cyan-400/10 border border-cyan-400/20 text-[9px] font-black text-cyan-400 hover:bg-cyan-400/20 disabled:opacity-20 disabled:cursor-not-allowed transition-all uppercase tracking-[0.3em] min-h-[36px]"
                 >
                   NEXT
@@ -1219,6 +1451,14 @@ const Analytics = () => {
                 <GlobalThreatMap
                   locations={analyticsData?.mapNodes || []}
                   topLocations={analyticsData?.topLocations || []}
+                  onLocationSelect={(loc) => {
+                    // Toggle: clicking the same location again deselects it
+                    setLocationFilter((prev) =>
+                      prev?.city === loc.city && prev?.country === loc.country
+                        ? null
+                        : loc
+                    );
+                  }}
                 />
               </motion.div>
             )}
@@ -1236,7 +1476,19 @@ const Analytics = () => {
               {topLocations.map((loc, i) => (
                 <div
                   key={i}
-                  className="group p-2 rounded-lg hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5"
+                  onClick={() =>
+                    setLocationFilter((prev) =>
+                      prev?.city === loc.city && prev?.country === loc.country
+                        ? null
+                        : { city: loc.city, country: loc.country }
+                    )
+                  }
+                  className={`group p-2 rounded-lg transition-colors border cursor-pointer ${
+                    locationFilter?.city === loc.city &&
+                    locationFilter?.country === loc.country
+                      ? "bg-blue-500/10 border-blue-500/30"
+                      : "hover:bg-white/[0.02] border-transparent hover:border-white/5"
+                  }`}
                 >
                   <div className="flex justify-between items-end mb-1.5">
                     <div className="flex flex-col min-w-0">

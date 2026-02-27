@@ -308,24 +308,27 @@ export default async function handler(req, res) {
       console.log(`[Analytics] Success init for ${sessionId}`);
 
       // Real-time broadcast for admin dashboards
-      try {
-        const { emitToAdmins } =
-          await import("../../services/realtime/broadcaster.js");
-        emitToAdmins("ANALYTICS:SIGNAL", {
-          type: "VISITOR_INIT",
-          visitorId,
-          sessionId,
-          city: loc.city,
-          country: loc.country,
-          device: device.type || "desktop",
-          os: os.name,
-          browser: browser.name,
-          path: path || "/",
-          timestamp: new Date().toISOString(),
-        });
-      } catch (e) {
-        // Broadcast failed, ignore
-      }
+      // Delayed 400ms: gives Neon time to commit before admin dashboard refetches on signal
+      setTimeout(async () => {
+        try {
+          const { emitToAdmins } =
+            await import("../../services/realtime/broadcaster.js");
+          emitToAdmins("ANALYTICS:SIGNAL", {
+            type: "VISITOR_INIT",
+            visitorId,
+            sessionId,
+            city: loc.city,
+            country: loc.country,
+            device: device.type || "desktop",
+            os: os.name,
+            browser: browser.name,
+            path: path || "/",
+            timestamp: new Date().toISOString(),
+          });
+        } catch (e) {
+          // Broadcast failed, ignore
+        }
+      }, 400);
 
       return res.status(200).json({ success: true });
     }
@@ -602,23 +605,25 @@ export default async function handler(req, res) {
           `.catch(() => {}); // Non-blocking
         }
 
-        // F. Real-time admin broadcast
-        try {
-          const { emitToAdmins } =
-            await import("../../services/realtime/broadcaster.js");
-          emitToAdmins("ANALYTICS:SIGNAL", {
-            type: "IDENTITY_RESOLVED",
-            method: source || "autofill",
-            email,
-            name: name || null,
-            entityId,
-            visitorId,
-            confidence: newConfidence,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (e) {
-          // Broadcast failed, ignore
-        }
+        // F. Real-time admin broadcast (delayed: Neon commit consistency)
+        setTimeout(async () => {
+          try {
+            const { emitToAdmins } =
+              await import("../../services/realtime/broadcaster.js");
+            emitToAdmins("ANALYTICS:SIGNAL", {
+              type: "IDENTITY_RESOLVED",
+              method: source || "autofill",
+              email,
+              name: name || null,
+              entityId,
+              visitorId,
+              confidence: newConfidence,
+              timestamp: new Date().toISOString(),
+            });
+          } catch (e) {
+            // Broadcast failed, ignore
+          }
+        }, 400);
 
         console.log(
           `[Identity] Resolved: ${email} -> entity ${entityId} | confidence: ${newConfidence.toFixed(2)}`
