@@ -1,19 +1,27 @@
 #!/usr/bin/env node
 
 /**
- * Smart Version Bumper for Portfolio Deployments (Enhanced)
- * ================================================
- * This script increments the project version (package.json) based on time
- * and historical data, but ONLY if codebase changes are detected.
+ * Smart Version Bumper for Portfolio
+ * ===================================
+ * Invoked in two contexts:
  *
- * Rules:
- *   - If only docs/metadata changed -> No version bump (Keep current)
- *   - If last deploy was < 7 days ago  -> patch bump (e.g. 1.2.3 -> 1.2.4)
- *   - If last deploy was >= 7 days ago -> minor bump (e.g. 1.2.3 -> 1.3.0)
+ *   1. [LOCAL PRE-PUSH] via Husky pre-push hook (PUSH_MODE=true)
+ *      -> Performs the actual bump, writes package.json + build-meta.json
+ *      -> The resulting files are committed locally BEFORE the push hits GitHub
  *
- * Usage:
- *   node scripts/version-bump.js          # auto-detect based on time + logic
- *   node scripts/version-bump.js --major  # force major bump
+ *   2. [CI VERIFY] via GitHub Actions (CI_VERIFY=true)
+ *      -> Reads the version already in package.json and only refreshes build-meta.json
+ *      -> Never bumps the version number (it was already bumped by step 1)
+ *      -> Never pushes a commit back to origin (eliminates the "ahead by 1" problem)
+ *
+ *   3. [DEV BUILD] via `bun run build` locally without env flags
+ *      -> No-op. Does NOT modify any files.
+ *
+ * Bump rules (applied in PUSH_MODE only):
+ *   - Only docs/metadata changed    -> No bump
+ *   - Last deploy < 7 days ago      -> patch bump  (1.2.3 -> 1.2.4)
+ *   - Last deploy >= 7 days ago     -> minor bump  (1.2.3 -> 1.3.0)
+ *   - --major / --minor / --patch   -> force specific level
  */
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
@@ -26,7 +34,7 @@ const ROOT = resolve(__dirname, "..");
 const PKG_PATH = resolve(ROOT, "package.json");
 const META_PATH = resolve(ROOT, "public", "build-meta.json");
 
-// --- Patterns to Ignore ---
+// Files that alone do NOT warrant a version bump
 const IGNORE_PATTERNS = [
   /^docs\//,
   /\.md$/,
@@ -36,11 +44,12 @@ const IGNORE_PATTERNS = [
   /^\.gitignore$/,
   /^\.prettierrc$/,
   /^public\/build-meta\.json$/,
-  /^package\.json$/, // Ignore the version bump itself from previous runs
+  /^package\.json$/,
   /^bun\.lock$/,
+  /^README\.md$/,
 ];
 
-// --- Helpers ---
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function parseVersion(versionStr) {
   const [major, minor, patch] = versionStr.split(".").map(Number);
@@ -53,14 +62,11 @@ function formatVersion({ major, minor, patch }) {
 
 function daysSince(isoDate) {
   if (!isoDate) return Infinity;
-  const then = new Date(isoDate);
-  const now = new Date();
-  return (now - then) / (1000 * 60 * 60 * 24);
+  return (Date.now() - new Date(isoDate).getTime()) / (1000 * 60 * 60 * 24);
 }
 
 function hasCodebaseChanges() {
   try {
-    // Get list of files changed since the last commit (or in the current push)
     const changedFiles = execSync("git diff --name-only HEAD^ HEAD")
       .toString()
       .trim()
@@ -69,129 +75,143 @@ function hasCodebaseChanges() {
 
     if (changedFiles.length === 0) return false;
 
-    return changedFiles.some((file) => {
-      return !IGNORE_PATTERNS.some((pattern) => pattern.test(file));
-    });
-  } catch (error) {
-    // If we can't determine (e.g. fresh repo), assume changed to be safe
+    return changedFiles.some(
+      (file) => !IGNORE_PATTERNS.some((pattern) => pattern.test(file))
+    );
+  } catch {
+    // Fresh repo or no parent commit — assume code changed
     return true;
   }
 }
 
-// --- Main Logic ---
+// ─── Modes ────────────────────────────────────────────────────────────────────
 
-function main() {
+const isPushMode = process.env.PUSH_MODE === "true";
+const isCIVerify = process.env.CI_VERIFY === "true";
+const forceArg = process.argv[2]; // --major | --minor | --patch
+
+// ─── DEV BUILD: no-op ─────────────────────────────────────────────────────────
+
+if (!isPushMode && !isCIVerify && !forceArg) {
+  console.log(
+    "\n  [DEV MODE] Skipping Version Bump. Not modifying build-meta.json to prevent git conflicts."
+  );
+  process.exit(0);
+}
+
+// ─── CI VERIFY: refresh build-meta only, no version change ───────────────────
+
+if (isCIVerify) {
   const pkg = JSON.parse(readFileSync(PKG_PATH, "utf-8"));
-  const currentVersion = parseVersion(pkg.version || "1.0.0");
+  const versionString = pkg.version;
 
-  // Read previous build meta if it exists
-  let lastDeployDate = null;
+  let existingMeta = {};
   if (existsSync(META_PATH)) {
     try {
-      const meta = JSON.parse(readFileSync(META_PATH, "utf-8"));
-      lastDeployDate = meta.deployedAt;
-    } catch {
-      // corrupted meta, ignore
-    }
+      existingMeta = JSON.parse(readFileSync(META_PATH, "utf-8"));
+    } catch {}
   }
 
-  const gap = daysSince(lastDeployDate);
-  const forceArg = process.argv[2]; // --major, --minor, --patch
-
-  // Determine if this is a "valid" environment for bumping
-  const isCI = process.env.FORCE_VERSION_BUMP === "true";
-  const isProduction = process.env.VERCEL_ENV === "production" || isCI;
-
-  // 1. CHANGE DETECTION: If not forced, check if we actually need a bump
-  const codebaseChanged = hasCodebaseChanges();
-
-  if (!forceArg && !codebaseChanged && isProduction) {
-    console.log(
-      "\n  [SKIP BUMP] Only documentation or metadata changed. Maintaining current version."
-    );
-
-    // Still update meta for build ID tracking
-    const buildMeta = {
-      version: formatVersion(currentVersion),
-      buildId: `meta-${Date.now().toString(36)}`,
-      deployedAt: new Date().toISOString(),
-      previousVersion: formatVersion(currentVersion),
-      env: "production",
-      reason: "doc-only update",
-    };
-    writeFileSync(
-      META_PATH,
-      JSON.stringify(buildMeta, null, 2) + "\n",
-      "utf-8"
-    );
-    return;
-  }
-
-  // 2. DEV MODE Check
-  if (!isProduction && !forceArg) {
-    console.log(
-      "\n  [DEV MODE] Skipping Version Bump (Local Build). Not modifying build-meta.json to prevent git conflicts."
-    );
-    return;
-  }
-
-  // 3. Increment Logic
-  let newVersion;
-
-  if (forceArg === "--major") {
-    newVersion = { major: currentVersion.major + 1, minor: 0, patch: 0 };
-  } else if (forceArg === "--minor") {
-    newVersion = {
-      major: currentVersion.major,
-      minor: currentVersion.minor + 1,
-      patch: 0,
-    };
-  } else if (forceArg === "--patch") {
-    newVersion = {
-      major: currentVersion.major,
-      minor: currentVersion.minor,
-      patch: currentVersion.patch + 1,
-    };
-  } else if (gap >= 7) {
-    // More than a week -> minor bump
-    newVersion = {
-      major: currentVersion.major,
-      minor: currentVersion.minor + 1,
-      patch: 0,
-    };
-  } else {
-    // Less than a week -> patch bump
-    newVersion = {
-      major: currentVersion.major,
-      minor: currentVersion.minor,
-      patch: currentVersion.patch + 1,
-    };
-  }
-
-  const versionString = formatVersion(newVersion);
-
-  // Update package.json
-  pkg.version = versionString;
-  writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-
-  // Generate build-meta.json
   const buildMeta = {
+    ...existingMeta,
     version: versionString,
     buildId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     deployedAt: new Date().toISOString(),
-    previousVersion: formatVersion(currentVersion),
-    daysSinceLastDeploy: gap === Infinity ? "first-deploy" : Math.round(gap),
     env: "production",
   };
 
   writeFileSync(META_PATH, JSON.stringify(buildMeta, null, 2) + "\n", "utf-8");
 
-  console.log(
-    `\n  Version Bump: ${formatVersion(currentVersion)} -> ${versionString}`
-  );
-  console.log(
-    `  Strategy:    ${gap >= 7 ? "MINOR (>= 7 days)" : "PATCH (< 7 days)"}\n`
-  );
+  console.log(`\n  [CI VERIFY] Version confirmed: ${versionString}`);
+  console.log("  build-meta.json refreshed (no version change).\n");
+  process.exit(0);
 }
 
-main();
+// ─── PUSH MODE: bump version locally before the push lands on GitHub ──────────
+
+const pkg = JSON.parse(readFileSync(PKG_PATH, "utf-8"));
+const currentVersion = parseVersion(pkg.version || "1.0.0");
+
+let lastDeployDate = null;
+if (existsSync(META_PATH)) {
+  try {
+    const meta = JSON.parse(readFileSync(META_PATH, "utf-8"));
+    lastDeployDate = meta.deployedAt;
+  } catch {}
+}
+
+const gap = daysSince(lastDeployDate);
+const codebaseChanged = hasCodebaseChanges();
+
+// If only docs/metadata changed, skip the bump entirely
+if (!forceArg && !codebaseChanged) {
+  console.log(
+    "\n  [PUSH MODE] Only documentation/metadata changed. Maintaining current version."
+  );
+
+  const buildMeta = {
+    version: formatVersion(currentVersion),
+    buildId: `meta-${Date.now().toString(36)}`,
+    deployedAt: new Date().toISOString(),
+    previousVersion: formatVersion(currentVersion),
+    env: "production",
+    reason: "doc-only update",
+  };
+  writeFileSync(META_PATH, JSON.stringify(buildMeta, null, 2) + "\n", "utf-8");
+  process.exit(0);
+}
+
+// Determine new version
+let newVersion;
+
+if (forceArg === "--major") {
+  newVersion = { major: currentVersion.major + 1, minor: 0, patch: 0 };
+} else if (forceArg === "--minor") {
+  newVersion = {
+    major: currentVersion.major,
+    minor: currentVersion.minor + 1,
+    patch: 0,
+  };
+} else if (forceArg === "--patch") {
+  newVersion = {
+    major: currentVersion.major,
+    minor: currentVersion.minor,
+    patch: currentVersion.patch + 1,
+  };
+} else if (gap >= 7) {
+  newVersion = {
+    major: currentVersion.major,
+    minor: currentVersion.minor + 1,
+    patch: 0,
+  };
+} else {
+  newVersion = {
+    major: currentVersion.major,
+    minor: currentVersion.minor,
+    patch: currentVersion.patch + 1,
+  };
+}
+
+const versionString = formatVersion(newVersion);
+
+// Write package.json
+pkg.version = versionString;
+writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+
+// Write build-meta.json
+const buildMeta = {
+  version: versionString,
+  buildId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+  deployedAt: new Date().toISOString(),
+  previousVersion: formatVersion(currentVersion),
+  daysSinceLastDeploy: gap === Infinity ? "first-deploy" : Math.round(gap),
+  env: "production",
+};
+writeFileSync(META_PATH, JSON.stringify(buildMeta, null, 2) + "\n", "utf-8");
+
+console.log(
+  `\n  [PUSH MODE] Version Bump: ${formatVersion(currentVersion)} -> ${versionString}`
+);
+console.log(
+  `  Strategy: ${gap >= 7 ? "MINOR (>= 7 days)" : "PATCH (< 7 days)"}\n`
+);

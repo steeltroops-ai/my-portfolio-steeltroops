@@ -1,12 +1,10 @@
-name: "CD: Automated Versioning & Deployment"
+name: "CD: Build Verification & Deployment"
 
 on:
   push:
     branches:
       - main
     paths-ignore:
-      - "package.json"
-      - "public/build-meta.json"
       - "**/README.md"
       - "docs/**"
       - "CACHING.md"
@@ -14,17 +12,16 @@ on:
       - ".vscode/**"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  version_and_deploy:
+  verify_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 2
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -34,26 +31,13 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
-      - name: Automated Version Bump
+      - name: Verify Version (CI mode - no version bump, no git push)
         env:
-          FORCE_VERSION_BUMP: "true"
-        run: node scripts/version-bump.js
-
-      - name: Commit and Push Version Change
+          CI_VERIFY: "true"
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json public/build-meta.json
+          node scripts/version-bump.js
+          echo "Version in package.json: $(node -p "require('./package.json').version")"
 
-          # Only commit and push if there are actual changes to staged files
-          if git diff --cached --quiet; then
-            echo "No version changes to commit. Skipping push."
-          else
-            git commit -m "chore(release): bump version [release] [skip ci]"
-            git push origin main
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Note: Vercel's automatic GitHub integration will pick up the second commit (the version bump)
-      # and deploy it instantly. This ensures your live site always has the correct version number.
+      # Vercel's GitHub integration handles the actual deployment automatically.
+      # This workflow only validates the build and confirms the version number.
+      # The version was already bumped locally by the pre-push Husky hook.
