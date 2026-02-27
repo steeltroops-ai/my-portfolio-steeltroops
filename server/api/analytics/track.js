@@ -472,18 +472,26 @@ export default async function handler(req, res) {
 
       // A. Upsert known_entities - passive identity resolution
       const entities = await sql`
-        INSERT INTO known_entities (real_name, email, role, notes)
+        INSERT INTO known_entities (real_name, email, role, notes, aliases)
         VALUES (
           ${name || "Unknown"},
           ${email.toLowerCase()},
           'Contact Candidate',
-          ${`Auto-resolved via ${source || "autofill"} at ${new Date().toISOString()}`}
+          ${`Auto-resolved via ${source || "autofill"} at ${new Date().toISOString()}`},
+          ${name ? [name] : []}::VARCHAR[]
         )
         ON CONFLICT (email) DO UPDATE SET
           real_name = CASE
             WHEN known_entities.real_name = 'Unknown' THEN EXCLUDED.real_name
             ELSE known_entities.real_name
           END,
+          aliases = (
+            SELECT ARRAY(
+              SELECT DISTINCT unnest(
+                array_append(known_entities.aliases, ${name || null}::VARCHAR)
+              ) WHERE unnest IS NOT NULL AND unnest != 'Unknown'
+            )
+          ),
           updated_at = NOW()
         RETURNING entity_id
       `;

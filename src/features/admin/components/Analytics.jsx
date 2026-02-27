@@ -35,6 +35,9 @@ import LazySection from "@/shared/components/performance/LazySection";
 import EntityDossier from "./EntityDossier";
 import ActiveSwimlane from "./ActiveSwimlane";
 import AdminPanelHeader from "./shared/AdminPanelHeader";
+import BehavioralRadar from "./BehavioralRadar";
+import ReadFunnel from "./ReadFunnel";
+import EntityGraph from "./EntityGraph";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -1296,8 +1299,6 @@ const Analytics = () => {
             </div>
           </div>
 
-
-
           {/* Detailed Content & Origin Matrix */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Top Pages */}
@@ -1398,6 +1399,12 @@ const Analytics = () => {
               </div>
             </div>
           </div>
+
+          {/* Advanced Forensic Matrices */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <BehavioralRadar />
+            <ReadFunnel />
+          </div>
         </div>
 
         {/* Intelligence Sidebar (Col 4) */}
@@ -1418,6 +1425,8 @@ const Analytics = () => {
             )}
           </LazySection>
 
+          {/* Identity & Device Correlation Spiderweb */}
+          <EntityGraph />
 
           {/* System Architecture */}
           <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">

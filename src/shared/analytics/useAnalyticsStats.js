@@ -74,3 +74,42 @@ export const useContentProfile = (visitorId, entityId) => {
     enabled: !!visitorId || !!entityId,
   });
 };
+
+export const useBiometricRadar = () => {
+  return useQuery({
+    queryKey: ["biometric-radar"],
+    queryFn: async () => {
+      const res = await fetch("/api/analytics/stats?action=biometric_radar", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch biometric radar");
+      return res.json();
+    },
+  });
+};
+
+export const useReadFunnel = () => {
+  return useQuery({
+    queryKey: ["read-funnel"],
+    queryFn: async () => {
+      const res = await fetch("/api/analytics/stats?action=read_funnel", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch read funnel");
+      return res.json();
+    },
+  });
+};
+
+export const useEntityGraph = () => {
+  return useQuery({
+    queryKey: ["entity-graph"],
+    queryFn: async () => {
+      const res = await fetch("/api/analytics/stats?action=entity_graph", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch entity graph");
+      return res.json();
+    },
+  });
+};

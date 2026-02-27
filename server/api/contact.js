@@ -112,16 +112,24 @@ export default async function handler(req, res) {
           // B. Create/Update Known Entity (Real Person)
           // We use email as the primary key for identity resolution
           const entities = await sql`
-              INSERT INTO known_entities (real_name, email, linkedin_url, role, notes)
+              INSERT INTO known_entities (real_name, email, linkedin_url, role, notes, aliases)
               VALUES (
                 ${name.trim()}, 
                 ${email.trim().toLowerCase()}, 
                 null, 
                 'Contact Inquiry', 
-                'Auto-resolved via Contact Form'
+                'Auto-resolved via Contact Form',
+                ${name.trim() ? [name.trim()] : []}::VARCHAR[]
               )
               ON CONFLICT (email) DO UPDATE SET 
-                real_name = EXCLUDED.real_name,
+                real_name = CASE WHEN EXCLUDED.real_name != '' THEN EXCLUDED.real_name ELSE known_entities.real_name END,
+                aliases = (
+                  SELECT ARRAY(
+                    SELECT DISTINCT unnest(
+                      array_append(known_entities.aliases, ${name.trim() || null}::VARCHAR)
+                    ) WHERE unnest IS NOT NULL AND unnest != 'Unknown' AND unnest != ''
+                  )
+                ),
                 updated_at = NOW()
               RETURNING entity_id
           `;

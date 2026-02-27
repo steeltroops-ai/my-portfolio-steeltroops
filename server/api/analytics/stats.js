@@ -206,6 +206,124 @@ export default async function handler(req, res) {
       });
     }
 
+    // 4. Behavioral Biometric Radar: scatter plot data for bot vs human detection
+    if (req.query.action === "biometric_radar") {
+      try {
+        const rows = await sql`
+          SELECT
+            bb.entropy_score,
+            bb.avg_mouse_velocity,
+            bb.typing_cadence_ms,
+            bb.is_bot_verified,
+            s.session_id,
+            v.city,
+            v.country,
+            v.is_bot,
+            k.real_name,
+            v.visitor_id
+          FROM behavioral_biometrics bb
+          JOIN visitor_sessions s ON bb.session_uuid = s.id
+          JOIN visitor_profiles v ON s.visitor_uuid = v.id
+          LEFT JOIN known_entities k ON v.likely_entity_id = k.entity_id
+          WHERE v.is_owner = FALSE
+          ORDER BY bb.recorded_at DESC
+          LIMIT 500
+        `;
+        const map = new Map();
+        for (const r of rows) {
+          if (!map.has(r.session_id)) map.set(r.session_id, r);
+        }
+        return res
+          .status(200)
+          .json({ success: true, points: Array.from(map.values()) });
+      } catch (e) {
+        return res.status(200).json({ success: true, points: [] });
+      }
+    }
+
+    // 5. Content Read Funnel: global scroll-depth drop-off
+    if (req.query.action === "read_funnel") {
+      try {
+        const raw = await sql`
+          SELECT e.event_type, COUNT(DISTINCT s.visitor_uuid) as unique_visitors,
+            COALESCE(e.event_label, 'all') as post_slug
+          FROM visitor_events e
+          JOIN visitor_sessions s ON e.session_uuid = s.id
+          JOIN visitor_profiles v ON s.visitor_uuid = v.id
+          WHERE v.is_owner = FALSE
+            AND e.event_type IN ('blog_open','read_depth_25pct','read_depth_50pct','read_depth_75pct','read_depth_100pct','blog_finish','blog_bounce')
+          GROUP BY e.event_type, COALESCE(e.event_label, 'all')
+          ORDER BY unique_visitors DESC
+        `;
+        const STAGES = [
+          { key: "blog_open", label: "OPENED" },
+          { key: "read_depth_25pct", label: "25% READ" },
+          { key: "read_depth_50pct", label: "50% READ" },
+          { key: "read_depth_75pct", label: "75% READ" },
+          { key: "read_depth_100pct", label: "100% READ" },
+          { key: "blog_finish", label: "FINISHED" },
+          { key: "blog_bounce", label: "BOUNCED" },
+        ];
+        const globalFunnel = STAGES.map((stage) => ({
+          ...stage,
+          count: raw
+            .filter((r) => r.event_type === stage.key)
+            .reduce((s, r) => s + parseInt(r.unique_visitors), 0),
+        }));
+        const perPost = raw.reduce((acc, r) => {
+          if (!acc[r.post_slug])
+            acc[r.post_slug] = { slug: r.post_slug, stages: {} };
+          acc[r.post_slug].stages[r.event_type] = parseInt(r.unique_visitors);
+          return acc;
+        }, {});
+        return res.status(200).json({
+          success: true,
+          global_funnel: globalFunnel,
+          per_post: Object.values(perPost)
+            .sort(
+              (a, b) =>
+                (b.stages["blog_open"] || 0) - (a.stages["blog_open"] || 0)
+            )
+            .slice(0, 10),
+        });
+      } catch (e) {
+        return res
+          .status(200)
+          .json({ success: true, global_funnel: [], per_post: [] });
+      }
+    }
+
+    // 6. Entity Graph: cross-device identity linking data for spiderweb
+    if (req.query.action === "entity_graph") {
+      try {
+        const [entities, deviceNodes] = await Promise.all([
+          sql`
+            SELECT ke.entity_id, ke.real_name, ke.email, ke.confidence_score, ke.total_visits, ke.last_seen, ke.resolution_sources, ke.aliases,
+              COUNT(DISTINCT vp.id) as device_count
+            FROM known_entities ke
+            LEFT JOIN visitor_profiles vp ON vp.likely_entity_id = ke.entity_id
+            GROUP BY ke.entity_id, ke.real_name, ke.email, ke.confidence_score, ke.total_visits, ke.last_seen, ke.resolution_sources, ke.aliases
+            ORDER BY ke.confidence_score DESC LIMIT 50
+          `,
+          sql`
+            SELECT vp.id as device_id, vp.visitor_id, vp.device_type, vp.browser, vp.os,
+              vp.city, vp.country, vp.is_bot, vp.last_seen, vp.visit_count, vp.likely_entity_id as entity_id,
+              vp.ip_address, vp.fingerprint
+            FROM visitor_profiles vp
+            WHERE vp.likely_entity_id IS NOT NULL AND vp.is_owner = FALSE
+            ORDER BY vp.last_seen DESC LIMIT 200
+          `,
+        ]);
+        return res
+          .status(200)
+          .json({ success: true, entities, device_nodes: deviceNodes });
+      } catch (e) {
+        return res
+          .status(200)
+          .json({ success: true, entities: [], device_nodes: [] });
+      }
+    }
+
     // 2. Parallel Core Dashboard Aggregation (High Speed Mode - Split into two batches for stability)
     console.log(
       "[Stats] Starting localized aggregation for session:",
