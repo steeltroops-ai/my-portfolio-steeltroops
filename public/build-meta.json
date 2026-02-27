@@ -1,8 +1,8 @@
 {
-  "version": "2.0.10",
-  "buildId": "mm4w9w9h-bmrwl5",
-  "deployedAt": "2026-02-27T12:54:55.637Z",
-  "previousVersion": "2.0.9",
-  "bumpLevel": "patch",
+  "version": "2.1.0",
+  "buildId": "mm4yt05x-qq8nxa",
+  "deployedAt": "2026-02-27T14:05:46.389Z",
+  "previousVersion": "2.0.10",
+  "bumpLevel": "minor",
   "env": "production"
 }
