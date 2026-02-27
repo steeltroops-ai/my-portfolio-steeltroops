@@ -39,7 +39,7 @@ import {
   verifyAuth,
   checkRateLimit,
 } from "./utils.js";
-import { emitToAdmins } from "../socket-hub.js";
+import { emitToAdmins } from "../services/realtime/broadcaster.js";
 
 export default async function handler(req, res) {
   // Use shared CORS logic

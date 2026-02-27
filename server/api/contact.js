@@ -81,7 +81,8 @@ export default async function handler(req, res) {
 
       // Real-time broadcast for admin
       try {
-        const { emitToAdmins } = await import("../socket-hub.js");
+        const { emitToAdmins } =
+          await import("../services/realtime/broadcaster.js");
         emitToAdmins("MESSAGES:NEW_INQUIRY", {
           name: name.trim(),
           subject: subject.trim(),

@@ -21,7 +21,7 @@
 import { neon } from "@neondatabase/serverless";
 import Cerebras from "@cerebras/cerebras_cloud_sdk";
 import { setCorsHeaders, verifyAuth } from "../utils.js";
-import { emitToAdmins } from "../../socket-hub.js";
+import { emitToAdmins } from "../../services/realtime/broadcaster.js";
 
 import { buildIdentity } from "./prompts/system-identities.js";
 import {

@@ -1,7 +1,7 @@
 // Vercel API Route: /api/posts
 import { neon } from "@neondatabase/serverless";
 import { setCorsHeaders, verifyAuth } from "./utils.js";
-import { emitToAdmins } from "../socket-hub.js";
+import { emitToAdmins } from "../services/realtime/broadcaster.js";
 
 const sql = neon(process.env.DATABASE_URL || "");
 

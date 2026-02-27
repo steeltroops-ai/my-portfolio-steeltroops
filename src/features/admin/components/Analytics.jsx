@@ -27,7 +27,7 @@ import {
 import { useAdmin } from "../context/AdminContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useSocket } from "@/shared/context/SocketContext";
+import { useTelemetry } from "@/shared/api/realtime/useTelemetry";
 import { useQueryClient } from "@tanstack/react-query";
 import LazySection from "@/shared/components/performance/LazySection";
 import EntityDossier from "./EntityDossier";
@@ -515,25 +515,14 @@ const Analytics = () => {
   const [dragScrollLeft, setDragScrollLeft] = useState(0);
   const [dragHasMoved, setDragHasMoved] = useState(false);
 
-  // --- REAL-TIME SOCKET INTEGRATION ---
-  const { socket } = useSocket();
+  // --- REAL-TIME TELEMETRY INTEGRATION ---
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleSignal = (data) => {
-      // On any analytics signal, invalidate stats to trigger a soft refetch
-      // This ensures "Active Now" counts are always logically consistent with DB
-      queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
-    };
-
-    socket.on("ANALYTICS:SIGNAL", handleSignal);
-
-    return () => {
-      socket.off("ANALYTICS:SIGNAL", handleSignal);
-    };
-  }, [socket, queryClient]);
+  useTelemetry("ANALYTICS:SIGNAL", (data) => {
+    // On any analytics signal, invalidate stats to trigger a soft refetch
+    // This ensures "Active Now" counts are always logically consistent with DB
+    queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
+  });
 
   // Reset pagination when filter changes
   useEffect(() => {

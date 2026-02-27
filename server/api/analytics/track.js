@@ -309,25 +309,22 @@ export default async function handler(req, res) {
 
       // Real-time broadcast for admin dashboards
       try {
-        if (!process.env.VERCEL) {
-          const { emitToAdmins } = await import("../../socket-hub.js");
-          emitToAdmins("ANALYTICS:SIGNAL", {
-            type: "VISITOR_INIT",
-            visitorId,
-            sessionId,
-            city: loc.city,
-            country: loc.country,
-            device: device.type || "desktop",
-            os: os.name,
-            browser: browser.name,
-            path: path || "/",
-            timestamp: new Date().toISOString(),
-          });
-        } else {
-          // TODO: Implement Supabase Realtime or equivalent for Vercel
-        }
+        const { emitToAdmins } =
+          await import("../../services/realtime/broadcaster.js");
+        emitToAdmins("ANALYTICS:SIGNAL", {
+          type: "VISITOR_INIT",
+          visitorId,
+          sessionId,
+          city: loc.city,
+          country: loc.country,
+          device: device.type || "desktop",
+          os: os.name,
+          browser: browser.name,
+          path: path || "/",
+          timestamp: new Date().toISOString(),
+        });
       } catch (e) {
-        // Broadcast failed (likely serverless environment without Hub), ignore
+        // Broadcast failed, ignore
       }
 
       return res.status(200).json({ success: true });
@@ -351,18 +348,17 @@ export default async function handler(req, res) {
 
       // Real-time broadcast for admin dashboards
       try {
-        if (!process.env.VERCEL) {
-          const { emitToAdmins } = await import("../../socket-hub.js");
-          emitToAdmins("ANALYTICS:SIGNAL", {
-            type: "EVENT",
-            sessionId,
-            eventType: type,
-            label,
-            value,
-            path,
-            timestamp: new Date().toISOString(),
-          });
-        }
+        const { emitToAdmins } =
+          await import("../../services/realtime/broadcaster.js");
+        emitToAdmins("ANALYTICS:SIGNAL", {
+          type: "EVENT",
+          sessionId,
+          eventType: type,
+          label,
+          value,
+          path,
+          timestamp: new Date().toISOString(),
+        });
       } catch (e) {
         // Broadcast failed
       }
@@ -415,15 +411,14 @@ export default async function handler(req, res) {
 
       // Real-time broadcast for admin dashboards
       try {
-        if (!process.env.VERCEL) {
-          const { emitToAdmins } = await import("../../socket-hub.js");
-          emitToAdmins("ANALYTICS:SIGNAL", {
-            type: "HEARTBEAT",
-            sessionId,
-            visitorId,
-            timestamp: new Date().toISOString(),
-          });
-        }
+        const { emitToAdmins } =
+          await import("../../services/realtime/broadcaster.js");
+        emitToAdmins("ANALYTICS:SIGNAL", {
+          type: "HEARTBEAT",
+          sessionId,
+          visitorId,
+          timestamp: new Date().toISOString(),
+        });
       } catch (e) {
         // Broadcast failed
       }
@@ -449,15 +444,14 @@ export default async function handler(req, res) {
 
       // Real-time broadcast for admin dashboards
       try {
-        if (!process.env.VERCEL) {
-          const { emitToAdmins } = await import("../../socket-hub.js");
-          emitToAdmins("ANALYTICS:SIGNAL", {
-            type: "PAGE_VIEW",
-            sessionId,
-            path,
-            timestamp: new Date().toISOString(),
-          });
-        }
+        const { emitToAdmins } =
+          await import("../../services/realtime/broadcaster.js");
+        emitToAdmins("ANALYTICS:SIGNAL", {
+          type: "PAGE_VIEW",
+          sessionId,
+          path,
+          timestamp: new Date().toISOString(),
+        });
       } catch (e) {
         // Broadcast failed
       }
@@ -610,19 +604,18 @@ export default async function handler(req, res) {
 
         // F. Real-time admin broadcast
         try {
-          if (!process.env.VERCEL) {
-            const { emitToAdmins } = await import("../../socket-hub.js");
-            emitToAdmins("ANALYTICS:SIGNAL", {
-              type: "IDENTITY_RESOLVED",
-              method: source || "autofill",
-              email,
-              name: name || null,
-              entityId,
-              visitorId,
-              confidence: newConfidence,
-              timestamp: new Date().toISOString(),
-            });
-          }
+          const { emitToAdmins } =
+            await import("../../services/realtime/broadcaster.js");
+          emitToAdmins("ANALYTICS:SIGNAL", {
+            type: "IDENTITY_RESOLVED",
+            method: source || "autofill",
+            email,
+            name: name || null,
+            entityId,
+            visitorId,
+            confidence: newConfidence,
+            timestamp: new Date().toISOString(),
+          });
         } catch (e) {
           // Broadcast failed, ignore
         }

@@ -11,7 +11,7 @@ import { Toaster } from "react-hot-toast";
 import { ReactLenis } from "lenis/react";
 import App from "@/App.jsx";
 import { blogQueryKeys } from "@/features/blog/hooks/useBlogQueries";
-import { SocketProvider } from "@/shared/context/SocketContext";
+import { RealtimeProvider } from "@/shared/api/realtime/RealtimeProvider";
 import { getPublishedPosts } from "@/features/blog/services/HybridBlogService";
 import ErrorBoundary from "@/shared/components/feedback/ErrorBoundary";
 import "@/index.css";
@@ -143,7 +143,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <SocketProvider>
+        <RealtimeProvider>
           <Toaster
             position="top-right"
             toastOptions={{
@@ -231,7 +231,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               </LazyMotion>
             </ReactLenis>
           </HelmetProvider>
-        </SocketProvider>
+        </RealtimeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>
