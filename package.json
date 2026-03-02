@@ -16,6 +16,11 @@
     "hash-password": "node scripts/hash-password.js",
     "update-password": "node scripts/update-admin-password.js",
     "sitemap": "node scripts/generate-sitemap.js",
+    "verify-tracking": "node scripts/verify-tracking.js",
+    "test-tracking-init": "node scripts/test-tracking-init.js",
+    "test-page-view-tracking": "node scripts/test-page-view-tracking.js",
+    "check-integrity": "bun run scripts/check-data-integrity.js",
+    "run-migrations": "node scripts/run-migrations.js",
     "prepare": "husky"
   },
   "dependencies": {
@@ -63,6 +68,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.0",
     "husky": "^9.1.7",
+    "playwright": "^1.58.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "terser": "^5.46.0",

@@ -1,6 +1,5 @@
 import { neon } from "@neondatabase/serverless";
 import { UAParser } from "ua-parser-js";
-import crypto from "crypto";
 import { z } from "zod";
 import { setCorsHeaders, checkRateLimit } from "../utils.js";
 
@@ -52,9 +51,9 @@ const pageviewSchema = z.object({
 const identifySchema = z.object({
   visitorId: z.string().min(5).max(100).optional(),
   sessionId: z.string().min(5).max(100).optional(),
-  email: z.string().email().max(255),
+  email: z.string().max(255).email(),
   name: z.string().max(255).nullable().optional(),
-  source: z.enum(["autofill", "form_submit", "manual"]).optional(),
+  source: z.enum(["autofill", "form_submit", "manual", "autofill_nav"]).optional(),
 });
 // -----------------------------
 
@@ -197,8 +196,8 @@ export default async function handler(req, res) {
       ];
       const isBot = userAgent
         ? botPatterns.some((pattern) =>
-            userAgent.toLowerCase().includes(pattern)
-          )
+          userAgent.toLowerCase().includes(pattern)
+        )
         : true;
 
       // 1. Immutable Hardware DNA (The "God Mode" Anchor)
@@ -565,7 +564,7 @@ export default async function handler(req, res) {
             ${baseWeight},
             ${email.toLowerCase()}
           )
-        `.catch(() => {});
+        `.catch(() => { });
 
         // Update entity: confidence, timestamps, resolution_sources
         await sql`
@@ -583,7 +582,7 @@ export default async function handler(req, res) {
               FROM known_entities WHERE entity_id = ${entityId}
             )
           WHERE entity_id = ${entityId}
-        `.catch(() => {});
+        `.catch(() => { });
 
         // Upsert identity_clusters for cross-device linking
         if (hardwareRows.length > 0 && hardwareRows[0].hardware_hash) {
@@ -593,7 +592,7 @@ export default async function handler(req, res) {
             ON CONFLICT (fingerprint_hash) DO UPDATE SET
               primary_entity_id = EXCLUDED.primary_entity_id,
               confidence_score = GREATEST(identity_clusters.confidence_score, EXCLUDED.confidence_score)
-          `.catch(() => {});
+          `.catch(() => { });
         }
 
         // E. Log the identity resolution event
@@ -610,7 +609,7 @@ export default async function handler(req, res) {
               NOW()
             FROM visitor_sessions WHERE session_id = ${sessionId}
             ON CONFLICT DO NOTHING
-          `.catch(() => {}); // Non-blocking
+          `.catch(() => { }); // Non-blocking
         }
 
         // F. Real-time admin broadcast (delayed: Neon commit consistency)
