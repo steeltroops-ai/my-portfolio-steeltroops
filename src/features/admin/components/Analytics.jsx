@@ -1190,7 +1190,7 @@ const Analytics = () => {
                               </p>
                               <div className="flex items-center gap-1">
                                 <span className="text-[7px] px-1 bg-white/5 text-neutral-500 font-mono border border-white/5 rounded">
-                                  {v.path}
+                                  {v.last_path}
                                 </span>
                               </div>
                             </div>
@@ -1281,7 +1281,7 @@ const Analytics = () => {
                     /
                   </span>
                   <span className="text-neutral-500 font-black text-[9px] font-mono leading-none">
-                    {Math.ceil(recentVisitors.length / itemsPerPage)
+                    {Math.ceil(filteredVisitors.length / itemsPerPage)
                       .toString()
                       .padStart(2, "0")}
                   </span>
@@ -1427,6 +1427,29 @@ const Analytics = () => {
 
           {/* Identity & Device Correlation Spiderweb */}
           <EntityGraph />
+
+          {/* Live Signal Stream */}
+          <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">
+            <div className="liquid-glass-top-line" />
+            <AdminPanelHeader
+              title="SIGNAL_STREAM"
+              subtitle="Live Behavioral Feed"
+              icon={FiActivity}
+              iconColorClass="text-cyan-400"
+            />
+            <div className="divide-y divide-white/[0.03] max-h-[500px] overflow-y-auto custom-scrollbar">
+              {recentActions.length > 0 ? (
+                <BehavioralStream
+                  actions={recentActions}
+                  showBotTraffic={false}
+                />
+              ) : (
+                <div className="p-8 text-center text-neutral-600 text-[10px] font-mono uppercase tracking-widest">
+                  Awaiting signals...
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* System Architecture */}
           <div className="liquid-glass backdrop-blur-none rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative">

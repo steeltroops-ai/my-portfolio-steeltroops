@@ -32,6 +32,7 @@ const AIBlogGenerator = () => {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const contentRef = useRef(null);
 
   const createPostMutation = useCreatePost();
@@ -52,6 +53,11 @@ const AIBlogGenerator = () => {
     cancel,
     reset,
   } = useAIGenerator();
+
+  // Reset saved indicator when generation resets
+  useEffect(() => {
+    if (!result) setIsSaved(false);
+  }, [result]);
 
   // Auto-scroll to bottom as content streams in
   useEffect(() => {
@@ -99,7 +105,7 @@ const AIBlogGenerator = () => {
 
       if (createPostMutation && createPostMutation.mutateAsync) {
         await createPostMutation.mutateAsync(postData);
-        result.saved = true;
+        setIsSaved(true);
       } else {
         console.warn("Create post mutation not available");
       }
@@ -509,21 +515,21 @@ const BlogPreviewCard = ({
         <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={onSave}
-            disabled={isSaving || result.saved}
+            disabled={isSaving || isSaved}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-              result.saved
+              isSaved
                 ? "bg-white/10 text-neutral-300 border border-white/10"
                 : "bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
             }`}
           >
             {isSaving ? (
               <FiLoader className="animate-spin" size={12} />
-            ) : result.saved ? (
+            ) : isSaved ? (
               <FiCheck size={12} />
             ) : (
               <FiSave size={12} />
             )}
-            {result.saved ? "Saved" : "Save Draft"}
+            {isSaved ? "Saved" : "Save Draft"}
           </button>
           <button
             onClick={onEdit}

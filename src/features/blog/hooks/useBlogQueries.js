@@ -315,25 +315,10 @@ export const useTogglePostPublished = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (postId) => {
-      let currentPost = queryClient.getQueryData(blogQueryKeys.post(postId));
-
-      if (!currentPost?.data) {
-        const allPostsData = queryClient.getQueryData(
-          blogQueryKeys.allPosts({})
-        );
-        if (allPostsData?.posts) {
-          const found = allPostsData.posts.find((p) => p.id === postId);
-          if (found) currentPost = { data: found };
-        }
-      }
-
-      if (!currentPost?.data) {
-        currentPost = await getPostById(postId);
-      }
-
-      const currentPublished = currentPost?.data?.published ?? false;
-      return togglePostPublished(postId, !currentPublished);
+    mutationFn: async ({ id, published }) => {
+      // The caller provides the desired new published state directly,
+      // so no cache lookup is needed here.
+      return togglePostPublished(id, published);
     },
     onMutate: async ({ id, published }) => {
       // 1. Cancel outgoing refetches

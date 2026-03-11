@@ -24,10 +24,10 @@ export const useAdminPulse = () => {
       const newData = { ...oldData };
 
       if (data.type === "VISITOR_INIT") {
-        newData.summary = {
-          ...newData.summary,
-          total_visitors: (newData.summary?.total_visitors || 0) + 1,
-          active_sessions: (newData.summary?.active_sessions || 0) + 1,
+        newData.stats = {
+          ...newData.stats,
+          totalVisitors: (newData.stats?.totalVisitors || 0) + 1,
+          liveNow: (newData.stats?.liveNow || 0) + 1,
         };
         cacheManager.set("admin-analytics-stats", newData, "analytics");
       }
@@ -97,9 +97,15 @@ export const useAdminPulse = () => {
     });
   });
 
+  useTelemetry("AI:STAGE_COMPLETE", (data) => {
+    // Progress updates during multi-stage generation — no UI toast needed,
+    // but we log so the AI generator component can pick it up via useTelemetry.
+    console.debug("[Pulse] AI stage complete:", data.stage, data.title);
+  });
+
   useTelemetry("AI:GENERATION_FINISHED", (data) => {
     queryClient.invalidateQueries({ queryKey: ["blog"] });
-    cacheManager.invalidatePrefix("blog-all-posts-");
+    cacheManager.invalidatePrefix("blog-"); // invalidate all blog caches, not just blog-all-posts-
 
     toast(`AI Engine: Content Finalized "${data.title}"`, {
       icon: <FiCheckCircle className="text-green-400" />,

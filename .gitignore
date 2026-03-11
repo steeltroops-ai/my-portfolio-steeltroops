@@ -28,6 +28,7 @@ docs/
 *.sw?
 .augment/
 .augment/rules/
+.kiro/
 
 
 # Netlify

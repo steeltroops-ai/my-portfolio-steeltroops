@@ -221,7 +221,7 @@ ORDER BY last_seen DESC LIMIT 5;
 ---
 
 ### Task 2.5: Test Admin Bypass
-**Status**: pending | **Priority**: medium | **Time**: 10 min
+**Status**: ✅ completed | **Priority**: medium | **Time**: 10 min
 
 **What to do**: Verify admin bypass prevents self-tracking
 

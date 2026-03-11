@@ -111,31 +111,34 @@ export const useUpdateMessageStatus = () => {
     },
     onMutate: async ({ id, action }) => {
       await queryClient.cancelQueries({ queryKey: ["contactMessages"] });
-      const previousMessages = queryClient.getQueryData([
-        "contactMessages",
-        "all",
-      ]);
 
-      if (previousMessages?.data) {
-        queryClient.setQueryData(["contactMessages", "all"], {
-          ...previousMessages,
-          data: previousMessages.data.map((m) =>
-            m.id === id ? { ...m, status: action } : m
-          ),
-        });
+      // Snapshot ALL active contactMessages query variants (e.g. "all", "unread", etc.)
+      const allPreviousData = queryClient.getQueriesData({
+        queryKey: ["contactMessages"],
+      });
+
+      // Optimistically update every cached variant that contains this message
+      for (const [queryKey, queryData] of allPreviousData) {
+        if (queryData?.data) {
+          queryClient.setQueryData(queryKey, {
+            ...queryData,
+            data: queryData.data.map((m) =>
+              m.id === id ? { ...m, status: action } : m
+            ),
+          });
+        }
       }
 
-      return { previousMessages };
+      return { allPreviousData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contactMessages"] });
     },
     onError: (err, variables, context) => {
-      if (context?.previousMessages) {
-        queryClient.setQueryData(
-          ["contactMessages", "all"],
-          context.previousMessages
-        );
+      if (context?.allPreviousData) {
+        for (const [queryKey, previousData] of context.allPreviousData) {
+          queryClient.setQueryData(queryKey, previousData);
+        }
       }
     },
     onSettled: () => {
@@ -166,29 +169,30 @@ export const useDeleteMessage = () => {
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["contactMessages"] });
-      const previousMessages = queryClient.getQueryData([
-        "contactMessages",
-        "all",
-      ]);
 
-      if (previousMessages?.data) {
-        queryClient.setQueryData(["contactMessages", "all"], {
-          ...previousMessages,
-          data: previousMessages.data.filter((m) => m.id !== id),
-        });
+      const allPreviousData = queryClient.getQueriesData({
+        queryKey: ["contactMessages"],
+      });
+
+      for (const [queryKey, queryData] of allPreviousData) {
+        if (queryData?.data) {
+          queryClient.setQueryData(queryKey, {
+            ...queryData,
+            data: queryData.data.filter((m) => m.id !== id),
+          });
+        }
       }
 
-      return { previousMessages };
+      return { allPreviousData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contactMessages"] });
     },
     onError: (err, variables, context) => {
-      if (context?.previousMessages) {
-        queryClient.setQueryData(
-          ["contactMessages", "all"],
-          context.previousMessages
-        );
+      if (context?.allPreviousData) {
+        for (const [queryKey, previousData] of context.allPreviousData) {
+          queryClient.setQueryData(queryKey, previousData);
+        }
       }
     },
     onSettled: () => {

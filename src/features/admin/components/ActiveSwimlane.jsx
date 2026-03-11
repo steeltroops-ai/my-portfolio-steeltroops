@@ -45,7 +45,7 @@ const ActiveSwimlane = ({ sessions = [], onSelectSession }) => {
                   {session.isp || "Unknown Net"}
                 </span>
                 <span className="text-[9px] text-neutral-500 font-mono tracking-tight">
-                  {session.city}, {session.country_code}
+                  {session.city}, {session.country}
                 </span>
               </div>
             </div>

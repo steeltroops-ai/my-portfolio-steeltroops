@@ -148,6 +148,7 @@ export default async function handler(req, res) {
             // D. Retroactive "God Mode" Linkage
             // Find ALL profiles (past, present, future) that share the same hardware hash
             // and link them to this entity.
+            let retroLinkedCount = 0;
             if (forensicData?.fingerprint) {
               const retroUpdate = await sql`
                 UPDATE visitor_profiles
@@ -156,12 +157,100 @@ export default async function handler(req, res) {
                 AND likely_entity_id IS NULL
                 RETURNING visitor_id
               `;
-
-              if (retroUpdate.length > 0) {
+              retroLinkedCount = retroUpdate.length;
+              if (retroLinkedCount > 0) {
                 console.log(
-                  `[Identity] GOD MODE: Retroactively linked ${retroUpdate.length} anonymous profiles to ${email}`
+                  `[Identity] GOD MODE: Retroactively linked ${retroLinkedCount} anonymous profiles to ${email}`
                 );
               }
+            }
+
+            // E. Compute Confidence Score
+            // form_submit = 0.5 base (confirmed human action)
+            // +0.25 if hardware fingerprint corroborates device identity
+            // +0.10 if visitor session is present (browsing context known)
+            const confidenceScore = Math.min(
+              1.0,
+              0.5 +
+                (forensicData?.fingerprint ? 0.25 : 0) +
+                (visitorId ? 0.1 : 0)
+            );
+
+            // F. Update entity: confidence, last_seen, total_visits, resolution_sources
+            await sql`
+              UPDATE known_entities SET
+                confidence_score = GREATEST(confidence_score, ${confidenceScore}),
+                last_seen = NOW(),
+                total_visits = total_visits + 1,
+                resolution_sources = ARRAY(
+                  SELECT DISTINCT unnest(
+                    array_append(COALESCE(resolution_sources, ARRAY[]::TEXT[]), 'form_submit')
+                  )
+                )
+              WHERE entity_id = ${entityId}
+            `;
+
+            // G. Log identity signal (immutable audit trail)
+            await sql`
+              INSERT INTO identity_signals
+                (entity_id, visitor_id, signal_type, signal_weight, signal_value)
+              VALUES (
+                ${entityId},
+                (SELECT id FROM visitor_profiles WHERE visitor_id = ${visitorId} LIMIT 1),
+                'form_submit',
+                ${confidenceScore},
+                ${JSON.stringify({ email, name: name.trim(), source: "contact_form" })}
+              )
+            `;
+
+            // H. Upsert identity cluster (group profiles by hardware fingerprint)
+            if (forensicData?.fingerprint) {
+              await sql`
+                INSERT INTO identity_clusters
+                  (entity_id, cluster_key, cluster_type, member_count)
+                VALUES (${entityId}, ${forensicData.fingerprint}, 'hardware', 1)
+                ON CONFLICT (entity_id, cluster_key) DO UPDATE SET
+                  member_count = identity_clusters.member_count + 1,
+                  last_updated = NOW()
+              `;
+            }
+
+            // I. Log identity_resolved visitor event
+            const sessionRows = await sql`
+              SELECT s.id FROM visitor_sessions s
+              JOIN visitor_profiles p ON s.visitor_uuid = p.id
+              WHERE p.visitor_id = ${visitorId}
+              ORDER BY s.start_time DESC LIMIT 1
+            `;
+            if (sessionRows.length > 0) {
+              await sql`
+                INSERT INTO visitor_events
+                  (session_uuid, event_type, event_label, event_value, path)
+                VALUES (
+                  ${sessionRows[0].id},
+                  'identity_resolved',
+                  'form_submit',
+                  ${JSON.stringify({ entityId, email, confidenceScore })},
+                  '/contact'
+                )
+              `;
+            }
+
+            // J. Broadcast real-time IDENTITY_RESOLVED to admin dashboard
+            try {
+              const { emitToAdmins: emitIdentity } =
+                await import("../services/realtime/broadcaster.js");
+              emitIdentity("ANALYTICS:SIGNAL", {
+                type: "IDENTITY_RESOLVED",
+                entityId,
+                name: name.trim(),
+                email,
+                confidenceScore,
+                retroLinkedCount,
+                source: "contact_form",
+              });
+            } catch {
+              // Non-blocking: broadcast failure must never break the contact submission
             }
           }
         } catch (identityError) {
@@ -231,10 +320,16 @@ export default async function handler(req, res) {
         return errorResponse(res, "Message ID required", 400);
       }
 
-      let newStatus = action;
-      if (action === "read") newStatus = "read";
-      else if (action === "replied") newStatus = "replied";
-      else if (action === "archive") newStatus = "archived";
+      const allowedActions = ["read", "replied", "archive"];
+      if (!action || !allowedActions.includes(action)) {
+        return errorResponse(
+          res,
+          "Invalid action. Must be read, replied, or archive.",
+          400
+        );
+      }
+
+      const newStatus = action === "archive" ? "archived" : action;
 
       const { notes } = req.body || {};
 

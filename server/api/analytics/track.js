@@ -20,7 +20,7 @@ const initSchema = z.object({
       campaign: z.string().max(100).nullable().optional(),
     })
     .optional(),
-  forensics: z.record(z.any()).optional(), // Since forensics extracts variable hardware specs
+  forensics: z.object({}).passthrough().optional(), // Since forensics extracts variable hardware specs
 });
 
 const eventSchema = z.object({
@@ -53,7 +53,9 @@ const identifySchema = z.object({
   sessionId: z.string().min(5).max(100).optional(),
   email: z.string().max(255).email(),
   name: z.string().max(255).nullable().optional(),
-  source: z.enum(["autofill", "form_submit", "manual", "autofill_nav"]).optional(),
+  source: z
+    .enum(["autofill", "form_submit", "manual", "autofill_nav"])
+    .optional(),
 });
 // -----------------------------
 
@@ -196,8 +198,8 @@ export default async function handler(req, res) {
       ];
       const isBot = userAgent
         ? botPatterns.some((pattern) =>
-          userAgent.toLowerCase().includes(pattern)
-        )
+            userAgent.toLowerCase().includes(pattern)
+          )
         : true;
 
       // 1. Immutable Hardware DNA (The "God Mode" Anchor)
@@ -486,9 +488,11 @@ export default async function handler(req, res) {
           END,
           aliases = (
             SELECT ARRAY(
-              SELECT DISTINCT unnest(
+              SELECT DISTINCT alias_val
+              FROM unnest(
                 array_append(known_entities.aliases, ${name || null}::VARCHAR)
-              ) WHERE unnest IS NOT NULL AND unnest != 'Unknown'
+              ) AS alias_val
+              WHERE alias_val IS NOT NULL AND alias_val != 'Unknown'
             )
           ),
           updated_at = NOW()
@@ -559,12 +563,12 @@ export default async function handler(req, res) {
           INSERT INTO identity_signals (entity_id, visitor_id, signal_type, signal_weight, signal_value)
           VALUES (
             ${entityId},
-            ${visitorId || null},
+            (SELECT id FROM visitor_profiles WHERE visitor_id = ${visitorId} LIMIT 1),
             ${source || "autofill"},
             ${baseWeight},
-            ${email.toLowerCase()}
+            ${JSON.stringify({ email: email.toLowerCase(), source: source || "autofill", method: source || "autofill" })}
           )
-        `.catch(() => { });
+        `.catch(() => {});
 
         // Update entity: confidence, timestamps, resolution_sources
         await sql`
@@ -582,17 +586,17 @@ export default async function handler(req, res) {
               FROM known_entities WHERE entity_id = ${entityId}
             )
           WHERE entity_id = ${entityId}
-        `.catch(() => { });
+        `.catch(() => {});
 
         // Upsert identity_clusters for cross-device linking
         if (hardwareRows.length > 0 && hardwareRows[0].hardware_hash) {
           await sql`
-            INSERT INTO identity_clusters (fingerprint_hash, primary_entity_id, confidence_score)
-            VALUES (${hardwareRows[0].hardware_hash}, ${entityId}, ${newConfidence})
-            ON CONFLICT (fingerprint_hash) DO UPDATE SET
-              primary_entity_id = EXCLUDED.primary_entity_id,
-              confidence_score = GREATEST(identity_clusters.confidence_score, EXCLUDED.confidence_score)
-          `.catch(() => { });
+            INSERT INTO identity_clusters (entity_id, cluster_key, cluster_type, member_count)
+            VALUES (${entityId}, ${hardwareRows[0].hardware_hash}, 'hardware', 1)
+            ON CONFLICT (entity_id, cluster_key) DO UPDATE SET
+              member_count = identity_clusters.member_count + 1,
+              last_updated = NOW()
+          `.catch(() => {});
         }
 
         // E. Log the identity resolution event
@@ -609,7 +613,7 @@ export default async function handler(req, res) {
               NOW()
             FROM visitor_sessions WHERE session_id = ${sessionId}
             ON CONFLICT DO NOTHING
-          `.catch(() => { }); // Non-blocking
+          `.catch(() => {}); // Non-blocking
         }
 
         // F. Real-time admin broadcast (delayed: Neon commit consistency)

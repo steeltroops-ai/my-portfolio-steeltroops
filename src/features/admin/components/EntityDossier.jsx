@@ -87,23 +87,19 @@ const EntityDossier = ({ visitorId, onClose }) => {
     {
       icon: FiClock,
       label: "Local Timezone",
-      value:
-        profile.timezone ||
-        Intl.DateTimeFormat().resolvedOptions().timeZone ||
-        "UTC",
+      value: profile.timezone_name || "UTC",
     },
 
     // --- SYSTEM ---
     {
       icon: FiMonitor,
       label: "Operating System",
-      value: `${profile.os || "Unknown OS"} ${profile.os_version || ""}`.trim(),
+      value: profile.os || "Unknown OS",
     },
     {
       icon: FiGlobe,
       label: "Browser Engine",
-      value:
-        `${profile.browser || "Unknown"} ${profile.browser_version || ""}`.trim(),
+      value: profile.browser || "Unknown",
     },
     {
       icon: FiSmartphone,
@@ -113,14 +109,14 @@ const EntityDossier = ({ visitorId, onClose }) => {
     {
       icon: FiMaximize,
       label: "Display Resolution",
-      value: profile.screen_resolution || "Unknown",
+      value: profile.screen_size || "Unknown",
     },
 
     // --- HARDWARE ---
     {
       icon: FiCpu,
       label: "Processor",
-      value: `${navigator.hardwareConcurrency || 4} Cores`,
+      value: profile.cpu_cores ? `${profile.cpu_cores} Cores` : "N/A",
     },
     {
       icon: FiLayers,
@@ -130,21 +126,21 @@ const EntityDossier = ({ visitorId, onClose }) => {
     {
       icon: FiActivity,
       label: "Memory",
-      value: `~${profile.device_memory || "8"} GB`,
+      value: profile.memory_estimate ? `~${profile.memory_estimate} GB` : "N/A",
     },
     {
       icon: FiBattery,
       label: "Power State",
-      value: profile.battery_level
-        ? `${profile.battery_level}%`
-        : "Mains Power",
+      value: "Not Captured",
     },
 
     // --- NETWORK ---
     {
       icon: FiWifi,
       label: "Network Uplink",
-      value: profile.connection_type || profile.isp || "Unknown ISP",
+      value: profile.network_downlink
+        ? `${profile.network_downlink} Mbps`
+        : profile.isp || "Unknown ISP",
     },
   ];
 
@@ -164,13 +160,16 @@ const EntityDossier = ({ visitorId, onClose }) => {
     {
       icon: FiGlobe,
       label: "Language Locale",
-      value: profile.language || navigator.language,
+      value: profile.languages || profile.language || "Unknown",
     },
     {
       icon: FiTerminal,
       label: "User Agent",
-      value: profile.user_agent || navigator.userAgent,
-      subtext: "Raw String",
+      value:
+        [profile.browser, profile.os, profile.device_type]
+          .filter(Boolean)
+          .join(" / ") || "Unknown",
+      subtext: "Parsed from UA",
     },
   ];
 

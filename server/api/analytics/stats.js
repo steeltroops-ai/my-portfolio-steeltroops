@@ -15,6 +15,16 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized access detected" });
     }
 
+    // Fast-path: lightweight version check — only return totalSessions for change detection.
+    // useSmartSync polls this every 30s; without this guard the full dashboard query runs on every poll.
+    if (req.query.version_check === "true") {
+      const [row] =
+        await sql`SELECT COUNT(*)::int AS total FROM visitor_sessions`;
+      return res
+        .status(200)
+        .json({ success: true, stats: { totalSessions: row.total } });
+    }
+
     // 1. Handle Visitor Detail Drill-down (Separate logic to keep parallel stats clean)
     if (req.query.action === "visitor_detail") {
       const { visitorId } = req.query;
@@ -100,9 +110,9 @@ export default async function handler(req, res) {
       `;
 
       const signals = await sql`
-        SELECT entity_id, signal_type, signal_weight, signal_value, recorded_at
+        SELECT entity_id, signal_type, signal_weight, signal_value, created_at
         FROM identity_signals
-        ORDER BY recorded_at DESC
+        ORDER BY created_at DESC
         LIMIT 500
       `;
 
@@ -342,7 +352,7 @@ export default async function handler(req, res) {
         browserBreakdown,
       ] = await Promise.all([
         sql`SELECT COUNT(DISTINCT visitor_id) as count FROM visitor_profiles WHERE last_seen > NOW() - INTERVAL '2 minutes' AND is_owner = FALSE`,
-        sql`SELECT COUNT(DISTINCT ip_address) as count FROM visitor_profiles WHERE is_owner = FALSE`,
+        sql`SELECT COUNT(*) as count FROM visitor_profiles WHERE is_owner = FALSE`,
         sql`SELECT COUNT(*) as count FROM visitor_sessions`,
         sql`SELECT COUNT(*) as count FROM visitor_events WHERE event_type = 'page_view' AND timestamp > NOW() - INTERVAL '7 days'`,
         sql`SELECT COUNT(*) as count FROM visitor_sessions s JOIN visitor_profiles v ON s.visitor_uuid = v.id WHERE v.is_bot = TRUE`,
@@ -360,7 +370,7 @@ export default async function handler(req, res) {
         recentActions,
         mapNodes,
       ] = await Promise.all([
-        sql`SELECT country, city, region, MAX(latitude) as lat, MAX(longitude) as lon, COUNT(*) as count, MAX(last_seen) as last_active FROM visitor_profiles WHERE is_owner = FALSE GROUP BY country, city, region ORDER BY count DESC LIMIT 50`,
+        sql`SELECT country, city, region, AVG(latitude) as lat, AVG(longitude) as lon, COUNT(*) as count, MAX(last_seen) as last_active FROM visitor_profiles WHERE is_owner = FALSE GROUP BY country, city, region ORDER BY count DESC LIMIT 50`,
         sql`SELECT referrer, COUNT(*) as count FROM visitor_sessions WHERE referrer IS NOT NULL AND referrer != '' AND referrer NOT LIKE '%localhost%' GROUP BY referrer ORDER BY count DESC LIMIT 10`,
         sql`SELECT utm_source, COUNT(*) as count FROM visitor_sessions WHERE utm_source IS NOT NULL AND utm_source != '' GROUP BY utm_source ORDER BY count DESC LIMIT 10`,
         sql`SELECT path, COUNT(*) as count FROM visitor_events WHERE event_type = 'page_view' GROUP BY path ORDER BY count DESC LIMIT 15`,

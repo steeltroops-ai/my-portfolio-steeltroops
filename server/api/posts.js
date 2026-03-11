@@ -32,6 +32,16 @@ export default async function handler(req, res) {
   try {
     // GET - Fetch posts
     if (req.method == "GET") {
+      // Fast-path: return only the latest updated_at for change-detection polling.
+      // useSmartSync calls this every 30s; no auth or count query needed.
+      if (req.query.version_check === "true") {
+        const [row] =
+          await sql`SELECT MAX(updated_at) AS latest FROM blog_posts WHERE published = true`;
+        return res
+          .status(200)
+          .json({ posts: [{ updated_at: row?.latest ?? null }] });
+      }
+
       // Get by ID (admin)
       if (id) {
         const session = await verifyAuth(req, sql);
@@ -241,6 +251,7 @@ export default async function handler(req, res) {
           featured_image_url = COALESCE(${updates.featured_image_url}, featured_image_url),
           meta_description = COALESCE(${updates.meta_description}, meta_description),
           published = COALESCE(${updates.published}, published),
+          author = COALESCE(${updates.author}, author),
           read_time = COALESCE(${updates.read_time}, read_time),
           updated_at = NOW()
         WHERE id = ${id}

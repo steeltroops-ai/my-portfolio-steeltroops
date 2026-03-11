@@ -121,10 +121,21 @@ export default async function handler(req, res) {
         return errorResponse(res, "Comment ID required", 400);
       }
 
-      let newStatus = action;
-      if (action === "approve") newStatus = "approved";
-      else if (action === "reject") newStatus = "rejected";
-      else if (action === "spam") newStatus = "spam";
+      const allowedActions = ["approve", "reject", "spam"];
+      if (!action || !allowedActions.includes(action)) {
+        return errorResponse(
+          res,
+          "Invalid action. Must be approve, reject, or spam.",
+          400
+        );
+      }
+
+      const newStatus =
+        action === "approve"
+          ? "approved"
+          : action === "reject"
+            ? "rejected"
+            : "spam";
 
       const comments = await sql`
         UPDATE comments SET

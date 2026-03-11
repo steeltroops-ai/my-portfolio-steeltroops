@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 // Simple UID generator for visitor and session
@@ -44,6 +44,9 @@ const onIdle = (cb) => {
 
 export const useAnalytics = () => {
   const location = useLocation();
+  const heartbeatRef = useRef(null);
+  const handlersRef = useRef({});
+  const isFirstRender = useRef(true);
 
   const trackEvent = useCallback(async (type, label = "", value = "") => {
     try {
@@ -69,8 +72,6 @@ export const useAnalytics = () => {
 
   // One-time initialization on mount
   useEffect(() => {
-    let heartbeatInterval;
-
     const initTracking = async () => {
       try {
         if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
@@ -123,6 +124,13 @@ export const useAnalytics = () => {
           totalClicks++;
         };
 
+        // Store handler refs so the cleanup function can remove them
+        handlersRef.current = {
+          handleMouseMove,
+          handleKeyDown,
+          handleMouseClick,
+        };
+
         window.addEventListener("mousemove", handleMouseMove, {
           passive: true,
         });
@@ -130,7 +138,7 @@ export const useAnalytics = () => {
         window.addEventListener("click", handleMouseClick, { passive: true });
 
         // Heartbeat every 15s for real-time fidelity
-        heartbeatInterval = setInterval(async () => {
+        heartbeatRef.current = setInterval(async () => {
           try {
             // Calculate Current Behavioral Entropy
             let mouse_velocity = 0;
@@ -195,18 +203,30 @@ export const useAnalytics = () => {
     });
 
     return () => {
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
-      if (typeof window !== "undefined") {
-        // We defined handlers inside initTracking unfortunately, so we must rely on a global cleanup if we refactored it,
-        // but since we keep logic inside initTracking, creating generic cleaners is fine.
-        // Easiest hack: We attached anonymous-like closures. To clean we need references.
-        // Actually, let's just leave the comment - they don't break much since they are passive, but for perfection, I should have defined the handlers outside `initTracking`.
+      if (heartbeatRef.current) {
+        clearInterval(heartbeatRef.current);
+        heartbeatRef.current = null;
       }
+      const { handleMouseMove, handleKeyDown, handleMouseClick } =
+        handlersRef.current;
+      if (handleMouseMove)
+        window.removeEventListener("mousemove", handleMouseMove);
+      if (handleKeyDown) window.removeEventListener("keydown", handleKeyDown);
+      if (handleMouseClick)
+        window.removeEventListener("click", handleMouseClick);
+      handlersRef.current = {};
     };
   }, []); // Run only once on mount
 
   // Track page views on location change
+  // Skip the first render: the `init` action already records the initial page_view,
+  // firing here too would double-count it.
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     const trackPageView = async () => {
       if (localStorage.getItem("portfolio_admin_bypass") === "true") return;
 

@@ -50,10 +50,6 @@ const MessageCenter = () => {
   const [replyText, setReplyText] = useState("");
   const textareaRef = useRef(null);
 
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
@@ -108,7 +104,7 @@ const MessageCenter = () => {
       thread.name.toLowerCase().includes(searchLower) ||
       thread.email.toLowerCase().includes(searchLower) ||
       thread.messages.some((m) =>
-        m.message.toLowerCase().includes(searchLower)
+        m.message?.toLowerCase().includes(searchLower)
       );
 
     const matchesFilter =
