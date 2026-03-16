@@ -24,17 +24,21 @@ if [ -n "$CODE_CHANGED" ]; then
 
   # Bump the version locally (writes package.json + build-meta.json)
   PUSH_MODE=true node scripts/version-bump.js
+  
+  # Generate fresh sitemap after version bump
+  echo ">> Generating sitemap..."
+  bun run sitemap
 
-  # Stage and amend the version files into the current HEAD commit
-  # (amend so the version bump is part of your commit, not a separate one)
-  git add package.json public/build-meta.json
+  # Stage and commit the version files and sitemap
+  # We commit separately so the user's feat commit stays clean
+  git add package.json public/build-meta.json public/sitemap.xml
 
-  # Only commit if there are actually staged changes (i.e. version did change)
+  # Only commit if there are actually staged changes
   if ! git diff --cached --quiet; then
-    git commit --no-verify -m "chore(release): bump version [skip ci]"
-    echo ">> Version bumped and committed."
+    git commit --no-verify -m "chore(release): bump version and update sitemap [skip ci]"
+    echo ">> Version and sitemap updated and committed."
   else
-    echo ">> Version unchanged (doc-only path). No commit needed."
+    echo ">> No changes detected. No commit needed."
   fi
 
   echo ">> Running build integrity check..."
