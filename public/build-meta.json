@@ -1,8 +1,9 @@
 {
   "version": "2.4.0",
-  "buildId": "mmtfigtg-t9owvn",
-  "deployedAt": "2026-03-16T16:59:56.452Z",
+  "buildId": "meta-mmtfs7ob",
+  "deployedAt": "2026-03-16T17:07:31.163Z",
   "previousVersion": "2.3.0",
   "bumpLevel": "minor",
-  "env": "production"
+  "env": "production",
+  "reason": "no-code-change"
 }
