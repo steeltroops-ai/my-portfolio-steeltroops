@@ -29,6 +29,7 @@ docs/
 .augment/
 .augment/rules/
 .kiro/
+.claude/
 
 
 # Netlify

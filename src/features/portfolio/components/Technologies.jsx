@@ -15,7 +15,7 @@ import { FaNodeJs, FaRust, FaGitAlt } from "react-icons/fa";
 import { FaGolang } from "react-icons/fa6";
 import { DiPython, DiDocker, DiPostgresql } from "react-icons/di";
 import { LiaAws } from "react-icons/lia";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView, useReducedMotion, LayoutGroup } from "framer-motion";
 import { appleEasing, viewportSettings } from "@/utils/animations";
 
 // Technology data with accessibility information
@@ -329,25 +329,45 @@ const Technologies = () => {
           viewport={viewportSettings.standard}
           className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-12 px-4"
         >
-          {filterCategories.map((category) => (
-            <button
-              key={category.label}
-              onClick={() => {
-                setSelectedCategory(category.label);
-                // Reset show all when changing category logic removed
-              }}
-              className={`
-              px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300
-              ${
-                selectedCategory === category.label
-                  ? "bg-purple-500/20 text-purple-300 border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] backdrop-blur-md"
-                  : "text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent"
-              }
-            `}
-            >
-              {category.label}
-            </button>
-          ))}
+          <LayoutGroup id="tech-filters">
+            <motion.div className="flex flex-wrap justify-center gap-2">
+              {filterCategories.map((category) => {
+                const isActive = selectedCategory === category.label;
+                return (
+                  <motion.button
+                    key={category.label}
+                    onClick={() => {
+                      setSelectedCategory(category.label);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`
+                      relative px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-300
+                      ${
+                        isActive
+                          ? "text-purple-300"
+                          : "text-neutral-400 hover:text-white"
+                      }
+                    `}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-tech-pill"
+                        className="absolute inset-0 bg-purple-500/20 border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] backdrop-blur-md rounded-full"
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 45,
+                          mass: 1,
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{category.label}</span>
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          </LayoutGroup>
         </motion.div>
 
         <motion.div

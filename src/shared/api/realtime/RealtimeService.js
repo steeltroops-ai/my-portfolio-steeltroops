@@ -77,6 +77,7 @@ class RealtimeService {
     // SSE requires explicit addEventListener for named events.
     const channels = [
       "ANALYTICS:SIGNAL",
+      "ANALYTICS:IDENTITY_RESOLVED",
       "MESSAGES:NEW_INQUIRY",
       "AI:GENERATION_STARTED",
       "AI:STAGE_COMPLETE",

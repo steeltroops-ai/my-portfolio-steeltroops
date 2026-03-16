@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"\nconst fs = require\\('fs'\\);\nconst raw = fs.readFileSync\\('C:/Users/mayan/.claude/projects/C--Omniverse-Programming-my-portfolio-steeltroops/e64c5149-b560-40e1-8ee9-b8c40c010591/tool-results/tooluse_82d1fqYPLDxvp1v9BQIm60.json', 'utf8'\\);\nconst parsed = JSON.parse\\(raw\\);\nconst lines = parsed[0].text.split\\('\\\\n'\\);\nlines.slice\\(800, 1200\\).forEach\\(\\(l, i\\) => console.log\\(i+801 + ': ' + l\\)\\);\n\")",
+      "Bash(node -e \"\nconst fs = require\\('fs'\\);\nconst raw = fs.readFileSync\\('C:/Users/mayan/.claude/projects/C--Omniverse-Programming-my-portfolio-steeltroops/e64c5149-b560-40e1-8ee9-b8c40c010591/tool-results/tooluse_82d1fqYPLDxvp1v9BQIm60.json', 'utf8'\\);\nconst parsed = JSON.parse\\(raw\\);\nconst lines = parsed[0].text.split\\('\\\\n'\\);\nlines.slice\\(1200, 1420\\).forEach\\(\\(l, i\\) => console.log\\(i+1201 + ': ' + l\\)\\);\n\")",
+      "Bash(cd \"c:/Omniverse/Programming/my-portfolio-steeltroops\" && npx -y acorn --ecma2022 --module --allow-import-export-everywhere src/shared/analytics/forensics.js 2>&1 | tail -5)",
+      "Bash(cd \"c:/Omniverse/Programming/my-portfolio-steeltroops\" && node -e \"\nconst fs = require\\('fs'\\);\nconst files = [\n  'src/shared/analytics/forensics.js',\n  'src/shared/analytics/useAnalytics.js',\n  'server/api/analytics/track.js',\n  'server/api/realtime/stream.js',\n  'server/services/realtime/socketTransport.js',\n  'src/shared/api/realtime/RealtimeService.js',\n  'src/features/admin/hooks/useAdminPulse.jsx',\n];\nfor \\(const f of files\\) {\n  try {\n    const code = fs.readFileSync\\(f, 'utf8'\\);\n    // Basic bracket balance check\n    const open = \\(code.match\\(/[{\\(\\\\\\\\[]/g\\) || []\\).length;\n    const close = \\(code.match\\(/[}\\)\\\\\\\\]]/g\\) || []\\).length;\n    const status = open === close ? 'OK' : 'MISMATCH';\n    console.log\\(status + ' ' + f + ' \\(open=' + open + ' close=' + close + '\\)'\\);\n  } catch \\(e\\) {\n    console.log\\('ERR ' + f + ': ' + e.message\\);\n  }\n}\n\" 2>&1)"
+    ]
+  }
+}

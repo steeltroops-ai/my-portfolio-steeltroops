@@ -1,99 +1,9 @@
-import { useState, useEffect, useRef } from "react";
 import { m, AnimatePresence, LayoutGroup } from "framer-motion";
-import {
-  scrollToElement,
-  isGlobalNavigating,
-} from "@/shared/utils/scrollHelper";
-import {
-  FiHome,
-  FiUser,
-  FiCpu,
-  FiBriefcase,
-  FiFolder,
-  FiMail,
-} from "react-icons/fi";
-
-const sections = [
-  { id: "hero", label: "Home", icon: FiHome },
-  { id: "about", label: "About", icon: FiUser },
-  { id: "technologies", label: "Tech Stack", icon: FiCpu },
-  { id: "experience", label: "Experience", icon: FiBriefcase },
-  { id: "projects", label: "Projects", icon: FiFolder },
-  { id: "contact", label: "Contact", icon: FiMail },
-];
+import { useNavigation } from "@/shared/context/NavigationContext";
+import { NAV_SECTIONS } from "@/constants/navigation";
 
 const MobileNav = () => {
-  const [activeSection, setActiveSection] = useState("hero");
-  const activeRef = useRef("hero");
-
-  const updateActiveSection = (newSection) => {
-    if (newSection !== activeRef.current) {
-      activeRef.current = newSection;
-      setActiveSection(newSection);
-    }
-  };
-
-  useEffect(() => {
-    // Sync state and lock with global navigation events
-    const onNavStart = (e) => {
-      if (e.detail?.targetId) updateActiveSection(e.detail.targetId);
-    };
-
-    window.addEventListener("portfolio-navigation-start", onNavStart);
-
-    // Intersection Observer
-    const observerOptions = {
-      root: null,
-      rootMargin: "-49% 0px -49% 0px", // Check exactly the middle of the screen
-      threshold: 0,
-    };
-
-    const observerCallback = (entries) => {
-      if (isGlobalNavigating()) return;
-
-      const visibleSections = entries.filter((entry) => entry.isIntersecting);
-      if (visibleSections.length > 0) {
-        // If multiple intersect the very center, pick the first one
-        if (visibleSections[0]?.target?.id) {
-          updateActiveSection(visibleSections[0].target.id);
-        }
-      }
-    };
-
-    const observer = new IntersectionObserver(
-      observerCallback,
-      observerOptions
-    );
-
-    const observeSections = () => {
-      sections.forEach((section) => {
-        const element = document.getElementById(section.id);
-        if (element) observer.observe(element);
-      });
-    };
-
-    observeSections();
-
-    // Re-observe when DOM changes
-    const mutationObserver = new MutationObserver(observeSections);
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      observer.disconnect();
-      mutationObserver.disconnect();
-      window.removeEventListener("portfolio-navigation-start", onNavStart);
-    };
-  }, []);
-
-  const handleNavClick = (sectionId) => {
-    updateActiveSection(sectionId);
-    scrollToElement(sectionId, { offset: 80 });
-    if (sectionId === "contact") {
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("contact-autofill-trigger"));
-      }, 600);
-    }
-  };
+  const { activeSection, handleNavClick } = useNavigation();
 
   return (
     <nav
@@ -107,14 +17,16 @@ const MobileNav = () => {
 
           <div className="relative px-2 sm:px-3 py-2">
             <ul className="flex justify-between items-center gap-0">
-              {sections.map((section) => {
+              {NAV_SECTIONS.map((section) => {
                 const isActive = activeSection === section.id;
                 const Icon = section.icon;
 
                 return (
                   <li key={section.id} className="relative">
-                    <button
+                    <m.button
                       onClick={() => handleNavClick(section.id)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.92 }}
                       className={`
                         relative z-10 flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-colors duration-300 touch-manipulation
                         ${
@@ -128,12 +40,13 @@ const MobileNav = () => {
                     >
                       {isActive && (
                         <m.div
-                          layoutId="active-pill"
+                          layoutId="mobile-active-pill"
                           className="absolute inset-0 bg-purple-500/10 border border-purple-400/50 rounded-lg shadow-lg ring-1 ring-white/10"
                           transition={{
                             type: "spring",
-                            stiffness: 400,
-                            damping: 35,
+                            stiffness: 500,
+                            damping: 45,
+                            mass: 1,
                           }}
                         />
                       )}
@@ -148,7 +61,7 @@ const MobileNav = () => {
                       <span className="relative z-20 text-[8px] font-medium hidden xs:block">
                         {section.label}
                       </span>
-                    </button>
+                    </m.button>
                   </li>
                 );
               })}

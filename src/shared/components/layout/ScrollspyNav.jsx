@@ -1,91 +1,9 @@
-import { useState, useEffect, useRef } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import {
-  scrollToElement,
-  isGlobalNavigating,
-} from "@/shared/utils/scrollHelper";
-
-const sections = [
-  { id: "hero", label: "Home" },
-  { id: "about", label: "About" },
-  { id: "technologies", label: "Tech Stack" },
-  { id: "experience", label: "Experience" },
-  { id: "projects", label: "Projects" },
-  { id: "contact", label: "Contact" },
-];
+import { useNavigation } from "@/shared/context/NavigationContext";
+import { NAV_SECTIONS } from "@/constants/navigation";
 
 const ScrollspyNav = () => {
-  const [activeSection, setActiveSection] = useState("hero");
-  const activeRef = useRef("hero");
-
-  const updateActiveSection = (newSection) => {
-    if (newSection !== activeRef.current) {
-      activeRef.current = newSection;
-      setActiveSection(newSection);
-    }
-  };
-
-  const handleNavClick = (sectionId) => {
-    updateActiveSection(sectionId);
-    scrollToElement(sectionId, { offset: 80 });
-    // After scroll settles, trigger autofill probe on contact form inputs
-    if (sectionId === "contact") {
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("contact-autofill-trigger"));
-      }, 600);
-    }
-  };
-
-  useEffect(() => {
-    // Sync state and lock with global navigation events
-    const onNavStart = (e) => {
-      if (e.detail?.targetId) updateActiveSection(e.detail.targetId);
-    };
-
-    window.addEventListener("portfolio-navigation-start", onNavStart);
-
-    // Intersection Observer for scroll-based updates
-    const observerOptions = {
-      root: null,
-      rootMargin: "-49% 0px -49% 0px", // Check exactly the middle of the screen
-      threshold: 0,
-    };
-
-    const observerCallback = (entries) => {
-      if (isGlobalNavigating()) return;
-
-      const intersectingEntries = entries.filter(
-        (entry) => entry.isIntersecting
-      );
-      if (intersectingEntries.length > 0) {
-        // If multiple intersect the very center, pick the first one
-        updateActiveSection(intersectingEntries[0].target.id);
-      }
-    };
-
-    const observer = new IntersectionObserver(
-      observerCallback,
-      observerOptions
-    );
-
-    const observeSections = () => {
-      sections.forEach((section) => {
-        const element = document.getElementById(section.id);
-        if (element) observer.observe(element);
-      });
-    };
-
-    observeSections();
-
-    const mutationObserver = new MutationObserver(observeSections);
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      observer.disconnect();
-      mutationObserver.disconnect();
-      window.removeEventListener("portfolio-navigation-start", onNavStart);
-    };
-  }, []);
+  const { activeSection, handleNavClick } = useNavigation();
 
   return (
     <nav
@@ -94,7 +12,7 @@ const ScrollspyNav = () => {
     >
       <LayoutGroup id="scrollspy-nav">
         <ul className="flex flex-col gap-1.5 md:gap-2 items-end pointer-events-auto">
-          {sections.map((section) => {
+          {NAV_SECTIONS.map((section) => {
             const isActive = activeSection === section.id;
 
             return (
@@ -105,7 +23,7 @@ const ScrollspyNav = () => {
                     e.preventDefault();
                     handleNavClick(section.id);
                   }}
-                  className={`
+                   className={`
                     relative z-10 block text-[10px] md:text-xs xl:text-sm whitespace-nowrap transition-colors duration-300 cursor-pointer
                     focus:outline-none px-2 md:px-3 py-1 md:py-1.5 touch-manipulation
                     ${
@@ -118,23 +36,28 @@ const ScrollspyNav = () => {
                 >
                   {isActive && (
                     <motion.div
-                      layoutId="active-pill"
-                      className="absolute inset-0 bg-purple-500/10 border border-purple-400/50 rounded-full shadow-lg ring-1 ring-white/10"
+                      layoutId="desktop-active-pill"
+                      className="absolute inset-0 bg-purple-500/15 border border-purple-400/60 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.2)] ring-1 ring-white/10"
                       transition={{
                         type: "spring",
-                        stiffness: 400,
-                        damping: 35,
+                        stiffness: 500,
+                        damping: 40,
+                        mass: 0.8,
                       }}
                     />
                   )}
-                  <span className="relative z-20">
-                    <span className="text-purple-400/60 font-mono mr-2">
+                  <motion.span
+                    className="relative z-20 flex items-center"
+                    whileHover={{ x: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <span className="text-purple-400/60 font-mono mr-2 text-[10px]">
                       {String(
-                        sections.findIndex((s) => s.id === section.id) + 1
+                        NAV_SECTIONS.findIndex((s) => s.id === section.id) + 1
                       ).padStart(2, "0")}
                     </span>
                     {section.label}
-                  </span>
+                  </motion.span>
                 </a>
               </li>
             );

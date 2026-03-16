@@ -107,7 +107,11 @@ const Contact = () => {
       if (!nameEl) return;
 
       // Focus name field → triggers browser autofill engine
-      nameEl.focus();
+      // Skip on mobile/touch to avoid virtual keyboard layout shifts during scroll
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (!isTouch) {
+        nameEl.focus();
+      }
 
       // Poll after typical autofill injection delay
       const poll = () => {

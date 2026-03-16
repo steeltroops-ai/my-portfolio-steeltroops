@@ -3,11 +3,14 @@ import { Link } from "react-router-dom";
 import SocialLinks from "@/shared/components/ui/SocialLinks";
 import { PERSONAL, CONTACT, SOCIALS } from "@/constants";
 
+import { useNavigation } from "@/shared/context/NavigationContext";
+
 const Footer = () => {
+  const { handleNavClick } = useNavigation();
   const currentYear = new Date().getFullYear();
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    handleNavClick("hero");
   };
 
   return (

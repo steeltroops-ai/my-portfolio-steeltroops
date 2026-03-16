@@ -31,11 +31,12 @@ export default async function handler(req, res) {
       if (!visitorId)
         return res.status(400).json({ error: "visitorId required" });
 
+      // BUG-04 fix: visitorId query param is the visitor_id string, not the UUID pk
       const profile = await sql`
         SELECT p.*, k.real_name, k.email, k.role, k.linkedin_url
         FROM visitor_profiles p
         LEFT JOIN known_entities k ON p.likely_entity_id = k.entity_id
-        WHERE p.id = ${visitorId}
+        WHERE p.visitor_id = ${visitorId}
       `;
 
       if (profile.length === 0)
@@ -45,8 +46,8 @@ export default async function handler(req, res) {
         await Promise.all([
           sql`SELECT s.*, (SELECT COUNT(*) FROM visitor_events WHERE session_uuid = s.id) as event_count FROM visitor_sessions s WHERE visitor_uuid = ${profile[0].id} ORDER BY start_time DESC`,
           sql`SELECT e.* FROM visitor_events e JOIN visitor_sessions s ON e.session_uuid = s.id WHERE s.visitor_uuid = ${profile[0].id} ORDER BY timestamp DESC LIMIT 100`,
-          sql`SELECT DISTINCT ip_address FROM visitor_sessions WHERE visitor_uuid = ${profile[0].id} UNION SELECT ip_address FROM visitor_profiles WHERE id = ${profile[0].id}`,
-          sql`SELECT visitor_id, ip_address, device_model, city, last_seen, 'hardware' as match_type FROM visitor_profiles WHERE fingerprint = ${profile[0].fingerprint} AND id != ${profile[0].id} AND fingerprint IS NOT NULL`,
+          sql`SELECT DISTINCT ip_address FROM visitor_sessions WHERE visitor_uuid = ${profile[0].id} UNION SELECT ip_address FROM visitor_profiles WHERE visitor_id = ${visitorId}`,
+          sql`SELECT visitor_id, ip_address, device_model, city, last_seen, 'hardware' as match_type FROM visitor_profiles WHERE fingerprint = ${profile[0].fingerprint} AND visitor_id != ${visitorId} AND fingerprint IS NOT NULL`,
         ]);
 
       const uniqueIps = historicalIps.map((r) => r.ip_address).filter(Boolean);
@@ -54,9 +55,9 @@ export default async function handler(req, res) {
       if (uniqueIps.length > 0) {
         ipMatches = await sql`
           SELECT visitor_id, ip_address, device_model, city, last_seen, 'network' as match_type
-          FROM visitor_profiles 
+          FROM visitor_profiles
           WHERE ip_address = ANY(${uniqueIps})
-          AND id != ${profile[0].id}
+          AND visitor_id != ${visitorId}
           AND (fingerprint != ${profile[0].fingerprint} OR fingerprint IS NULL)
           LIMIT 5
         `;

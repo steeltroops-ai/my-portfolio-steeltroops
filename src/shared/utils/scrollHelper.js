@@ -12,7 +12,7 @@ let navigationTimeout = null;
  * @param {object} options - Scroll options
  */
 export const scrollToElement = (id, options = {}) => {
-  const { offset = 80, duration = 1.4, behavior = "smooth" } = options;
+  const { offset = 80, duration = 1.2, behavior = "smooth", onComplete = null } = options;
 
   // Signal that we are navigating (can be used by lazy loaders)
   isNavigating = true;
@@ -25,8 +25,21 @@ export const scrollToElement = (id, options = {}) => {
   );
 
   const performScroll = () => {
+    const cleanup = () => {
+      navigationTimeout = setTimeout(
+        () => {
+          isNavigating = false;
+          window.dispatchEvent(new CustomEvent("portfolio-navigation-end"));
+          if (onComplete) onComplete();
+          navigationTimeout = null;
+        },
+        duration * 1000 + 100
+      );
+    };
+
     if (id === "hero" || id === "top") {
       window.scrollTo({ top: 0, behavior });
+      cleanup();
     } else {
       const element = document.getElementById(id);
       if (element) {
@@ -34,58 +47,36 @@ export const scrollToElement = (id, options = {}) => {
         const elementPosition = element.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - offset;
 
-        // Use native scroll - Lenis usually intercepts this if 'root' is true
+        // Use native scroll - Lenis intercepts this if 'root' is true
         window.scrollTo({
           top: offsetPosition,
           behavior,
         });
 
-        // SECOND PASS: Layout shifts from lazy-loaded content can move the target.
-        // We do a "correction" pass after a short delay when the CSS transition is likely finished.
+        // Correction pass for lazy-loaded content shifts
         setTimeout(() => {
           const correctedElement = document.getElementById(id);
           if (correctedElement) {
-            const newPos =
-              correctedElement.getBoundingClientRect().top +
-              window.pageYOffset -
-              offset;
-            // Only correct if shift is significant
-            if (Math.abs(window.scrollY - newPos) > 15) {
-              window.scrollTo({ top: newPos, behavior });
+            const rect = correctedElement.getBoundingClientRect();
+            const currentTop = rect.top;
+            
+            if (Math.abs(currentTop - offset) > 40) {
+              const finalPos = currentTop + window.pageYOffset - offset;
+              window.scrollTo({ top: finalPos, behavior: "smooth" });
             }
           }
-        }, 800);
-
-        // Final sanity check even later
-        setTimeout(() => {
-          const finalElement = document.getElementById(id);
-          if (finalElement) {
-            const finalPos =
-              finalElement.getBoundingClientRect().top +
-              window.pageYOffset -
-              offset;
-            if (Math.abs(window.scrollY - finalPos) > 10) {
-              window.scrollTo({ top: finalPos, behavior: "auto" }); // Instant fix at the end
-            }
-          }
-        }, 1500);
+        }, duration * 1000 + 200);
+        
+        cleanup();
       } else {
-        console.warn(`[ScrollHelper] Element with id "${id}" not found.`);
+        // Fallback cleanup if element is missing
+        isNavigating = false;
+        if (onComplete) onComplete();
       }
     }
-
-    // Reset navigation flag after a generous buffer
-    navigationTimeout = setTimeout(
-      () => {
-        isNavigating = false;
-        window.dispatchEvent(new CustomEvent("portfolio-navigation-end"));
-        navigationTimeout = null;
-      },
-      duration * 1000 + 600
-    );
   };
 
-  // Give the browser a frame to handle any immediate state updates
+  // Immediate frame execution
   requestAnimationFrame(performScroll);
 };
 

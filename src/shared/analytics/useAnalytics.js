@@ -161,11 +161,13 @@ export const useAnalytics = () => {
                 keyIntervals.reduce((a, b) => a + b, 0) / keyIntervals.length;
             }
 
-            // High entropy if moving mouse uniquely and clicking
-            let entropy_score = Math.min(
+            // Behavioral entropy: 0.0 (bot-like) to 1.0 (clearly human)
+            // Normalized to 0-1 range to match server-side threshold (BUG-11 client fix)
+            const rawEntropy = Math.min(
               mouseEvents.length * 0.5 + totalClicks * 10,
               100
             );
+            let entropy_score = Math.min(rawEntropy / 100, 1.0);
 
             await fetch("/api/analytics/track?action=heartbeat", {
               method: "POST",

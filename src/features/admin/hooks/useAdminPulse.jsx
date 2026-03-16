@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTelemetry } from "@/shared/api/realtime/useTelemetry";
 import { toast } from "react-hot-toast";
 import React from "react";
-import { FiActivity, FiMail, FiCpu, FiCheckCircle } from "react-icons/fi";
+import { FiActivity, FiMail, FiCpu, FiCheckCircle, FiUserCheck } from "react-icons/fi";
 import { cacheManager } from "@/lib/cacheManager";
 
 /**
@@ -146,7 +146,44 @@ export const useAdminPulse = () => {
     });
   });
 
-  // 5. SYSTEM COMMAND PULSE
+  // 5. IDENTITY RESOLUTION PULSE
+  useTelemetry("ANALYTICS:IDENTITY_RESOLVED", (data) => {
+    console.log(
+      `  [Pulse] Identity Resolved: ${data.email} (confidence: ${data.confidence})`
+    );
+
+    // Refresh analytics data to reflect the new identity link
+    queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["analytics-visitors"] });
+
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-1">
+          <p className="font-black text-[9px] text-emerald-400 uppercase tracking-widest">
+            Identity Resolved
+          </p>
+          <p className="text-xs font-bold">
+            {data.name || data.email} — {Math.round((data.confidence || 0) * 100)}% confidence
+          </p>
+          <p className="text-[10px] text-gray-400">
+            via {data.method}
+          </p>
+        </div>
+      ),
+      {
+        icon: <FiUserCheck className="text-emerald-400" />,
+        duration: 5000,
+        style: {
+          background: "rgba(0,0,0,0.9)",
+          color: "#fff",
+          border: "1px solid rgba(52,211,153,0.3)",
+          backdropFilter: "blur(12px)",
+        },
+      }
+    );
+  });
+
+  // 6. SYSTEM COMMAND PULSE
   useTelemetry("SYSTEM:CACHE_PURGE", (data) => {
     console.warn("  [Pulse] System Cache Purge Requested:", data.reason);
 

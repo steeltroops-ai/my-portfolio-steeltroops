@@ -1,5 +1,5 @@
 import { PROJECTS } from "@/constants";
-import { m, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
   FaGithub,
   FaChevronDown,
@@ -12,6 +12,7 @@ import {
 import { FiGlobe } from "react-icons/fi";
 import { useState } from "react";
 import { useAnalytics } from "@/shared/analytics/useAnalytics";
+import { isGlobalNavigating } from "@/shared/utils/scrollHelper";
 
 const ProjectCard = ({ project, isExpanded, onToggle }) => {
   const { trackEvent } = useAnalytics();
@@ -88,7 +89,11 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
         }}
       >
         <AnimatePresence mode="wait">
-          <m.img
+          <m.div key={currentImageIndex} className="relative w-full h-full overflow-hidden">
+            {/* Treatment Layers */}
+            <div className="noise-overlay" />
+            <div className="vignette-overlay" />
+            <m.img
             key={currentImageIndex}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -145,10 +150,10 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               project.imageAlt ||
               `${project.title} - ${isExpanded ? currentImageIndex + 1 : 1}`
             }
-            className={`w-full h-full transition-transform duration-700 ${
+            className={`w-full h-full project-image-treatment ${
               isExpanded
                 ? "object-cover object-top"
-                : "object-cover object-top group-hover:scale-110"
+                : "object-cover object-top group-hover:scale-105"
             }`}
             data-original-url={(() => {
               const raw = images[isExpanded ? currentImageIndex : 0];
@@ -173,6 +178,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
               e.target.src = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url&colorScheme=dark&viewport.isMobile=false&viewport.width=1280&viewport.height=720`;
             }}
           />
+          </m.div>
         </AnimatePresence>
 
         {/* Fallback Placeholder (if no image at all) */}
@@ -302,7 +308,7 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
 
       {/* Card Content Area */}
       <div
-        className={`px-6 pb-4 pt-2 sm:px-8 sm:pb-6 sm:pt-3 flex-1 flex flex-col relative z-20 text-left ${isExpanded ? "bg-white/[0.01] md:overflow-y-auto" : ""}`}
+        className={`px-6 pb-4 pt-2 sm:px-8 sm:pb-6 sm:pt-3 flex-1 min-h-0 flex flex-col relative z-20 text-left ${isExpanded ? "bg-white/[0.01] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" : ""}`}
       >
         {!isExpanded && (
           <div className="mb-2">
@@ -493,12 +499,20 @@ const ProjectCard = ({ project, isExpanded, onToggle }) => {
   );
 };
 
+const projectCategories = ["All", "Flagship", "Fullstack", "ML", "Robotics"];
+
 const Projects = () => {
   const [expandedId, setExpandedId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
+  const toggleExpand = (title) => {
+    setExpandedId(expandedId === title ? null : title);
   };
+
+  const filteredProjects = PROJECTS.filter((project) => {
+    if (selectedCategory === "All") return true;
+    return project.categories?.includes(selectedCategory);
+  });
 
   return (
     <section className="pb-16 sm:pb-24 lg:pb-32 border-b border-neutral-800 scroll-mt-20">
@@ -507,43 +521,96 @@ const Projects = () => {
           My <span>Projects</span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-min">
-          {PROJECTS.map((project, index) => {
-            const isExpanded = expandedId === index;
-            return (
-              <m.div
-                layout
-                transition={{
-                  type: "spring",
-                  stiffness: 60,
-                  damping: 20,
-                  mass: 1,
-                }}
-                onLayoutAnimationComplete={() => {
-                  if (isExpanded) {
-                    document
-                      .getElementById(`project-${index}`)
-                      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }
-                }}
-                id={`project-${index}`}
-                key={`${project.title}-${index}`}
-                className={`relative rounded-2xl
-                  ${
-                    isExpanded
-                      ? "md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2 md:h-[932px] min-h-[800px] h-auto z-50"
-                      : "h-[450px] z-0"
-                  }`}
-              >
-                <ProjectCard
-                  project={project}
-                  isExpanded={isExpanded}
-                  onToggle={() => toggleExpand(index)}
-                />
-              </m.div>
-            );
-          })}
-        </div>
+        {/* Category Filter */}
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-12 px-4"
+        >
+          <LayoutGroup id="project-filters">
+            {projectCategories.map((category) => {
+              const isActive = selectedCategory === category;
+              return (
+                <m.button
+                  key={category}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setExpandedId(null);
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`
+                    relative px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-300
+                    ${
+                      isActive
+                        ? "text-purple-300"
+                        : "text-neutral-400 hover:text-white"
+                    }
+                  `}
+                >
+                  {isActive && (
+                    <m.div
+                      layoutId="active-project-pill"
+                      className="absolute inset-0 bg-purple-500/20 border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] backdrop-blur-md rounded-full"
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 45,
+                        mass: 1,
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10">{category}</span>
+                </m.button>
+              );
+            })}
+          </LayoutGroup>
+        </m.div>
+
+        <m.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-min">
+          <AnimatePresence mode="popLayout">
+            {filteredProjects.map((project) => {
+              const isExpanded = expandedId === project.title;
+              return (
+                <m.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 60,
+                    damping: 20,
+                    mass: 1,
+                  }}
+                  onLayoutAnimationComplete={() => {
+                    if (isExpanded && !isGlobalNavigating()) {
+                      const id = project.title.replace(/\s+/g, '-').toLowerCase();
+                      document
+                        .getElementById(`project-${id}`)
+                        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                  }}
+                  id={`project-${project.title.replace(/\s+/g, '-').toLowerCase()}`}
+                  key={project.title}
+                  className={`relative rounded-2xl
+                    ${
+                      isExpanded
+                        ? "md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2 md:h-[932px] min-h-[800px] h-auto z-50"
+                        : "h-[450px] z-0"
+                    }`}
+                >
+                  <ProjectCard
+                    project={project}
+                    isExpanded={isExpanded}
+                    onToggle={() => toggleExpand(project.title)}
+                  />
+                </m.div>
+              );
+            })}
+          </AnimatePresence>
+        </m.div>
       </div>
     </section>
   );

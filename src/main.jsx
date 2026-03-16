@@ -20,7 +20,7 @@ import { LazyMotion } from "framer-motion";
 
 // Critical shared components - loaded immediately
 import FloatingChatButton from "@/shared/components/ui/FloatingChatButton";
-import MobileNav from "@/shared/components/layout/MobileNav";
+
 
 // Add error logging for production debugging
 window.addEventListener("error", (event) => {
@@ -181,7 +181,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                             <>
                               <App />
                               <FloatingChatButton />
-                              <MobileNav />
                             </>
                           }
                         />

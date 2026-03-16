@@ -18,14 +18,16 @@ import { setCorsHeaders, verifyAuth } from "../utils.js";
 import registry from "../../services/realtime/streamRegistry.js";
 import broadcaster from "../../services/realtime/broadcaster.js";
 import sseTransport from "../../services/realtime/sseTransport.js";
+import socketTransport from "../../services/realtime/socketTransport.js";
 
 const sql = neon(process.env.DATABASE_URL || "");
 
-// Ensure SSE transport is registered exactly once
+// Ensure transports are registered exactly once
 let _transportInitialized = false;
 function ensureTransport() {
   if (_transportInitialized) return;
   broadcaster.registerTransport(sseTransport);
+  broadcaster.registerTransport(socketTransport); // BUG-05: Socket.io now receives broadcasts
   broadcaster.start();
   _transportInitialized = true;
 }
