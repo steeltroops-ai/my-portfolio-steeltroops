@@ -1,9 +1,8 @@
 {
-  "version": "2.4.0",
-  "buildId": "meta-mmtfs7ob",
-  "deployedAt": "2026-03-16T17:07:31.163Z",
-  "previousVersion": "2.3.0",
-  "bumpLevel": "minor",
-  "env": "production",
-  "reason": "no-code-change"
+  "version": "2.4.1",
+  "buildId": "mnf1nrgz-zk8uio",
+  "deployedAt": "2026-03-31T20:03:04.787Z",
+  "previousVersion": "2.4.0",
+  "bumpLevel": "patch",
+  "env": "production"
 }
