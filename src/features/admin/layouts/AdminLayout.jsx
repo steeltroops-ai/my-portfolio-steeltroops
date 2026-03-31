@@ -7,11 +7,12 @@ import { fetchStats } from "@/shared/analytics/useAnalyticsStats";
 import { fetchContactMessages } from "../hooks/useContactMessages";
 import { getAllPosts } from "../../blog/services/HybridBlogService";
 import { blogQueryKeys } from "../../blog/hooks/useBlogQueries";
-import { useSmartSync } from "../../../hooks/useSmartSync";
 import { IMAGES } from "@/constants";
 
 import { AdminProvider, useAdmin } from "../context/AdminContext";
 import { useAdminPulse } from "../hooks/useAdminPulse";
+import { RealtimeProvider } from "@/shared/api/realtime/RealtimeProvider";
+import { useSmartSync } from "../../../hooks/useSmartSync";
 
 const AdminLayoutContent = () => {
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useAdmin();
@@ -20,6 +21,9 @@ const AdminLayoutContent = () => {
 
   // 1. Centralized Real-Time Intelligence
   useAdminPulse();
+
+  // 2. Version-check polling fallback (30s) — keeps data fresh when SSE is unavailable
+  useSmartSync();
 
   // GLOBAL SHADOW-LOADER: Intelligent Pre-heating with Priority Queuing
   useEffect(() => {
@@ -205,9 +209,11 @@ const AdminLayoutContent = () => {
 
 const AdminLayout = () => {
   return (
-    <AdminProvider>
-      <AdminLayoutContent />
-    </AdminProvider>
+    <RealtimeProvider>
+      <AdminProvider>
+        <AdminLayoutContent />
+      </AdminProvider>
+    </RealtimeProvider>
   );
 };
 

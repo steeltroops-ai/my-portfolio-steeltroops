@@ -15,24 +15,36 @@ import { cacheManager } from "@/lib/cacheManager";
 export const useAdminPulse = () => {
   const queryClient = useQueryClient();
 
-  // 1. ANALYTICS PULSE
+  // 1. ANALYTICS PULSE — Single source of truth for real-time cache updates
   useTelemetry("ANALYTICS:SIGNAL", (data) => {
     console.log("  [Pulse] Analytics Signal:", data.type);
 
-    queryClient.setQueryData(["analytics-stats"], (oldData) => {
-      if (!oldData) return oldData;
-      const newData = { ...oldData };
-
-      if (data.type === "VISITOR_INIT") {
-        newData.stats = {
-          ...newData.stats,
-          totalVisitors: (newData.stats?.totalVisitors || 0) + 1,
-          liveNow: (newData.stats?.liveNow || 0) + 1,
+    if (data.type === "VISITOR_INIT" || data.type === "IDENTITY_RESOLVED") {
+      // State-changing events: full refetch for accurate counts
+      queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
+    } else if (data.type === "EVENT" || data.type === "PAGE_VIEW") {
+      // Non-state-changing: patch recentActions in-place for instant UI update
+      queryClient.setQueryData(["analytics-stats"], (old) => {
+        if (!old) return old;
+        const newAction = {
+          timestamp: data.timestamp,
+          event_type: data.eventType || data.type,
+          event_label: data.label || "",
+          path: data.path || "/",
+          city: data.city || "",
+          country: data.country || "",
+          ip_address: "",
+          is_bot: false,
         };
-        cacheManager.set("admin-analytics-stats", newData, "analytics");
-      }
-      return newData;
-    });
+        const updated = {
+          ...old,
+          recentActions: [newAction, ...(old.recentActions || [])].slice(0, 100),
+        };
+        cacheManager.set("admin-analytics-stats", updated, "default");
+        return updated;
+      });
+    }
+    // HEARTBEAT: silent — no cache interaction
 
     if (data.type !== "HEARTBEAT") {
       toast(

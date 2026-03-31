@@ -1,16 +1,16 @@
 {
-  "name": "Admin Control | Mayank",
-  "short_name": "AdminHQ",
-  "description": "Production Engineering portfolio of Mayank Pratap Singh (@steeltroops). Full Stack, ML, and Robotics.",
-  "start_url": "/admin/dashboard",
+  "name": "Mayank Pratap Singh | steeltroops",
+  "short_name": "steeltroops",
+  "description": "Building high-performance production systems. Full Stack, Robotics & ML Engineer.",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
-  "theme_color": "#a855f7",
+  "theme_color": "#0a0a0a",
   "icons": [
     {
-      "src": "/profile.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {

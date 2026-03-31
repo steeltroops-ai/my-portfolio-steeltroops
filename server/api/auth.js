@@ -18,7 +18,7 @@ function verifyPassword(password, stored) {
   const verifyHash = crypto
     .pbkdf2Sync(password, salt, 1000, 64, "sha512")
     .toString("hex");
-  return hash === verifyHash;
+  return crypto.timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(verifyHash, "hex"));
 }
 
 function generateToken() {
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "Lax",
         path: "/",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: 60 * 60 * 24, // 24 hours (matches DB session expiry)
       };
 
       res.setHeader(
@@ -211,6 +211,6 @@ export default async function handler(req, res) {
     return errorResponse(res, "Invalid action", 400);
   } catch (error) {
     console.error("Auth API error:", error);
-    return errorResponse(res, error.message || "Internal server error", 500);
+    return errorResponse(res, "Internal server error", 500);
   }
 }

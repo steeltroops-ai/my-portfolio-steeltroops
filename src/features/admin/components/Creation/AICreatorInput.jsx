@@ -68,6 +68,7 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
   const [prompt, setPrompt] = useState("");
   const [audience, setAudience] = useState("General");
   const [isAdvanced, setIsAdvanced] = useState(false);
+  const [advancedExpanded, setAdvancedExpanded] = useState(false);
 
   // Quick Mode State
   const [quickStyle, setQuickStyle] = useState("Professional");
@@ -95,16 +96,20 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
     if (!prompt.trim() || isGenerating) return;
 
     if (isAdvanced) {
+      // Filter out sections with empty headings — let the AI auto-determine those
+      const validSections = sections.filter((s) => s.heading?.trim());
+      const blueprintData =
+        validSections.length > 0
+          ? { totalSections: validSections.length, sections: validSections }
+          : null;
+
       // Advanced Payload
       onGenerate({
         prompt,
         audience,
         style: selectedTone, // mapped to globalTone in parent
         toneModifier: selectedModifier,
-        blueprint: {
-          totalSections: sections.length,
-          sections: sections,
-        },
+        blueprint: blueprintData,
         includeCode: false, // blueprint handles this
         codeLanguage,
         length: "medium", // blueprint determines real length
@@ -130,7 +135,7 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
   };
 
   return (
-    <div className="w-full transition-all duration-300 ease-in-out">
+    <div className="w-full transition-all duration-300 ease-in-out" data-lenis-prevent>
       {/* Main Input Container */}
       <div
         className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl transition-all hover:border-white/20 ${isAdvanced ? "bg-neutral-900/80" : ""}`}
@@ -158,7 +163,7 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
                 ? "Enter your blog topic..."
                 : "Describe what you want to create..."
             }
-            className={`w-full bg-transparent text-white placeholder-neutral-500 resize-none focus:outline-none scrollbar-none leading-relaxed transition-all ${isAdvanced ? "text-lg sm:text-xl font-medium mb-2 sm:mb-4" : "text-sm sm:text-base max-h-32 sm:max-h-48"}`}
+            className={`w-full bg-transparent text-white placeholder-neutral-500 resize-none focus:outline-none scrollbar-none leading-relaxed transition-all ${isAdvanced ? "text-lg sm:text-xl font-medium mb-2 sm:mb-4 max-h-40 sm:max-h-48" : "text-sm sm:text-base max-h-32 sm:max-h-48"}`}
             rows={1}
             style={{ minHeight: "24px" }}
           />
@@ -171,7 +176,10 @@ const AICreatorInput = ({ onGenerate, isGenerating }) => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden px-5 pb-5 border-t border-white/5"
+              onAnimationComplete={() => setAdvancedExpanded(true)}
+              onAnimationStart={() => setAdvancedExpanded(false)}
+              className={`${advancedExpanded ? "overflow-y-auto" : "overflow-hidden"} max-h-[50vh] px-5 pb-5 border-t border-white/5`}
+              data-lenis-prevent
             >
               <div className="space-y-6 pt-5">
                 {/* 1. Tone Selector */}

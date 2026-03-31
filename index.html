@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon-32x32.png" />
-    <link rel="apple-touch-icon" href="/profile.jpg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
@@ -69,15 +69,15 @@
     />
     <meta
       property="og:description"
-      content="Building high-performance production systems. Expert in distributed backends, scalable ML pipelines (RAG, MLOps), and autonomous robotics (ROS2, SLAM)."
+      content="Building high-performance production systems. Expert in distributed backends, scalable ML pipelines (RAG, MLOps), and autonomous robotics (ROS2, SLAM). Shipped systems for healthcare, aerospace, and autonomous navigation."
     />
     <meta
       property="og:image"
-      content="https://steeltroops.vercel.app/profile.webp"
+      content="https://steeltroops.vercel.app/profile.jpg"
     />
     <meta
       property="og:site_name"
-      content="Mayank Pratap Singh (@steeltroops) | Production Systems Engineer"
+      content="Mayank Pratap Singh (@steeltroops) | Production Engineer | Full Stack, ML & Robotics"
     />
 
     <!-- Twitter -->
@@ -89,15 +89,17 @@
     />
     <meta
       name="twitter:description"
-      content="Building high-performance production systems. Expert in distributed backends, scalable ML pipelines (RAG, MLOps), and autonomous robotics (ROS2, SLAM)."
+      content="Building high-performance production systems. Expert in distributed backends, scalable ML pipelines (RAG, MLOps), and autonomous robotics (ROS2, SLAM). Shipped systems for healthcare, aerospace, and autonomous navigation."
     />
     <meta
       name="twitter:image"
-      content="https://steeltroops.vercel.app/profile.webp"
+      content="https://steeltroops.vercel.app/profile.jpg"
     />
+    <meta name="twitter:site" content="@steeltroops_ai" />
     <meta name="twitter:creator" content="@steeltroops_ai" />
 
-    <!-- Structured Data for Search Visibility -->
+    <!-- Structured Data handled by SEOHead component (react-helmet-async) -->
+    <!-- Static fallback for crawlers that don't execute JavaScript -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -106,34 +108,44 @@
           "@type": "Person",
           "name": "Mayank Pratap Singh",
           "alternateName": "steeltroops",
-          "description": "Building high-performance production systems. Expert in distributed backends, scalable ML pipelines (RAG, MLOps), and autonomous robotics (ROS2, SLAM).",
-          "image": "https://steeltroops.vercel.app/profile.webp",
-          "jobTitle": "Production Engineer | Full Stack, ML & Robotics",
+          "description": "Building high-performance production systems. Expert in distributed backends, scalable ML pipelines (RAG, MLOps), and autonomous robotics (ROS2, SLAM). Shipped systems for healthcare, aerospace, and autonomous navigation.",
+          "image": "https://steeltroops.vercel.app/profile.jpg",
+          "jobTitle": "Full Stack, Robotics & ML Engineer",
           "url": "https://steeltroops.vercel.app",
+          "email": "steeltroops.ai@gmail.com",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "India",
+            "addressCountry": "IN"
+          },
           "sameAs": [
+            "https://x.com/steeltroops_ai",
             "https://github.com/steeltroops-ai",
+            "https://instagram.com/steeltroops_ai",
             "https://linkedin.com/in/steeltroops-ai",
-            "https://x.com/steeltroops_ai"
+            "https://own.page/steeltroops"
           ],
           "knowsAbout": [
+            "Software Engineering",
             "Full Stack Development",
             "Machine Learning",
             "Robotics",
             "ROS2",
+            "SLAM",
+            "Distributed Systems",
+            "MLOps",
             "React",
             "Node.js",
-            "Next.js",
             "Python",
             "C++",
-            "Reinforcement Learning",
+            "Rust",
             "Computer Vision"
           ],
-          "worksFor": [
-            {
-              "@type": "Organization",
-              "name": "Google/Microsoft/Apple/SpaceX/Nasa"
-            }
-          ]
+          "alumniOf": {
+            "@type": "CollegeOrUniversity",
+            "name": "GLA University",
+            "url": "https://www.gla.ac.in/"
+          }
         }
       }
     </script>

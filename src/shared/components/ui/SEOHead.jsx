@@ -66,8 +66,8 @@ const SEOHead = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
-      <meta name="twitter:creator" content={PERSONAL.username} />
-      <meta name="twitter:site" content={PERSONAL.username} />
+      <meta name="twitter:creator" content="@steeltroops_ai" />
+      <meta name="twitter:site" content="@steeltroops_ai" />
 
       {/* Article specific meta tags */}
       {type === "article" && (
@@ -107,7 +107,7 @@ const SEOHead = ({
             name: PERSONAL.name,
             alternateName: PERSONAL.username.replace("@", ""),
             description: description,
-            image: `${SITE_META.siteUrl}/hodakaprofile.jpg`,
+            image: SITE_META.ogImage,
             jobTitle: PERSONAL.role,
             url: SITE_META.siteUrl,
             email: "steeltroops.ai@gmail.com",

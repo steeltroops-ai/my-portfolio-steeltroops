@@ -40,8 +40,8 @@ export const RealtimeProvider = ({ children }) => {
     // Subscribe to status changes
     const unsubscribe = realtimeService.onStatusChange(setStatus);
 
-    // Open the SSE connection
-    realtimeService.connect();
+    // Open the SSE connection (reconnect resets attempt counter for clean start)
+    realtimeService.reconnect();
 
     return () => {
       unsubscribe();

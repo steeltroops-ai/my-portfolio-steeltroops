@@ -11,7 +11,7 @@ import { Toaster } from "react-hot-toast";
 import { ReactLenis } from "lenis/react";
 import App from "@/App.jsx";
 import { blogQueryKeys } from "@/features/blog/hooks/useBlogQueries";
-import { RealtimeProvider } from "@/shared/api/realtime/RealtimeProvider";
+// RealtimeProvider moved to AdminLayout — SSE should only connect for authenticated admins
 import { getPublishedPosts } from "@/features/blog/services/HybridBlogService";
 import ErrorBoundary from "@/shared/components/feedback/ErrorBoundary";
 import "@/index.css";
@@ -143,7 +143,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <RealtimeProvider>
           <Toaster
             position="top-right"
             toastOptions={{
@@ -230,7 +229,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               </LazyMotion>
             </ReactLenis>
           </HelmetProvider>
-        </RealtimeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>

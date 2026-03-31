@@ -374,11 +374,16 @@ export default async function handler(req, res) {
 
       const { sessionId, type, label, value, path } = parsed.data;
 
-      await sql`
+      const result = await sql`
         INSERT INTO visitor_events (session_uuid, event_type, event_label, event_value, path, timestamp)
         SELECT id, ${type}, ${label || ""}, ${value || ""}, ${path || "/"}, NOW()
         FROM visitor_sessions WHERE session_id = ${sessionId}
+        RETURNING id
       `;
+
+      if (result.length === 0) {
+        console.warn(`[Analytics] Event dropped: session ${sessionId} not found for event type ${type}`);
+      }
 
       res.status(200).json({ success: true });
 
@@ -472,11 +477,16 @@ export default async function handler(req, res) {
 
       const { sessionId, path } = parsed.data;
 
-      await sql`
+      const result = await sql`
         INSERT INTO visitor_events (session_uuid, event_type, path, timestamp)
         SELECT id, 'page_view', ${path || "/"}, NOW()
         FROM visitor_sessions WHERE session_id = ${sessionId}
+        RETURNING id
       `;
+
+      if (result.length === 0) {
+        console.warn(`[Analytics] Pageview dropped: session ${sessionId} not found (init may not have completed)`);
+      }
 
       res.status(200).json({ success: true });
 

@@ -508,7 +508,9 @@ export const cacheManager = new SmartCacheManager();
 
 // Run cleanup every 5 minutes
 if (typeof window !== "undefined") {
-  setInterval(() => cacheManager.cleanup(), 5 * 60 * 1000);
+  // Guard against duplicate intervals during Vite HMR
+  if (window.__cacheManagerIntervalId) clearInterval(window.__cacheManagerIntervalId);
+  window.__cacheManagerIntervalId = setInterval(() => cacheManager.cleanup(), 5 * 60 * 1000);
 
   // Also migrate/clean on first load after 3 seconds
   setTimeout(() => {

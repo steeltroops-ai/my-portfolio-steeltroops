@@ -124,6 +124,17 @@ class RealtimeService {
   }
 
   /**
+   * Reset reconnect counter and open a fresh connection.
+   * Call this after admin login to guarantee a live SSE link.
+   */
+  reconnect() {
+    this.disconnect();
+    this._destroyed = false;
+    this._reconnectAttempts = 0;
+    this.connect();
+  }
+
+  /**
    * Close the SSE connection and clean up.
    */
   disconnect() {

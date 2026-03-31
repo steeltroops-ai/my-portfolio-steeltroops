@@ -9,7 +9,7 @@ export function serializeCookie(name, value, options = {}) {
   if (options.secure) str += "; Secure";
   if (options.sameSite) str += `; SameSite=${options.sameSite}`;
   if (options.path) str += `; Path=${options.path || "/"}`;
-  if (options.maxAge) str += `; Max-Age=${options.maxAge}`;
+  if (options.maxAge != null) str += `; Max-Age=${options.maxAge}`;
   return str;
 }
 

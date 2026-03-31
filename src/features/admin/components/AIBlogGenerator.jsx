@@ -54,9 +54,14 @@ const AIBlogGenerator = () => {
     reset,
   } = useAIGenerator();
 
-  // Reset saved indicator when generation resets
+  // Sync saved indicator with result state
   useEffect(() => {
-    if (!result) setIsSaved(false);
+    if (!result) {
+      setIsSaved(false);
+    } else if (result.saved && result.id) {
+      // SSE streaming endpoint already saved this post
+      setIsSaved(true);
+    }
   }, [result]);
 
   // Auto-scroll to bottom as content streams in
@@ -69,15 +74,24 @@ const AIBlogGenerator = () => {
   const handleAIInputSubmit = async (inputData) => {
     if (!inputData.prompt.trim()) return;
 
+    // Map UI length labels to server LENGTH_CONFIG keys
+    const lengthMapping = {
+      short: "short",
+      medium: "medium",
+      long: "long",
+      "deep dive": "comprehensive",
+    };
+    const rawLength = inputData.length?.toLowerCase() || "medium";
+    const mappedLength = lengthMapping[rawLength] || rawLength;
+
     const params = {
       topic: inputData.prompt,
       globalTone: inputData.style?.toLowerCase() || "professional",
       toneModifier: inputData.toneModifier,
       audience: inputData.audience?.toLowerCase() || "general",
-      length: inputData.length?.toLowerCase() || "medium",
+      length: mappedLength,
       tags: inputData.includeCode ? ["technical", "code"] : [],
       codeLanguage: inputData.codeLanguage || "python",
-      // Blueprint can be passed from a future BlueprintBuilder component
       blueprint: inputData.blueprint || undefined,
     };
 
@@ -91,6 +105,15 @@ const AIBlogGenerator = () => {
 
   const handleSavePost = async () => {
     if (!result) return;
+
+    // The SSE streaming endpoint already saves the post to DB.
+    // result.saved and result.id are set by the generation_complete event.
+    if (result.saved && result.id) {
+      setIsSaved(true);
+      return;
+    }
+
+    // Fallback: only create a new post if the stream didn't save it
     setIsSaving(true);
     try {
       const postData = {

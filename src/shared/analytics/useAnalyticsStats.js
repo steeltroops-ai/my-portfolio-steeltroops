@@ -29,9 +29,9 @@ export const useAnalyticsStats = () => {
     refetchInterval: (query) => {
       // If error (backend down), poll every 10s to recover
       if (query.state.status === "error") return 10000;
-      // 30s fallback polling — SSE handles real-time updates but this ensures
-      // the matrix stays fresh if the SSE connection drops
-      return 30000;
+      // 15s polling — SSE is unreliable on serverless (Vercel).
+      // This is the primary real-time mechanism.
+      return 15000;
     },
   });
 };

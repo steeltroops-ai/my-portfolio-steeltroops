@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://steeltroops.vercel.app/</loc>
-    <lastmod>2026-03-16</lastmod>
+    <lastmod>2026-03-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://steeltroops.vercel.app/blogs</loc>
-    <lastmod>2026-03-16</lastmod>
+    <lastmod>2026-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://steeltroops.vercel.app/blogs/a-step-by-step-guide-to-learning-robotics-for-beginners-b6co</loc>
+    <lastmod>2026-03-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://steeltroops.vercel.app/blogs/deep-dive-into-transformers-understanding-the-fundamentals</loc>

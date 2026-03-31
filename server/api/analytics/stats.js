@@ -485,8 +485,6 @@ export default async function handler(req, res) {
     return res.status(500).json({
       success: false,
       error: "Data Aggregation Failed",
-      details: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 }

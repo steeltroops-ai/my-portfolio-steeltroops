@@ -503,10 +503,9 @@ async function savePost({
   const calculatedReadTime =
     readTime || Math.ceil(content.split(/\s+/).length / 200);
 
-  // Build a simple Unsplash URL from the search query if available
-  const featuredImageUrl = imageSearchQuery
-    ? `https://source.unsplash.com/1200x630/?${encodeURIComponent(imageSearchQuery)}`
-    : null;
+  // Note: source.unsplash.com is deprecated (returns 404).
+  // Featured image can be added manually when editing the post.
+  const featuredImageUrl = null;
 
   const result = await sql`
     INSERT INTO blog_posts (

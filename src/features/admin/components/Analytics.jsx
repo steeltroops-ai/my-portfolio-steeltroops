@@ -29,7 +29,6 @@ import {
 import { useAdmin } from "../context/AdminContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useTelemetry } from "@/shared/api/realtime/useTelemetry";
 import { useQueryClient } from "@tanstack/react-query";
 import LazySection from "@/shared/components/performance/LazySection";
 import EntityDossier from "./EntityDossier";
@@ -547,39 +546,8 @@ const Analytics = () => {
   const [dragScrollLeft, setDragScrollLeft] = useState(0);
   const [dragHasMoved, setDragHasMoved] = useState(false);
 
-  // --- REAL-TIME TELEMETRY INTEGRATION ---
-  const queryClient = useQueryClient();
-
-  // Selective cache patching — only full-refetch on state-changing events
-  useTelemetry("ANALYTICS:SIGNAL", (data) => {
-    if (data.type === "VISITOR_INIT" || data.type === "IDENTITY_RESOLVED") {
-      // New visitor or identity resolved: full stats refresh needed
-      queryClient.invalidateQueries({ queryKey: ["analytics-stats"] });
-    } else if (data.type === "EVENT" || data.type === "PAGE_VIEW") {
-      // Patch only recentActions in-place — no full refetch
-      queryClient.setQueryData(["analytics-stats"], (old) => {
-        if (!old) return old;
-        const newAction = {
-          timestamp: data.timestamp,
-          event_type: data.eventType || data.type,
-          event_label: data.label || "",
-          path: data.path || "/",
-          city: data.city || "",
-          country: data.country || "",
-          ip_address: "",
-          is_bot: false,
-        };
-        return {
-          ...old,
-          recentActions: [newAction, ...(old.recentActions || [])].slice(
-            0,
-            100
-          ),
-        };
-      });
-    }
-    // HEARTBEAT: silent — no cache interaction
-  });
+  // Real-time cache updates are centralized in useAdminPulse (AdminLayout).
+  // This component only reads from React Query — no duplicate handlers.
 
   // Reset pagination when any filter or sort changes
   useEffect(() => {
@@ -1234,7 +1202,7 @@ const Analytics = () => {
                           </div>
                           <div className="w-[15%] min-w-[100px] px-5 py-3 text-right">
                             <button
-                              onClick={() => setSelectedVisitorId(v.id)}
+                              onClick={() => setSelectedVisitorId(v.visitor_id)}
                               className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-400/5 border border-cyan-400/10 text-[8px] font-black text-cyan-400 hover:bg-cyan-400/20 transition-all uppercase tracking-widest"
                             >
                               TRACE{" "}

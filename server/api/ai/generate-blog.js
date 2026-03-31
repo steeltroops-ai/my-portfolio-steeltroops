@@ -341,8 +341,7 @@ WHAT YOU AVOID:
   } catch (error) {
     console.error(`[Mayank OS] Critical Failure:`, error);
     return res.status(500).json({
-      error: "Generation Failed",
-      details: error.message,
+      error: "Generation failed. Please try again.",
     });
   }
 }

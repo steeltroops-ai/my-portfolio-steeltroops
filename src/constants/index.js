@@ -75,7 +75,7 @@ export const SOCIALS = {
   github: "https://github.com/steeltroops-ai",
   instagram: "https://instagram.com/steeltroops_ai",
   linkedin: "https://linkedin.com/in/steeltroops-ai",
-  bento: "https://bento.me/steeltroops",
+  bento: "https://own.page/steeltroops",
 };
 
 // =====================================================
